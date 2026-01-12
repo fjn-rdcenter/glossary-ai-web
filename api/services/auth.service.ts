@@ -92,23 +92,24 @@ export class AuthService {
    * Logout user
    */
   static async logout(): Promise<void> {
+    // 1. Clear client-side state FIRST to ensure user is "logged out" locally
+    // regardless of whether the API call succeeds or fails.
+    localStorage.removeItem("auth_token");
+    localStorage.setItem("user_logged_out", "true");
+    
+    // Clear refresh token cookie (best effort, though HttpOnly cookies won't be cleared by JS)
+    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    console.log("Local tokens cleared, calling backend logout...");
+
     try {
       await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
         withCredentials: true, // Send cookies with request
       });
-      
-      // Clear access token from localStorage
-      localStorage.removeItem("auth_token");
-      
-      // Clear refresh token cookie
-      document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      
-      // Set logout flag to prevent auto-login
-      localStorage.setItem("user_logged_out", "true");
-      console.log("Tokens cleared");
+      console.log("Backend logout successful");
     } catch (error) {
+      // Log error but don't rethrow, so UI can proceed to redirect
+      console.warn("Backend logout failed (network or auth error), but client is cleared:", error);
       ApiErrorHandler.logError(error, "AuthService.logout");
-      throw new Error(ApiErrorHandler.parseError(error));
     }
   }
 

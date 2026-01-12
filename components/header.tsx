@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Search, LogOut } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function Header() {
+  const router = useRouter();
   const [user, setUser] = useState<{ username: string } | null>(null);
 
   useEffect(() => {
@@ -37,6 +39,11 @@ export function Header() {
   const displayUser = user || { username: "Guest" };
   // Remove @fujinet.net suffix if present
   const username = displayUser.username.replace("@fujinet.net", "");
+
+  const handleLogout = async () => {
+      await AuthService.logout();
+      router.push("/login");
+  };
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 flex items-center justify-between sticky top-0 z-10">
@@ -77,7 +84,7 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => AuthService.logout().then(() => window.location.href = "/login")}>
+            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

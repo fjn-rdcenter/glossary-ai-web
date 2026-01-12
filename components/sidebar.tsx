@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { LayoutDashboard, FileText, BookOpen, History, LogOut, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { AuthService } from "@/api/services"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -17,8 +18,15 @@ const navItems = [
 ]
 
 export function Sidebar() {
+  const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await AuthService.logout();
+    router.push("/login"); // Use router for client-side nav, or window.location.href to force clean state
+  };
 
   return (
     <>
@@ -99,10 +107,13 @@ export function Sidebar() {
                 className="w-full flex items-center gap-3 justify-start text-zinc-400 hover:text-white hover:bg-white/5"
                 asChild
               >
-                <Link href="/login" onClick={() => setIsOpen(false)}>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 text-left"
+                >
                   <LogOut className="w-5 h-5 shrink-0" />
                   <span>Sign out</span>
-                </Link>
+                </button>
               </Button>
             </div>
           </motion.div>
