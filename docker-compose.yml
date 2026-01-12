@@ -9,17 +9,19 @@ services:
       args:
         TS_WEBAPP_BUILD_VARIANT: ${TS_WEBAPP_BUILD_VARIANT}
         TS_WEBAPP_PROXY_CONNECTION_STRING: ${TS_WEBAPP_PROXY_CONNECTION_STRING}
+    ports:
+      - "13000:3000"
     container_name: ts-v2-webapp
-    image: translatesphere-v2-web-frontend:2026.01.07..1
+    image: translatesphere-v2-web-frontend:2026.01.07.1
     restart: always
 
-  translatesphere-v2-web-nginx:
-    image: nginx:1.25.4-alpine
-    container_name: ts-v2-webapp-nginx-2026-01-07-1
-    restart: always
-    ports:
-      - "13000:13000" 
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - translatesphere-v2-web-frontend
+  # translatesphere-v2-web-nginx:
+  #   image: nginx:1.25.4-alpine
+  #   container_name: ts-v2-webapp-nginx-2026-01-07-1
+  #   restart: always
+  #   ports:
+  #     - "13000:13000" 
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - translatesphere-v2-web-frontend
