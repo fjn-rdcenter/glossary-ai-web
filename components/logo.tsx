@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils"
+import LOGO_RD from "@/public/rd-center-logo.png";
+import Image from "next/image";
 
 interface LogoProps {
   className?: string
@@ -14,8 +16,8 @@ export function Logo({ className, size = "md" }: LogoProps) {
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <img
-        src="/rd-center-logo.png"
+      <Image
+        src={LOGO_RD}
         alt="Logo"
         className={cn("object-contain", sizes[size])}
       />
