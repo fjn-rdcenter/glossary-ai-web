@@ -105,6 +105,7 @@ export interface GlossaryResponse extends GlossaryBase {
   termCount: number;
   createdAt: string; // datetime
   updatedAt: string; // datetime
+  terms?: GlossaryTermPaginatedResponse;
 }
 
 export interface GlossaryPaginatedResponse {

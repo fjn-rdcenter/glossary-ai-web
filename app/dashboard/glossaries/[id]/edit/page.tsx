@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
-import { GlossaryResponse } from "@/api/types";
+import { GlossaryResponse, GlossaryDetailResponse } from "@/lib/types";
 import { GlossaryForm } from "@/components/glossary/glossary-form";
 import { RefreshCw } from "lucide-react";
 import { getLanguageName } from "@/lib/utils";
@@ -15,7 +15,7 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const router = useRouter();
 
-  const [glossary, setGlossary] = useState<GlossaryResponse | null>(null);
+  const [glossary, setGlossary] = useState<GlossaryDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +23,8 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
       setLoading(true);
       try {
         const data = await GlossaryService.getGlossaryById(id);
-        setGlossary(data);
+        // Cast to Detail because ID fetch returns terms
+        setGlossary(data as GlossaryDetailResponse);
       } catch (error) {
         console.error("Failed to fetch glossary", error);
       } finally {
@@ -34,7 +35,7 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
     fetchGlossaryData();
   }, [id]);
 
-  const handleSuccess = (updatedGlossary: GlossaryResponse) => {
+  const handleSuccess = (updatedGlossary: GlossaryDetailResponse) => {
       router.push(`/dashboard/glossaries/${id}`);
   };
 

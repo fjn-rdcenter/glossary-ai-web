@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { GlossaryService } from "@/api/services";
-import { GlossaryDetailResponse } from "@/api/types";
+import { GlossaryDetailResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +98,7 @@ export function EditGlossaryDialog({
       setLoading(true);
       GlossaryService.getGlossaryById(glossaryId)
         .then((data) => {
-          setGlossary(data);
+          setGlossary(data as GlossaryDetailResponse);
           setName(data.name);
           setDescription(data.description || "");
           if (data.terms?.items) {
@@ -346,7 +346,7 @@ export function EditGlossaryDialog({
       }
 
       const updated = await GlossaryService.getGlossaryById(glossaryId);
-      onSuccess(updated);
+      onSuccess(updated as GlossaryDetailResponse);
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);

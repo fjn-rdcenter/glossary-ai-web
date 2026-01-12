@@ -51,7 +51,7 @@ export default function DashboardPage() {
         const thisYear = now.getFullYear();
 
         const jobsThisMonth = jobs.filter((job) => {
-          const dateStr = job.submittedAt || job.startedAt;
+          const dateStr =  job.startedAt;
           if (!dateStr) return false;
           const jobDate = new Date(dateStr);
           return (
