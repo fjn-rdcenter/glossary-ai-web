@@ -141,4 +141,22 @@ export class TranslationService {
       throw new Error(ApiErrorHandler.parseError(error));
     }
   }
+  static async downloadOriginalDocument(documentId: string): Promise<Blob> {
+    try {
+      const response = await apiClient.get(
+        API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(documentId),
+        {
+          responseType: "blob",
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(
+        error,
+        "TranslationService.downloadOriginalDocument"
+      );
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
 }

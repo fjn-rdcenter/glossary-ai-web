@@ -94,19 +94,37 @@ export default function HistoryPage() {
     }
   };
 
-  const handleDownload = async (job: TranslationHistoryResponse) => {
+  const handleDownloadTranslated = async (job: TranslationHistoryResponse) => {
     if (job.status !== "completed") return;
     try {
       const blob = await TranslationService.downloadTranslatedDocument(job.id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `translated_${job.id}.docx`; 
+      a.download = `translated_${job.documentName}`; 
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed", error);
+    }
+  };
+
+  const handleDownloadOriginal = async (job: TranslationHistoryResponse) => {
+    try {
+      // Use sourceDocument if available, otherwise fallback to id (less reliable but usually unrelated)
+      // Actually sourceDocument alias is present in the interface
+      const docId = job.sourceDocument || job.id; 
+      const blob = await TranslationService.downloadOriginalDocument(docId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `original_${job.documentName}`; 
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download original failed", error);
     }
   };
 
@@ -272,31 +290,30 @@ export default function HistoryPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => window.location.href = `/dashboard/translate?jobId=${job.id}`}>
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        {job.status === "completed" && (
-                          <DropdownMenuItem onClick={() => handleDownload(job)}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => window.location.href = `/dashboard/translate?jobId=${job.id}`}>
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            View Details
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 dark:text-red-400" onClick={() => TranslationService.cancelTranslation(job.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Record
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuItem onClick={() => handleDownloadOriginal(job)}>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download Original File
+                          </DropdownMenuItem>
+                          {job.status === "completed" && (
+                            <DropdownMenuItem onClick={() => handleDownloadTranslated(job)}>
+                              <Check className="mr-2 h-4 w-4" />
+                              Download Translated File
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
