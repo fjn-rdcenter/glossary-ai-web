@@ -26,7 +26,6 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 
-
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
@@ -55,7 +54,10 @@ export default function DashboardPage() {
           const dateStr = job.submittedAt || job.startedAt;
           if (!dateStr) return false;
           const jobDate = new Date(dateStr);
-          return jobDate.getMonth() === thisMonth && jobDate.getFullYear() === thisYear;
+          return (
+            jobDate.getMonth() === thisMonth &&
+            jobDate.getFullYear() === thisYear
+          );
         }).length;
 
         setStats({
@@ -73,6 +75,25 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
+  // Clear all translation process states when dashboard loads
+  useEffect(() => {
+    // Clear all translation-related sessionStorage
+    sessionStorage.removeItem("uploadedFile");
+    sessionStorage.removeItem("pendingUploadFile");
+    sessionStorage.removeItem("documentId");
+    sessionStorage.removeItem("jobId");
+    sessionStorage.removeItem("currentStep");
+    sessionStorage.removeItem("sourceLanguage");
+    sessionStorage.removeItem("targetLanguage");
+    sessionStorage.removeItem("glossaryOption");
+    sessionStorage.removeItem("selectedGlossaries");
+
+    // Clear any pending file in global scope
+    if (typeof window !== "undefined") {
+      delete (window as any).__pendingFile;
+    }
+  }, []);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
   }, []);
@@ -86,21 +107,33 @@ export default function DashboardPage() {
       "application/msword": [".doc"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
         [".docx"],
-      "text/plain": [".txt"],
+      "application/vnd.ms-word.document.macroEnabled.12": [".docm"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.template":
+        [".dotx"],
+      "application/vnd.ms-word.template.macroEnabled.12": [".dotm"],
+      "application/vnd.ms-powerpoint": [".ppt"],
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        [".pptx"],
     },
     multiple: false,
   });
 
   const handleContinue = () => {
     if (files.length > 0) {
+      // Store file metadata and set a flag that we're coming from dashboard with a file
       sessionStorage.setItem(
-        "uploadedFile",
+        "pendingUploadFile",
         JSON.stringify({
           name: files[0].name,
           size: files[0].size,
           type: files[0].type,
         })
       );
+      // Store the actual file temporarily in a way the next page can access
+      // We'll use a global variable as a workaround since File objects can't be serialized
+      if (typeof window !== "undefined") {
+        (window as any).__pendingFile = files[0];
+      }
       router.push("/dashboard/translate");
     }
   };
@@ -113,21 +146,21 @@ export default function DashboardPage() {
     {
       label: "Total Translations",
       value: loading ? "..." : stats.totalTranslations.toLocaleString(),
-      change: "Lifetime", 
+      change: "Lifetime",
       icon: FileText,
       trend: "neutral",
     },
     {
       label: "Active Glossaries",
       value: loading ? "..." : stats.activeGlossaries.toString(),
-      change: "Total", 
+      change: "Total",
       icon: BookOpen,
       trend: "neutral",
     },
     {
       label: "Translations This Month",
       value: loading ? "..." : stats.translationsThisMonth.toString(),
-      change: "This Month", 
+      change: "This Month",
       icon: Calendar,
       trend: "neutral",
     },
@@ -249,7 +282,7 @@ export default function DashboardPage() {
                           : "Click or drag files to upload"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        PDF, DOCX, TXT • Up to 50MB per file
+                        PDF, DOCX, PowerPoint • Up to 50MB per file
                       </p>
                     </div>
                   </div>

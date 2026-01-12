@@ -10,6 +10,10 @@ const nextConfig = {
   turbopack: {
     root: path.resolve(process.cwd()),
   },
+  basePath: "/v2",
+  // assetPrefix: "/v2/",
+  reactStrictMode: true,
+  trailingSlash: true
 }
 
 export default nextConfig

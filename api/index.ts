@@ -11,7 +11,7 @@
  */
 
 // Export configuration
-export { API_CONFIG } from "./config";
+export { API_CONFIG, BASE_PATH } from "./config";
 
 // Export client
 export { default as apiClient } from "./client";

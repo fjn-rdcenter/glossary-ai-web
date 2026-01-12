@@ -3,33 +3,33 @@ export function translate(key: string, language: string): string {
   const translations: Record<string, Record<string, string>> = {
     Contact: {
       en: "Contact",
-      vi: "Liên hệ",
-      ja: "お問い合わせ"
+      vn: "Liên hệ",
+      jp: "お問い合わせ"
     },
     Address: {
       en: "Floor 9, Block C, Waseco Building, 10 Pho Quang Street, Tan Son Hoa Ward, Ho Chi Minh City",
-      vi: "Tầng 9, Tòa C, Tòa nhà Waseco, 10 Phổ Quang, Phường Tân Sơn Nhì, TP. Hồ Chí Minh",
-      ja: "ベトナム国ホーチミン市タンソンホア区フォークアン通り10番地ワセコビルディングCブロック9階"
+      vn: "Tầng 9, Tòa C, Tòa nhà Waseco, 10 Phổ Quang, Phường Tân Sơn Nhì, TP. Hồ Chí Minh",
+      jp: "ベトナム国ホーチミン市タンソンホア区フォークアン通り10番地ワセコビルディングCブロック9階"
     },
     PhoneVN: {
       en: "(VN) (84-28) 3847-7000",
-      vi: "(VN) (84-28) 3847-7000",
-      ja: "(VN) (84-28) 3847-7000"
+      vn: "(VN) (84-28) 3847-7000",
+      jp: "(VN) (84-28) 3847-7000"
     },
     PhoneJP: {
       en: "(JP) (81-3) 5579-9961",
-      vi: "(JP) (81-3) 5579-9961",
-      ja: "(JP) (81-3) 5579-9961"
+      vn: "(JP) (81-3) 5579-9961",
+      jp: "(JP) (81-3) 5579-9961"
     },
     Email: {
       en: "Email: info@fujinet.net",
-      vi: "Email: info@fujinet.net",
-      ja: "メール: info@fujinet.net"
+      vn: "Email: info@fujinet.net",
+      jp: "メール: info@fujinet.net"
     },
     MainPages: {
       en: "Main Pages",
-      vi: "Trang chính",
-      ja: "メインページ"
+      vn: "Trang chính",
+      jp: "メインページ"
     }
   };
 

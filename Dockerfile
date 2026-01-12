@@ -1,80 +1,60 @@
-FROM node:20-alpine AS base
-RUN corepack enable
+ARG TS_WEBAPP_BUILD_VARIANT
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# ==========================================
+# VARIANT 1: BUILD WITHOUT PROXY
+# ==========================================
+FROM node:20.12.2-alpine3.19 AS build_without_proxy
+
+ONBUILD WORKDIR /app
+ONBUILD COPY package*.json ./
+ONBUILD RUN yarn install --frozen-lockfile
+ONBUILD COPY . .
+
+ONBUILD ENV NEXT_TELEMETRY_DISABLED 1
+ONBUILD RUN yarn build
+
+# ==========================================
+# VARIANT 2: BUILD WITH PROXY
+# ==========================================
+
+FROM node:20.12.2-alpine3.19 AS build_with_proxy
+
+ARG TS_WEBAPP_PROXY_CONNECTION_STRING
+
+ONBUILD WORKDIR /app
+ONBUILD COPY package*.json ./
+
+ONBUILD RUN yarn config set proxy ${TS_WEBAPP_PROXY_CONNECTION_STRING}
+ONBUILD RUN yarn config set https-proxy ${TS_WEBAPP_PROXY_CONNECTION_STRING}
+ONBUILD RUN yarn config set "strict-ssl" false
+ONBUILD RUN yarn install --frozen-lockfile
+
+ONBUILD COPY . .
+
+ONBUILD ENV NEXT_TELEMETRY_DISABLED 1
+ONBUILD RUN yarn build
+
+FROM ${TS_WEBAPP_BUILD_VARIANT} AS source_stage
+
+FROM node:20.12.2-alpine3.19 AS runner
+
 WORKDIR /app
 
-# Proxy settings
-ARG HTTP_PROXY=""
-ARG HTTPS_PROXY=""
-ENV HTTP_PROXY=$HTTP_PROXY
-ENV HTTPS_PROXY=$HTTPS_PROXY
-
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn install --immutable; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Proxy settings for build time
-ARG HTTP_PROXY=""
-ARG HTTPS_PROXY=""
-ENV HTTP_PROXY=$HTTP_PROXY
-ENV HTTPS_PROXY=$HTTPS_PROXY
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=source_stage /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+COPY --from=source_stage --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=source_stage --chown=nextjs:nodejs /app/.next/standalone ./
 
 USER nextjs
 
-EXPOSE 13000
-
-ENV PORT 13000
-# set hostname to localhost
-ENV HOSTNAME "0.0.0.0"
+EXPOSE 3000
 
 CMD ["node", "server.js"]

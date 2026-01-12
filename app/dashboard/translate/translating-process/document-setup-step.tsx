@@ -18,8 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileCard } from "@/components/file-card";
+import { useToast } from "@/hooks/use-toast";
 // Remove mock data
-// import { languages } from "@/lib/mock-data"; 
+// import { languages } from "@/lib/mock-data";
 
 // Constants
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
@@ -33,7 +34,7 @@ interface DocumentSetupStepProps {
   setUploadedFile: (
     file: { name: string; size: number; type: string } | null
   ) => void;
-  setFileToUpload: (file: File | null) => void; 
+  setFileToUpload: (file: File | null) => void;
   sourceLanguage: string;
   setSourceLanguage: (lang: string) => void;
   targetLanguage: string;
@@ -53,6 +54,8 @@ export function DocumentSetupStep({
   onNext,
   onBack,
 }: DocumentSetupStepProps) {
+  const { toast } = useToast();
+
   const handleRemoveFile = () => {
     setUploadedFile(null); // This triggers the logic in parent to clear everything
     // setFileToUpload(null) is called implicitly by parent's setUploadedFile wrapper if I implemented it that way,
@@ -62,6 +65,29 @@ export function DocumentSetupStep({
   };
 
   const handleFileSelect = (file: File) => {
+    // Validate file type
+    const allowedExtensions = [
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".docm",
+      ".dotx",
+      ".dotm",
+      ".ppt",
+      ".pptx",
+    ];
+    const fileName = file.name.toLowerCase();
+    const isValidType = allowedExtensions.some((ext) => fileName.endsWith(ext));
+
+    if (!isValidType) {
+      toast({
+        variant: "destructive",
+        title: "Invalid File Type",
+        description: "Please upload only PowerPoint, Word, or PDF files.",
+      });
+      return;
+    }
+
     const fileData = {
       name: file.name,
       size: file.size,
@@ -171,7 +197,7 @@ export function DocumentSetupStep({
                 type="file"
                 id="file-upload"
                 className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf,.doc,.docx,.docm,.dotx,.dotm,.ppt,.pptx"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -230,13 +256,13 @@ export function DocumentSetupStep({
                   <SelectValue placeholder="To" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SUPPORTED_LANGUAGES
-                    .filter((l) => l.code !== sourceLanguage)
-                    .map((lang) => (
-                      <SelectItem key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </SelectItem>
-                    ))}
+                  {SUPPORTED_LANGUAGES.filter(
+                    (l) => l.code !== sourceLanguage
+                  ).map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

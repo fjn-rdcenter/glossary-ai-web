@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { API_CONFIG } from "./config";
+import { API_CONFIG, BASE_PATH } from "./config";
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -126,13 +126,15 @@ apiClient.interceptors.response.use(
         
         // Logout user on failed refresh
         if (typeof window !== 'undefined') {
-             localStorage.removeItem("auth_token");
-             // Clear cookie loosely if possible specific to client logic
-             document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            localStorage.removeItem("auth_token");
+            // Clear cookie loosely if possible specific to client logic
+            document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            const loginPath = `${BASE_PATH}/login`;
+
+            if (!window.location.pathname.startsWith(loginPath)) {
+              window.location.replace(loginPath);
+            }
              
-             if (!window.location.pathname.includes('/login')) {
-                 window.location.href = "/login";
-             }
         }
         return Promise.reject(refreshError);
       } finally {
