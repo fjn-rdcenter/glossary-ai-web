@@ -58,6 +58,9 @@ export class AuthService {
       // Store refresh token in cookie (if not already set by backend)
       let cookieExists = document.cookie.includes('refresh_token');
       
+      // Clear manual logout flag if it exists
+      localStorage.removeItem("user_logged_out");
+      
       if (refreshToken) {
         // Check if backend already set the cookie
         if (!cookieExists) {
@@ -99,6 +102,9 @@ export class AuthService {
       
       // Clear refresh token cookie
       document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      
+      // Set logout flag to prevent auto-login
+      localStorage.setItem("user_logged_out", "true");
       console.log("Tokens cleared");
     } catch (error) {
       ApiErrorHandler.logError(error, "AuthService.logout");

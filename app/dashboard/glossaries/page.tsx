@@ -38,7 +38,7 @@ import {
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
-import { getLanguageName } from "@/lib/utils";
+import { getLanguageName, formatDate } from "@/lib/utils";
 
 export default function GlossariesPage() {
   const router = useRouter();
@@ -283,7 +283,7 @@ export default function GlossariesPage() {
 
                 <div className="mt-4 pt-4 border-t border-border flex items-center text-xs text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5 mr-1" />
-                  Updated {glossary.updatedAt ? new Date(glossary.updatedAt).toLocaleDateString() : "N/A"}
+                  Updated {formatDate(glossary.updatedAt)}
                 </div>
               </CardContent>
             </Card>

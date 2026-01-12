@@ -93,6 +93,13 @@ export default function LoginPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Check if user explicitly logged out
+        if (localStorage.getItem("user_logged_out")) {
+           console.log("User explicitly logged out, skipping auto-check.");
+           setIsChecking(false);
+           return;
+        }
+
         // Build a check list of indicators
         const hasRefreshCookie = document.cookie.includes('refresh_token');
         const hasAuthToken = localStorage.getItem("auth_token"); 

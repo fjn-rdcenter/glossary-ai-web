@@ -171,6 +171,7 @@ export interface TranslationJobResponse {
   targetLanguage: string;
   glossaries?: string[];
   sourceDocument: string;
+  sourceDocumentName?: string;
   targetDocument?: string;
   status: StatusEnum;
   progress: number;

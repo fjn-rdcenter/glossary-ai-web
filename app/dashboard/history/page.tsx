@@ -49,7 +49,7 @@ import {
 import { PageTransition } from "@/components/ui/page-transition";
 import { TranslationService } from "@/api/services";
 import { TranslationHistoryResponse, StatusEnum } from "@/lib/types";
-import { getLanguageName } from "@/lib/utils";
+import { getLanguageName, formatDate } from "@/lib/utils";
 
 export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,9 +101,10 @@ export default function HistoryPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      // Use sourceDocument (which might be ID or Name depending on backend implementation of 'sourceDocument')
-      // Schema defines sourceDocument: str.
-      a.download = `translated_${job.sourceDocument}`; 
+      a.href = url;
+      // Use sourceDocumentName for filename if available, else ID
+      const filename = job.sourceDocumentName || job.sourceDocument;
+      a.download = `translated_${filename}`; 
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -121,7 +122,8 @@ export default function HistoryPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `original_${job.sourceDocument}`;  
+      const filename = job.sourceDocumentName || job.sourceDocument;
+      a.download = `original_${filename}`;  
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -135,7 +137,7 @@ export default function HistoryPage() {
      const matchesStatus =
        statusFilter === "all" || job.status === statusFilter;
       // Add search logic if needed
-      const matchesSearch = searchTerm === "" || job.sourceDocument.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = searchTerm === "" || (job.sourceDocumentName || job.sourceDocument).toLowerCase().includes(searchTerm.toLowerCase());
      return matchesStatus && matchesSearch;
   });
 
@@ -241,8 +243,8 @@ export default function HistoryPage() {
                         <FileText className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[200px]" title={job.sourceDocument}>
-                           {job.sourceDocument}
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[200px]" title={job.sourceDocumentName || job.sourceDocument}>
+                           {job.sourceDocumentName || job.sourceDocument}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {/* Mock size if not available */}
@@ -273,22 +275,7 @@ export default function HistoryPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-muted-foreground">
-                      {(() => {
-                        try {
-                           return job.startedAt ? format(new Date(job.startedAt), "MMM d, yyyy") : "N/A";
-                        } catch (e) {
-                           return "Invalid Date";
-                        }
-                      })()}
-                    </div>
-                    <div className="text-xs text-muted-foreground/60">
-                      {(() => {
-                        try {
-                           return job.startedAt ? format(new Date(job.startedAt), "h:mm a") : "";
-                        } catch (e) {
-                           return "";
-                        }
-                      })()}
+                       {formatDate(job.startedAt)}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
