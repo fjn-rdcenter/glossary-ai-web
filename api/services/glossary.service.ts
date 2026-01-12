@@ -10,7 +10,7 @@ import {
   ApiResponse,
   PaginatedResponse,
   GlossaryTermsUpsertResponse,
-} from "../types";
+} from "@/lib/types";
 import { ApiErrorHandler } from "../utils/error-handler";
 
 export class GlossaryService {

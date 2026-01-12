@@ -9,7 +9,7 @@ import { DocumentSetupStep } from "./translating-process/document-setup-step";
 import { GlossarySelectionStep } from "./translating-process/glossary-selection-step";
 import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
 import { TranslationService, GlossaryService } from "@/api/services";
-import { GlossaryResponse } from "@/api/types";
+import { GlossaryResponse } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [

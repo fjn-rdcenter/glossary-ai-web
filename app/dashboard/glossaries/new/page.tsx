@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryForm } from "@/components/glossary/glossary-form";
-import { GlossaryResponse } from "@/api/types";
+import { GlossaryResponse } from "@/lib/types";
 
 export default function NewGlossaryPage() {
   const router = useRouter();

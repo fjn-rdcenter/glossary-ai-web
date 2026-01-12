@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, getLanguageName } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GlossaryResponse, GlossaryDetailResponse } from "@/api/types";
+import { GlossaryResponse, GlossaryDetailResponse } from "@/lib/types";
 import { GlossaryService } from "@/api/services";
 import { CreateGlossaryDialog } from "../../../../components/glossary/create-glossary-dialog";
 import { EditGlossaryDialog } from "../../../../components/glossary/edit-glossary-dialog";

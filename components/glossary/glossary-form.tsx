@@ -46,7 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { GlossaryService } from "@/api/services";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
-import { GlossaryDetailResponse } from "@/api/types";
+import { GlossaryDetailResponse } from "@/lib/types";
 import { GlossarySummary } from "@/components/glossary/glossary-summary";
 
 // Internal type for UI management

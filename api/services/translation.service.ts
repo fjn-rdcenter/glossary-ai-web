@@ -16,7 +16,7 @@ import {
   TranslationHistoryResponse,
   PaginatedResponse,
   ApiResponse,
-} from "../types";
+} from "@/lib/types";
 import { ApiErrorHandler } from "../utils/error-handler";
 
 export class TranslationService {

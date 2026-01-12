@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ArrowRight, Globe, Check } from "lucide-react";
@@ -78,12 +78,46 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [language, setLanguage] = useState<Language>("en");
+
+
+
+  
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const t = translations[language];
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        // Build a check list of indicators
+        const hasRefreshCookie = document.cookie.includes('refresh_token');
+        const hasAuthToken = localStorage.getItem("auth_token"); 
+
+        if (hasRefreshCookie || hasAuthToken) {
+            console.log("Checking session...");
+            // If tokens exist, try to refresh
+            await AuthService.refreshToken();
+            router.push("/dashboard");
+            return; 
+        }
+      } catch (error) {
+        console.log("Session check failed:", error);
+        // Clean up potential stale data if needed
+        localStorage.removeItem("auth_token");
+      } finally {
+        // Always stop checking to show form if we didn't redirect
+        // Note: if router.push is called, component might unmount, 
+        // but setting state is fine if we are still here.
+        setIsChecking(false);
+      }
+    };
+
+    checkSession();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +148,22 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#f2f6fc]">
+        <motion.div
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 1,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+            className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full"
+          />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f2f6fc] p-4">

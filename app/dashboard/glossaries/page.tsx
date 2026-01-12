@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
-import { GlossaryResponse } from "@/api/types";
+import { GlossaryResponse } from "@/lib/types";
 import { getLanguageName } from "@/lib/utils";
 
 export default function GlossariesPage() {

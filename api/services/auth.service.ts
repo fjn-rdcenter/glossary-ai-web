@@ -13,7 +13,7 @@ import {
   UserResponse,
   RefreshTokenResponse,
   ApiResponse,
-} from "../types";
+} from "@/lib/types";
 import { ApiErrorHandler } from "../utils/error-handler";
 
 export class AuthService {
@@ -45,8 +45,9 @@ export class AuthService {
       
       // Handle different response formats
       const loginData = response.data.data || response.data;
-      const token = loginData.token || loginData.access_token;
-      const refreshToken = loginData.refreshToken || loginData.refresh_token;
+      // In new schema, properties are strictly access_token and refresh_token
+      const token = (loginData as any).token || loginData.access_token;
+      const refreshToken = (loginData as any).refreshToken || loginData.refresh_token;
       
       // Store access token in localStorage
       if (token) {
@@ -122,8 +123,9 @@ export class AuthService {
       
       // Handle different response formats
       const tokenData = response.data.data || response.data;
-      const newAccessToken = tokenData.token || tokenData.access_token;
-      const newRefreshToken = tokenData.refreshToken || tokenData.refresh_token;
+      // Use type assertion for backward compatibility if needed, or strictly use new schema
+      const newAccessToken = (tokenData as any).token || tokenData.access_token;
+      const newRefreshToken = (tokenData as any).refreshToken || tokenData.refresh_token;
       
       // Update access token in localStorage
       if (newAccessToken) {
