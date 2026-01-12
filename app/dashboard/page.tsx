@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalTranslations: 0,
     activeGlossaries: 0,
-    translationsThisMonth: 0,
+    uniqueDocuments: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -46,24 +46,13 @@ export default function DashboardPage() {
           GlossaryService.getGlossaries(),
         ]);
 
-        const now = new Date();
-        const thisMonth = now.getMonth();
-        const thisYear = now.getFullYear();
-
-        const jobsThisMonth = jobs.filter((job) => {
-          const dateStr =  job.startedAt;
-          if (!dateStr) return false;
-          const jobDate = new Date(dateStr);
-          return (
-            jobDate.getMonth() === thisMonth &&
-            jobDate.getFullYear() === thisYear
-          );
-        }).length;
+        // Calculate unique documents
+        const uniqueDocs = new Set(jobs.map(j => j.sourceDocument)).size;
 
         setStats({
           totalTranslations: jobs.length,
           activeGlossaries: glossaries.length,
-          translationsThisMonth: jobsThisMonth,
+          uniqueDocuments: uniqueDocs,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);
@@ -114,6 +103,8 @@ export default function DashboardPage() {
       "application/vnd.ms-powerpoint": [".ppt"],
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         [".pptx"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        [".xlsx"],
     },
     multiple: false,
   });
@@ -158,10 +149,10 @@ export default function DashboardPage() {
       trend: "neutral",
     },
     {
-      label: "Translations This Month",
-      value: loading ? "..." : stats.translationsThisMonth.toString(),
-      change: "This Month",
-      icon: Calendar,
+      label: "Documents Uploaded",
+      value: loading ? "..." : stats.uniqueDocuments.toString(),
+      change: "Total Unique",
+      icon: FileText,
       trend: "neutral",
     },
   ];
@@ -204,8 +195,8 @@ export default function DashboardPage() {
           let href = "/dashboard/history";
           if (stat.label === "Active Glossaries") {
             href = "/dashboard/glossaries";
-          } else if (stat.label === "Translations This Month") {
-            href = "/dashboard/history?filter=month";
+          } else if (stat.label === "Documents Uploaded") {
+            href = "/dashboard/history";
           }
 
           return (
@@ -282,7 +273,7 @@ export default function DashboardPage() {
                           : "Click or drag files to upload"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        PDF, DOCX, PowerPoint • Up to 50MB per file
+                        PDF, DOCX, PPTX, XLSX • Up to 50MB per file
                       </p>
                     </div>
                   </div>

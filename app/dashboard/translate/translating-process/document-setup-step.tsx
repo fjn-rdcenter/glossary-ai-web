@@ -75,6 +75,7 @@ export function DocumentSetupStep({
       ".dotm",
       ".ppt",
       ".pptx",
+      ".xlsx",
     ];
     const fileName = file.name.toLowerCase();
     const isValidType = allowedExtensions.some((ext) => fileName.endsWith(ext));
@@ -83,7 +84,7 @@ export function DocumentSetupStep({
       toast({
         variant: "destructive",
         title: "Invalid File Type",
-        description: "Please upload only PowerPoint, Word, or PDF files.",
+        description: "Please upload only PowerPoint, Word, Excel, or PDF files.",
       });
       return;
     }
@@ -197,7 +198,7 @@ export function DocumentSetupStep({
                 type="file"
                 id="file-upload"
                 className="hidden"
-                accept=".pdf,.doc,.docx,.docm,.dotx,.dotm,.ppt,.pptx"
+                accept=".pdf,.doc,.docx,.docm,.dotx,.dotm,.ppt,.pptx,.xlsx"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {

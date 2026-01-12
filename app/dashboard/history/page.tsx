@@ -48,12 +48,15 @@ import {
 } from "@/components/ui/select";
 import { PageTransition } from "@/components/ui/page-transition";
 import { TranslationService } from "@/api/services";
-import { TranslationHistoryResponse, StatusEnum } from "@/lib/types";
+import { TranslationJobResponse, TranslationHistoryResponse, StatusEnum } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
+import { TranslationDetailDialog } from "@/components/history/translation-detail-dialog";
 
 export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedJob, setSelectedJob] = useState<TranslationJobResponse | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("desc");
   
   // Real data states
@@ -111,6 +114,11 @@ export default function HistoryPage() {
     } catch (error) {
       console.error("Download failed", error);
     }
+  };
+
+  const handleView = (job: TranslationJobResponse) => {
+    setSelectedJob(job);
+    setDetailOpen(true);
   };
 
   const handleDownloadOriginal = async (job: TranslationHistoryResponse) => {
@@ -173,12 +181,9 @@ export default function HistoryPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
-          </Button>
-          <Button className="bg-zinc-900 text-white hover:bg-zinc-800">
-            Export CSV
           </Button>
         </div>
       </div>
