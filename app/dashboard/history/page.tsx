@@ -292,7 +292,7 @@ export default function HistoryPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => window.location.href = `/dashboard/translate?jobId=${job.id}`}>
+                          <DropdownMenuItem onClick={() => handleView(job)}>
                             <ExternalLink className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
