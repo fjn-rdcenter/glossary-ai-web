@@ -182,7 +182,6 @@ export interface TranslationStatusResponse {
 
 export interface TranslationHistoryResponse {
   id: string;
-  documentName: string;
   sourceLanguage: string;
   targetLanguage: string;
   status: StatusEnum;

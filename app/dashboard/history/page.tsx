@@ -104,7 +104,7 @@ export default function HistoryPage() {
       a.href = url;
       // Use sourceDocumentName for filename if available, else ID
       const filename = job.sourceDocumentName || job.sourceDocument;
-      a.download = `translated_${filename}`; 
+      a.download = `${job.targetLanguage.toUpperCase()}-${filename}`; 
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -123,7 +123,7 @@ export default function HistoryPage() {
       const a = document.createElement("a");
       a.href = url;
       const filename = job.sourceDocumentName || job.sourceDocument;
-      a.download = `original_${filename}`;  
+      a.download = `${filename}`;  
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
