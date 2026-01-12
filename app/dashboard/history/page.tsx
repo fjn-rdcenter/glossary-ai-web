@@ -342,6 +342,15 @@ export default function HistoryPage() {
           </Button>
         </div>
       </div>
+      {selectedJob && (
+        <TranslationDetailDialog
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          job={selectedJob}
+          onDownloadTranslated={() => handleDownloadTranslated(selectedJob)}
+          onDownloadOriginal={() => handleDownloadOriginal(selectedJob)}
+        />
+      )}
     </PageTransition>
   );
 }
