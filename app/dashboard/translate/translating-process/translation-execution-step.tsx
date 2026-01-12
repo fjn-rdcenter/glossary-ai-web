@@ -260,7 +260,7 @@ export function TranslationExecutionStep({
               {uploadedFile && (
                 <div className="max-w-md mx-auto mb-8">
                   <FileCard
-                    name={`translated_${uploadedFile.name}`}
+                    name={`${targetLanguage}_${uploadedFile.name}`}
                     size={uploadedFile.size}
                     type={uploadedFile.type}
                     status="success"
