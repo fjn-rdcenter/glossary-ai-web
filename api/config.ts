@@ -3,7 +3,7 @@
  * Central configuration for API endpoints and settings
  */
 
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "/v2";
 
 export const API_CONFIG = {
   BASE_URL: process.env.API_BASE_URL || "http://172.16.6.10:18000",

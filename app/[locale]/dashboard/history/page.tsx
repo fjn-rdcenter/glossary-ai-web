@@ -51,6 +51,7 @@ import { TranslationService } from "@/api/services";
 import { TranslationJobResponse, TranslationHistoryResponse, StatusEnum } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
 import { TranslationDetailDialog } from "@/components/history/translation-detail-dialog";
+import { useTranslations } from 'next-intl';
 
 export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,6 +59,9 @@ export default function HistoryPage() {
   const [selectedJob, setSelectedJob] = useState<TranslationJobResponse | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("desc");
+
+  const trmlCommon = useTranslations("Common");
+  const trmlHistory = useTranslations("History");
   
   // Real data states
   const [jobs, setJobs] = useState<TranslationHistoryResponse[]>([]);
@@ -174,16 +178,16 @@ export default function HistoryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Translation History
+            {trmlHistory("historyTitle")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            View and manage your past translation jobs.
+            {trmlHistory("historySubtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            {trmlHistory("refresh")}
           </Button>
         </div>
       </div>
@@ -192,7 +196,7 @@ export default function HistoryPage() {
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder={trmlHistory("searchDocuments")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 bg-white dark:bg-zinc-950"
@@ -202,14 +206,14 @@ export default function HistoryPage() {
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[150px] bg-white dark:bg-zinc-950">
               <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={trmlHistory("status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="translating">Translating</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="all">{trmlHistory("allStatus")}</SelectItem>
+              <SelectItem value="completed">{trmlHistory("statusTranslating")}</SelectItem>
+              <SelectItem value="translating">{trmlHistory("statusTranslating")}</SelectItem>
+              <SelectItem value="pending">{trmlHistory("statusPending")}</SelectItem>
+              <SelectItem value="failed">{trmlHistory("statusFailed")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -219,24 +223,24 @@ export default function HistoryPage() {
         <Table>
           <TableHeader className="bg-zinc-50 dark:bg-zinc-900">
             <TableRow>
-              <TableHead className="w-[300px]">Document</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Languages</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[300px]">{trmlHistory("colDocument")}</TableHead>
+              <TableHead>{trmlHistory("status")}</TableHead>
+              <TableHead>{trmlHistory("colLanguages")}</TableHead>
+              <TableHead>{trmlHistory("colDate")}</TableHead>
+              <TableHead className="text-right">{trmlHistory("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
                <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  Loading...
+                  {trmlHistory("loading")}
                 </TableCell>
               </TableRow>
             ) : paginatedHistory.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  No translations found.
+                  {trmlHistory("noHistory")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -270,11 +274,11 @@ export default function HistoryPage() {
                   <TableCell>
                     <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                       <span className="font-medium">
-                        {getLanguageName(job.sourceLanguage)}
+                        {trmlCommon(job.sourceLanguage)}
                       </span>
                       <ArrowRight className="w-3 h-3 text-muted-foreground" />
                       <span className="font-medium">
-                        {getLanguageName(job.targetLanguage)}
+                        {trmlCommon(job.targetLanguage)}
                       </span>
                     </div>
                   </TableCell>
@@ -294,16 +298,16 @@ export default function HistoryPage() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleView(job)}>
                             <ExternalLink className="mr-2 h-4 w-4" />
-                            View Details
+                            {trmlHistory("viewDetails")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownloadOriginal(job)}>
                               <Download className="mr-2 h-4 w-4" />
-                              Download Original File
+                              {trmlHistory("downloadOriginal")}
                           </DropdownMenuItem>
                           {job.status === "completed" && (
                             <DropdownMenuItem onClick={() => handleDownloadTranslated(job)}>
                               <Check className="mr-2 h-4 w-4" />
-                              Download Translated File
+                              {trmlHistory("downloadTranslated")}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -319,7 +323,11 @@ export default function HistoryPage() {
        {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-            Showing {(pagination.page - 1) * pagination.size + 1} to {Math.min(pagination.page * pagination.size, pagination.total)} of {pagination.total} translations
+            {trmlHistory("showing", {
+              start: (pagination.page - 1) * pagination.size + 1,
+              end: Math.min(pagination.page * pagination.size, pagination.total),
+              total: pagination.total,
+            })}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -329,7 +337,7 @@ export default function HistoryPage() {
             disabled={pagination.page <= 1}
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            {trmlHistory("prev")}
           </Button>
           <Button
             variant="outline"
@@ -337,7 +345,7 @@ export default function HistoryPage() {
             onClick={() => handlePageChange(pagination.page + 1)}
             disabled={pagination.page >= pagination.totalPages}
           >
-            Next
+            {trmlHistory("next")}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

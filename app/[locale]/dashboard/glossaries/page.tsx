@@ -39,6 +39,7 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 export default function GlossariesPage() {
   const router = useRouter();
@@ -47,6 +48,9 @@ export default function GlossariesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedGlossaries, setSelectedGlossaries] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
 
   const fetchGlossaries = async () => {
     setLoading(true);
@@ -127,16 +131,16 @@ export default function GlossariesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-serif font-semibold text-foreground">
-              Glossaries
+              {trmlGlossaries("glossariesTitle")}
             </h1>
             <p className="mt-1 text-muted-foreground">
-              Manage your custom terminology profiles
+              {trmlGlossaries("glossariesSubtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={fetchGlossaries} disabled={loading} className="mr-2">
                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-               Refresh
+               {trmlGlossaries("refresh")}
             </Button>
             {selectedGlossaries.size > 0 && (
               <Button
@@ -144,7 +148,7 @@ export default function GlossariesPage() {
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="mr-2 w-4 h-4" />
-                Delete {selectedGlossaries.size}
+                {trmlGlossaries("delete")}{" "}{selectedGlossaries.size}
               </Button>
             )}
             <Button
@@ -152,7 +156,7 @@ export default function GlossariesPage() {
               className="group"
             >
               <Plus className="mr-2 w-4 h-4" />
-              Create Glossary
+              {trmlGlossaries("createGlossary")}
               <ArrowRight className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </Button>
           </div>
@@ -165,7 +169,7 @@ export default function GlossariesPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search glossaries..."
+              placeholder={trmlGlossaries("searchGlossaries")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12 bg-card"
@@ -180,7 +184,7 @@ export default function GlossariesPage() {
                 }
                 onCheckedChange={toggleSelectAll}
               />
-              <span className="text-sm text-muted-foreground">Select All</span>
+              <span className="text-sm text-muted-foreground">{trmlGlossaries("selectAll")}</span>
             </div>
           )}
         </div>
@@ -189,7 +193,7 @@ export default function GlossariesPage() {
       {/* Glossary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-             <div className="col-span-full text-center py-10 text-muted-foreground">Loading glossaries...</div>
+             <div className="col-span-full text-center py-10 text-muted-foreground">{trmlGlossaries("loadingList")}</div>
         ) : filteredGlossaries.map((glossary, index) => (
           <SlideUp key={glossary.id} delay={0.1 + index * 0.05}>
             <Card
@@ -230,7 +234,7 @@ export default function GlossariesPage() {
                         }
                       >
                         <Eye className="mr-2 h-4 w-4" />
-                        View
+                        {trmlGlossaries("view")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
@@ -240,7 +244,7 @@ export default function GlossariesPage() {
                         }
                       >
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        {trmlGlossaries("edit")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -251,7 +255,7 @@ export default function GlossariesPage() {
                         }}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        {trmlGlossaries("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -264,7 +268,7 @@ export default function GlossariesPage() {
                   {glossary.description ? (
                     glossary.description
                   ) : (
-                    <span className="italic opacity-50">No description provided</span>
+                    <span className="italic opacity-50">{trmlGlossaries("noDescription")}</span>
                   )}
                 </div>
 
@@ -273,17 +277,17 @@ export default function GlossariesPage() {
                     <span className="font-medium text-foreground">
                       {glossary.termCount}
                     </span>{" "}
-                    terms
+                    {trmlGlossaries("terms")}
                   </span>
                   <span className="w-1 h-1 rounded-full bg-border" />
                   <span>
-                    {getLanguageName(glossary.sourceLanguage)} → {getLanguageName(glossary.targetLanguage)}
+                    {trmlCommon(glossary.sourceLanguage)} → {trmlCommon(glossary.targetLanguage)}
                   </span>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-border flex items-center text-xs text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5 mr-1" />
-                  Updated {formatDate(glossary.updatedAt)}
+                  {trmlGlossaries("updated")} {formatDate(glossary.updatedAt)}
                 </div>
               </CardContent>
             </Card>
@@ -299,17 +303,17 @@ export default function GlossariesPage() {
               <BookOpen className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No glossaries found
+              {trmlGlossaries("noResults")}
             </h3>
             <p className="text-muted-foreground mb-6">
               {searchQuery
-                ? "Try a different search term"
-                : "Create your first glossary to get started"}
+                ? trmlGlossaries("searchEmptyHint")
+                : trmlGlossaries("createFirst")}
             </p>
             {!searchQuery && (
               <Button onClick={() => router.push("/dashboard/glossaries/new")}>
                 <Plus className="mr-2 w-4 h-4" />
-                Create Glossary
+                {trmlGlossaries("create")}
               </Button>
             )}
           </div>
@@ -323,7 +327,7 @@ export default function GlossariesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Glossaries?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedGlossaries.size}{" "}
+              **Are you sure you want to delete{" "}{selectedGlossaries.size}{" "}
               glossaries? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -333,7 +337,7 @@ export default function GlossariesPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={deleteSelectedGlossaries}
             >
-              Delete
+              **Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
