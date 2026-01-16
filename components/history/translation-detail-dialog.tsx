@@ -25,6 +25,7 @@ import { TranslationJobResponse, GlossaryResponse } from "@/lib/types";
 import { formatDate, getLanguageName } from "@/lib/utils";
 import { GlossaryService } from "@/api/services";
 import { Separator } from "@/components/ui/separator";
+import { useTranslations } from 'next-intl';
 
 interface TranslationDetailDialogProps {
   open: boolean;
@@ -41,6 +42,9 @@ export function TranslationDetailDialog({
   onDownloadTranslated,
   onDownloadOriginal,
 }: TranslationDetailDialogProps) {
+  const trmlCommon = useTranslations("Common");
+  const trmlHistory = useTranslations("History");
+  
   const [glossaries, setGlossaries] = useState<GlossaryResponse[]>([]);
   const [loadingGlossaries, setLoadingGlossaries] = useState(false);
 
@@ -117,11 +121,11 @@ export function TranslationDetailDialog({
             <div className="space-y-3">
               <h4 className="text-sm font-medium flex items-center text-slate-900 dark:text-slate-100">
                 <FileText className="w-4 h-4 mr-2" />
-                Document Information
+                {trmlHistory("docInfo")}
               </h4>
               <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 space-y-2">
                 <div>
-                    <span className="text-xs text-muted-foreground block mb-0.5">Filename</span>
+                    <span className="text-xs text-muted-foreground block mb-0.5">{trmlHistory("fileName")}</span>
                     <span className="text-sm font-medium break-all">{job.sourceDocumentName || job.sourceDocument}</span>
                 </div>
               </div>
@@ -132,7 +136,7 @@ export function TranslationDetailDialog({
             {/* Language & Config Section */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100">Language Pair</h4>
+                    <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100">{trmlHistory("langPair")}</h4>
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
                         <Badge variant="secondary" className="text-xs uppercase">{job.sourceLanguage}</Badge>
                         <ArrowRight className="w-3 h-3 text-muted-foreground" />
@@ -142,7 +146,7 @@ export function TranslationDetailDialog({
                  <div className="space-y-3">
                     <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center">
                         <BookOpen className="w-4 h-4 mr-2" />
-                        Glossaries
+                        {trmlHistory("usedGlossaries")}
                     </h4>
                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 min-h-[58px]">
                         {jobGlossaries.length > 0 ? (
@@ -154,7 +158,7 @@ export function TranslationDetailDialog({
                                 ))}
                             </div>
                         ) : (
-                            <span className="text-sm text-muted-foreground italic">None used</span>
+                            <span className="text-sm text-muted-foreground italic">{trmlHistory("noneUsed")}</span>
                         )}
                     </div>
                 </div>
@@ -166,15 +170,15 @@ export function TranslationDetailDialog({
              <div className="space-y-3">
                 <h4 className="text-sm font-medium flex items-center text-slate-900 dark:text-slate-100">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Timeline
+                    {trmlHistory("timeline")}
                 </h4>
                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
                      <div>
-                        <span className="text-xs text-muted-foreground block">Started</span>
+                        <span className="text-xs text-muted-foreground block">{trmlHistory("timeStarted")}</span>
                         <span className="text-sm">{job.startedAt ? formatDate(job.startedAt) : "-"}</span>
                     </div>
                     <div>
-                        <span className="text-xs text-muted-foreground block">Completed</span>
+                        <span className="text-xs text-muted-foreground block">{trmlHistory("timeCompleted")}</span>
                         <span className="text-sm">{job.completedAt ? formatDate(job.completedAt) : "-"}</span>
                     </div>
                 </div>
@@ -188,17 +192,17 @@ export function TranslationDetailDialog({
              {job.status === 'completed' && onDownloadTranslated && (
                  <Button className="flex-1 sm:flex-none" size="sm" onClick={() => onDownloadTranslated(job)}>
                     <Download className="w-4 h-4 mr-2" />
-                    Translated
+                    {trmlHistory("labelTranslated")}
                  </Button>
              )}
               {onDownloadOriginal && (
                  <Button variant="outline" className="flex-1 sm:flex-none" size="sm" onClick={() => onDownloadOriginal(job)}>
                     <Download className="w-4 h-4 mr-2" />
-                    Original
+                    {trmlHistory("labelOriginal")}
                  </Button>
              )}
           </div>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{trmlHistory("close")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

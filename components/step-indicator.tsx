@@ -3,6 +3,7 @@
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { useTranslations } from 'next-intl';
 
 interface Step {
   id: string
@@ -16,6 +17,7 @@ interface StepIndicatorProps {
 }
 
 export function StepIndicator({ steps, currentStep, className }: StepIndicatorProps) {
+  const trml = useTranslations("StepIndicator");
   return (
     <div className={cn("flex items-center justify-center", className)}>
       {steps.map((step, index) => (
@@ -40,7 +42,7 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
                 index <= currentStep ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              {step.label}
+              {trml(step.label) ?? step.label}
             </span>
           </div>
           {index < steps.length - 1 && (

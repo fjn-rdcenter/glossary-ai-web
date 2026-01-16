@@ -1,8 +1,13 @@
 import { fileURLToPath } from "url"
 import path from "path"
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+const withNextIntl = createNextIntlPlugin(
+  './i18n/request.ts' 
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -16,4 +21,4 @@ const nextConfig = {
   trailingSlash: true
 }
 
-export default nextConfig
+export default withNextIntl(nextConfig)

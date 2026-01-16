@@ -3,9 +3,10 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Geist_Mono } from "next/font/google";
 import { LanguageProvider } from "@/components/system/languageWrapper";
 import { Toaster } from "@/components/ui/toaster";
-import "./globals.css";
+import "../globals.css";
 import localFont from 'next/font/local';
-
+import {getMessages} from 'next-intl/server';
+import { NextIntlClientProvider } from "next-intl";
 
 const inter = localFont(
   {
@@ -44,20 +45,25 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{locale: string}>;
 }>) {
+  const { locale } = await params;
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${inter.variable} ${playfair.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <LanguageProvider>
+        <NextIntlClientProvider messages={messages}>
           {children}
           <Toaster />
-        </LanguageProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

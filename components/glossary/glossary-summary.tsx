@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
+import { useTranslations } from 'next-intl';
 
 interface GlossarySummaryProps {
   name: string;
@@ -32,9 +33,11 @@ export function GlossarySummary({
   onCancel,
   className,
 }: GlossarySummaryProps) {
-  
-  const sourceLangName = SUPPORTED_LANGUAGES.find(l => l.code === sourceLanguage)?.name || sourceLanguage;
-  const targetLangName = SUPPORTED_LANGUAGES.find(l => l.code === targetLanguage)?.name || targetLanguage;
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
+
+  const sourceLangName = trmlCommon(sourceLanguage) ?? sourceLanguage
+  const targetLangName = trmlCommon(targetLanguage) ?? targetLanguage
 
   return (
     <Card className={cn("sticky top-24 border-none shadow-md bg-secondary/30", className)}>
@@ -60,15 +63,15 @@ export function GlossarySummary({
             <div className="text-sm">
                 <p className="font-medium">
                     {isValid 
-                       ? (mode === "create" ? "Ready to Create" : "Ready to Save")
-                       : "Missing Information"
+                       ? (mode === "create" ? trmlGlossaries("readyCreate") : trmlGlossaries("readySave"))
+                       : trmlGlossaries("missingInfo")
                     }
                 </p>
                 {!isValid && (
                    <ul className="mt-1 list-disc list-inside text-xs opacity-90 space-y-0.5">
-                       {!name && <li>Glossary name is required</li>}
-                       {!termCount && <li>At least one term is required</li>}
-                       {(!sourceLanguage || !targetLanguage) && <li>Languages must be selected</li>}
+                       {!name && <li>{trmlGlossaries("errorNameRequired")}</li>}
+                       {!termCount && <li>{trmlGlossaries("errorTermRequired")}</li>}
+                       {(!sourceLanguage || !targetLanguage) && <li>{trmlGlossaries("errorLangRequired")}</li>}
                    </ul>
                 )}
             </div>
@@ -78,9 +81,9 @@ export function GlossarySummary({
         <div className="space-y-4">
              {/* Name Preview */}
              <div>
-                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Name</p>
+                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">{trmlGlossaries("name")}</p>
                  <p className="font-medium text-sm truncate pl-1 border-l-2 border-primary/50">
-                     {name || <span className="text-muted-foreground italic">Untitled</span>}
+                     {name || <span className="text-muted-foreground italic">{trmlGlossaries("untitled")}</span>}
                  </p>
              </div>
 
@@ -88,7 +91,7 @@ export function GlossarySummary({
              <div>
                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
                      <Languages className="w-3 h-3" />
-                     Language Pair
+                     {trmlGlossaries("languagePair")}
                  </p>
                  <div className="flex items-center gap-2 text-sm pl-1 border-l-2 border-primary/50">
                      <span className="font-medium">{sourceLangName || "?"}</span>
@@ -99,9 +102,9 @@ export function GlossarySummary({
 
              {/* Stats */}
              <div>
-                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Statistics</p>
+                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">{trmlGlossaries("statistics")}</p>
                  <div className="flex items-center justify-between p-2 rounded-md bg-background/50 border border-border/50">
-                     <span className="text-sm">Total Terms</span>
+                     <span className="text-sm">{trmlGlossaries("totalTerms")}</span>
                      <span className="font-bold font-mono text-primary">{termCount}</span>
                  </div>
              </div>
@@ -123,12 +126,12 @@ export function GlossarySummary({
             ) : (
               <>
                 {mode === "create" ? <Plus className="mr-2 w-4 h-4" /> : <Save className="mr-2 w-4 h-4" />}
-                {mode === "create" ? "Create Glossary" : "Save Changes"}
+                {mode === "create" ? trmlGlossaries("createGlossary") : trmlGlossaries("save")}
               </>
             )}
           </Button>
           <Button variant="outline" className="w-full hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30" onClick={onCancel}>
-            Cancel
+            {trmlCommon("cancel")}
           </Button>
         </div>
       </CardContent>
