@@ -15,6 +15,7 @@ import { FileCard } from "@/components/file-card";
 import { TranslationStatus } from "../page";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { getLanguageName } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 interface TranslationExecutionStepProps {
   currentStep: number;
@@ -55,6 +56,8 @@ export function TranslationExecutionStep({
   onNewTranslation,
   onRetry,
 }: TranslationExecutionStepProps) {
+  const trmlCommon = useTranslations("Common");
+  const trmlTranslationExecution = useTranslations("TranslationExecution");
   // Step 2: Preview Summary
   if (currentStep === 2) {
     return (
@@ -68,16 +71,16 @@ export function TranslationExecutionStep({
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">
-              Translation Summary
+              {trmlTranslationExecution("title")}
             </CardTitle>
             <p className="text-muted-foreground">
-              Review your settings before starting
+              {trmlTranslationExecution("description")}
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Document Info */}
             <div className="p-4 rounded-xl bg-secondary/50">
-              <p className="text-sm text-muted-foreground mb-2">Document</p>
+              <p className="text-sm text-muted-foreground mb-2">{trmlTranslationExecution("document")}</p>
               {uploadedFile && (
                 <FileCard
                   name={uploadedFile.name}
@@ -91,18 +94,18 @@ export function TranslationExecutionStep({
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl bg-secondary/50">
                 <p className="text-sm text-muted-foreground mb-1">
-                  Source Language
+                  {trmlCommon("sourceLanguage")}
                 </p>
                 <p className="font-medium">
-                  {SUPPORTED_LANGUAGES.find((l) => l.code === sourceLanguage)?.name || sourceLanguage}
+                  {trmlCommon(sourceLanguage)}
                 </p>
               </div>
               <div className="p-4 rounded-xl bg-secondary/50">
                 <p className="text-sm text-muted-foreground mb-1">
-                  Target Language
+                  {trmlCommon("targetLanguage")}
                 </p>
                 <p className="font-medium">
-                  {SUPPORTED_LANGUAGES.find((l) => l.code === targetLanguage)?.name || targetLanguage}
+                  {trmlCommon(targetLanguage)}
                 </p>
               </div>
             </div>
@@ -111,7 +114,7 @@ export function TranslationExecutionStep({
             <div className="p-4 rounded-xl bg-secondary/50">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">
-                  {selectedGlossaryList.length > 1 ? "Glossaries" : "Glossary"}
+                  {trmlTranslationExecution("glossariesCount", { count: selectedGlossaryList.length })}
                 </p>
               </div>
               {selectedGlossaryList.length === 0 ? (
@@ -132,7 +135,7 @@ export function TranslationExecutionStep({
                           </p>
                         </div>
                         <div className="text-xs font-medium bg-secondary px-2 py-1 rounded-md">
-                          {glossary.termCount} terms
+                          {glossary.termCount} {trmlTranslationExecution("termsCount", { count: glossary.termCount })}
                         </div>
                       </div>
                     </div>
@@ -145,10 +148,10 @@ export function TranslationExecutionStep({
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={onBack}>
                 <ArrowLeft className="mr-2 w-4 h-4" />
-                Back
+                {trmlCommon("back")}
               </Button>
               <Button onClick={() => onStepChange(3)} className="group">
-                Start Translation
+                {trmlTranslationExecution("startTranslation")}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
@@ -175,18 +178,18 @@ export function TranslationExecutionStep({
                 <FileText className="w-10 h-10 text-foreground" />
               </div>
               <h2 className="text-2xl font-semibold mb-2">
-                Ready to Translate
+                {trmlTranslationExecution("translateTilte")}
               </h2>
               <p className="text-muted-foreground mb-8">
-                Click below to start the translation process
+                {trmlTranslationExecution("translateDescription")}
               </p>
               <div className="flex justify-center gap-4">
                  <Button size="lg" variant="outline" onClick={onBack}>
                   <ArrowLeft className="mr-2 w-4 h-4" />
-                  Back
+                  {trmlCommon("back")}
                 </Button>
                 <Button size="lg" onClick={onStartTranslation} className="group">
-                  Start Translating
+                  {trmlTranslationExecution("startTranslating")}
                 </Button>
               </div>
             </div>
@@ -203,9 +206,11 @@ export function TranslationExecutionStep({
                 }}
                 className="w-20 h-20 rounded-full border-4 border-secondary border-t-primary mx-auto mb-6"
               />
-              <h2 className="text-2xl font-semibold mb-2">Translating...</h2>
+              <h2 className="text-2xl font-semibold mb-2">
+                {trmlTranslationExecution("translating")}
+              </h2>
               <p className="text-muted-foreground mb-6">
-                Processing your document
+                {trmlTranslationExecution("processing")}
               </p>
 
               {/* Progress Bar */}
@@ -219,7 +224,7 @@ export function TranslationExecutionStep({
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  {Math.round(Math.min(progress, 100))}% complete
+                  {Math.round(Math.min(progress, 100))}% {trmlTranslationExecution("complete")}
                 </p>
               </div>
 
@@ -230,7 +235,7 @@ export function TranslationExecutionStep({
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <X className="mr-2 w-4 h-4" />
-                Cancel Translation
+                {trmlTranslationExecution("cancel")}
               </Button>
             </div>
           )}
@@ -250,10 +255,10 @@ export function TranslationExecutionStep({
                 <Check className="w-10 h-10 text-green-600 dark:text-green-500" />
               </motion.div>
               <h2 className="text-2xl font-semibold mb-2">
-                Translation Complete!
+                {trmlTranslationExecution("successTitle")}
               </h2>
               <p className="text-muted-foreground mb-8">
-                Your document has been successfully translated
+                {trmlTranslationExecution("successDesc")}
               </p>
 
               {/* Result File Card */}
@@ -270,10 +275,10 @@ export function TranslationExecutionStep({
 
               <div className="flex justify-center gap-4">
                 <Button size="lg" onClick={onDownload}>
-                  Download File
+                  {trmlTranslationExecution("download")}
                 </Button>
                 <Button size="lg" variant="outline" onClick={onNewTranslation}>
-                  New Translation
+                  {trmlTranslationExecution("newTranslation")}
                 </Button>
               </div>
             </div>
@@ -294,19 +299,19 @@ export function TranslationExecutionStep({
                 <AlertCircle className="w-10 h-10 text-red-600 dark:text-red-500" />
               </motion.div>
               <h2 className="text-2xl font-semibold mb-2">
-                Translation Failed
+                {trmlTranslationExecution("errorTitle")}
               </h2>
               <p className="text-muted-foreground mb-8">
-                Something went wrong while processing your document.
+                {trmlTranslationExecution("errorDesc")}
               </p>
 
               <div className="flex justify-center gap-4">
                 <Button size="lg" onClick={onRetry}>
                   <RotateCcw className="mr-2 w-4 h-4" />
-                  Try Again
+                  {trmlTranslationExecution("tryAgain")}
                 </Button>
                 <Button size="lg" variant="outline" onClick={onNewTranslation}>
-                  Start Over
+                  {trmlTranslationExecution("startOver")}
                 </Button>
               </div>
             </div>
@@ -327,19 +332,19 @@ export function TranslationExecutionStep({
                 <Ban className="w-10 h-10 text-orange-600 dark:text-orange-500" />
               </motion.div>
               <h2 className="text-2xl font-semibold mb-2">
-                Translation Cancelled
+                {trmlTranslationExecution("cancelledTitle")}
               </h2>
               <p className="text-muted-foreground mb-8">
-                The translation process was stopped.
+                {trmlTranslationExecution("cancelledDesc")}
               </p>
 
               <div className="flex justify-center gap-4">
                 <Button size="lg" onClick={onBack}>
                   <ArrowLeft className="mr-2 w-4 h-4" />
-                  Back
+                  {trmlCommon("back")}
                 </Button>
                 <Button size="lg" variant="outline" onClick={onNewTranslation}>
-                  New Translation
+                  {trmlTranslationExecution("newTranslation")}
                 </Button>
               </div>
             </div>

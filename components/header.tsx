@@ -17,6 +17,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useTranslations } from 'next-intl';
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Menu } from "lucide-react"
 
 export function Header() {
   const router = useRouter();
@@ -45,6 +48,8 @@ export function Header() {
       router.push("/login");
   };
 
+  const trml = useTranslations("Header");
+
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center gap-4 w-full max-w-md">
@@ -57,7 +62,7 @@ export function Header() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search documents, glossaries..."
+            placeholder={trml("searchPlaceholder")}
             className="pl-9 bg-muted/50 border-none focus-visible:ring-1"
           />
         </div>
@@ -65,7 +70,7 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Welcome back,</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{trml("welcome")}</p>
           <p className="text-sm font-medium leading-tight">{username}</p>
         </div>
         
@@ -90,6 +95,10 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <SidebarTrigger className="-mr-2 ml-1">
+          <Menu className="h-5 w-5" />
+        </SidebarTrigger>
       </div>
     </header>
   )
