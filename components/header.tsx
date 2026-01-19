@@ -27,7 +27,7 @@ export function Header() {
       try {
         const userData = await AuthService.getCurrentUser();
         if (userData) {
-           setUser(userData);
+          setUser(userData);
         }
       } catch (error) {
         console.error("Failed to fetch user", error);
@@ -41,8 +41,8 @@ export function Header() {
   const username = displayUser.username.replace("@fujinet.net", "");
 
   const handleLogout = async () => {
-      await AuthService.logout();
-      router.push("/login");
+    await AuthService.logout();
+    router.push("/login");
   };
 
   return (
@@ -52,7 +52,7 @@ export function Header() {
         <Link href="/dashboard" className="shrink-0 transition-opacity hover:opacity-80">
           <Logo size="sm" />
         </Link>
-        
+
         <div className="relative w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -68,7 +68,7 @@ export function Header() {
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Welcome back,</p>
           <p className="text-sm font-medium leading-tight">{username}</p>
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">

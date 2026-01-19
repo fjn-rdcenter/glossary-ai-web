@@ -47,7 +47,7 @@ export default function DashboardPage() {
         ]);
 
         // Calculate unique documents
-        const uniqueDocs = new Set(jobs.map(j => j.sourceDocument)).size;
+        const uniqueDocs = new Set(jobs.map((j) => j.sourceDocument)).size;
 
         setStats({
           totalTranslations: jobs.length,
@@ -103,8 +103,9 @@ export default function DashboardPage() {
       "application/vnd.ms-powerpoint": [".ppt"],
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         [".pptx"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        [".xlsx"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+        ".xlsx",
+      ],
     },
     multiple: false,
   });

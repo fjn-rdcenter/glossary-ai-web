@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, BookOpen, History, LogOut, Menu, X } from "lucide-react"
+import { LayoutDashboard, FileText, BookOpen, History, LogOut, Menu, X, PlayCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/dashboard/translate", label: "Translate", icon: FileText },
   { href: "/dashboard/glossaries", label: "Glossaries", icon: BookOpen },
   { href: "/dashboard/history", label: "History", icon: History },
+  { href: "/user-guidance", label: "User Guidance", icon: PlayCircle },
 ]
 
 export function Sidebar() {
@@ -107,7 +108,7 @@ export function Sidebar() {
                 className="w-full flex items-center gap-3 justify-start text-zinc-400 hover:text-white hover:bg-white/5"
                 asChild
               >
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 text-left"
                 >

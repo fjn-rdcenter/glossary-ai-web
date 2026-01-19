@@ -14,12 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -75,11 +70,11 @@ export default function GlossaryDetailPage() {
       // Fetch Glossary Details
       const glossaryData = await GlossaryService.getGlossaryById(id);
       setGlossary(glossaryData);
-      
+
       if (glossaryData.terms) {
-          setTerms(glossaryData.terms.items);
+        setTerms(glossaryData.terms.items);
       } else {
-          setTerms([]);
+        setTerms([]);
       }
       
     } catch (error) {
@@ -134,17 +129,17 @@ export default function GlossaryDetailPage() {
       } else if (deleteAction === "terms") {
         // Delete specific terms
         await Promise.all(
-            Array.from(selectedTerms).map(termId => 
-                GlossaryService.deleteTerm(glossary.id, termId)
-            )
+          Array.from(selectedTerms).map((termId) =>
+            GlossaryService.deleteTerm(glossary.id, termId)
+          )
         );
-        
+
         // Refresh or local update
         setTerms((prev) => prev.filter((t) => !selectedTerms.has(t.id)));
         setSelectedTerms(new Set());
-        
+
         // Also update glossary term count if possible or refetch
-        fetchGlossaryData(); 
+        fetchGlossaryData();
       }
     } catch (error) {
       console.error("Delete failed", error);
@@ -157,12 +152,12 @@ export default function GlossaryDetailPage() {
   if (id === "new") return null;
 
   if (loading) {
-     return (
-        <div className="container mx-auto px-6 py-10 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-             <p className="mt-2 text-muted-foreground">Loading glossary...</p>
-        </div>
-     );
+    return (
+      <div className="container mx-auto px-6 py-10 text-center">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="mt-2 text-muted-foreground">Loading glossary...</p>
+      </div>
+    );
   }
 
   if (!glossary) {
@@ -198,12 +193,13 @@ export default function GlossaryDetailPage() {
                 {glossary.name}
               </h1>
               <p className="mt-1 text-muted-foreground">
-                {getLanguageName(glossary.sourceLanguage)} → {getLanguageName(glossary.targetLanguage)} •{" "}
+                {getLanguageName(glossary.sourceLanguage)} →{" "}
+                {getLanguageName(glossary.targetLanguage)} •{" "}
                 {glossary.termCount} terms
               </p>
               {/* Description - moved here */}
               <div className="mt-2 text-sm italic text-muted-foreground/80 max-w-2xl">
-                 {glossary.description || "No description provided"}
+                {glossary.description || "No description provided"}
               </div>
             </div>
           </div>
@@ -323,9 +319,7 @@ export default function GlossaryDetailPage() {
                       <TableCell>
                         <Checkbox
                           checked={selectedTerms.has(term.id)}
-                          onCheckedChange={() =>
-                            toggleTermSelection(term.id)
-                          }
+                          onCheckedChange={() => toggleTermSelection(term.id)}
                         />
                       </TableCell>
                       <TableCell className="font-medium">

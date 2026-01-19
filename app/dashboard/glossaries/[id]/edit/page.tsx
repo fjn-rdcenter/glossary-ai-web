@@ -36,16 +36,16 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
   }, [id]);
 
   const handleSuccess = (updatedGlossary: GlossaryDetailResponse) => {
-      router.push(`/dashboard/glossaries/${id}`);
+    router.push(`/dashboard/glossaries/${id}`);
   };
 
   if (loading) {
-      return (
-         <div className="container mx-auto px-6 py-10 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="mt-2 text-muted-foreground">Loading glossary...</p>
-         </div>
-      );
+    return (
+      <div className="container mx-auto px-6 py-10 text-center">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="mt-2 text-muted-foreground">Loading glossary...</p>
+      </div>
+    );
   }
 
   if (!glossary) {
@@ -70,17 +70,18 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
           <div>
             <h1 className="text-3xl font-serif font-semibold text-foreground">Edit Glossary</h1>
             <p className="mt-1 text-muted-foreground">
-              {getLanguageName(glossary.sourceLanguage)} → {getLanguageName(glossary.targetLanguage)}
+              {getLanguageName(glossary.sourceLanguage)} →{" "}
+              {getLanguageName(glossary.targetLanguage)}
             </p>
           </div>
         </div>
       </SlideUp>
 
-      <GlossaryForm 
-          mode="edit"
-          initialData={glossary}
-          onSuccess={handleSuccess}
-          onCancel={() => router.push(`/dashboard/glossaries/${id}`)}
+      <GlossaryForm
+        mode="edit"
+        initialData={glossary}
+        onSuccess={handleSuccess}
+        onCancel={() => router.push(`/dashboard/glossaries/${id}`)}
       />
     </PageTransition>
   )

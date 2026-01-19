@@ -11,7 +11,7 @@ export default function NewGlossaryPage() {
   const router = useRouter();
 
   const handleSuccess = (createdGlossary: GlossaryResponse) => {
-      router.push(`/dashboard/glossaries/${createdGlossary.id}`);
+    router.push(`/dashboard/glossaries/${createdGlossary.id}`);
   };
 
   return (
@@ -31,10 +31,10 @@ export default function NewGlossaryPage() {
         </div>
       </SlideUp>
 
-      <GlossaryForm 
-          mode="create"
-          onSuccess={handleSuccess}
-          onCancel={() => router.push("/dashboard/glossaries")}
+      <GlossaryForm
+        mode="create"
+        onSuccess={handleSuccess}
+        onCancel={() => router.push("/dashboard/glossaries")}
       />
     </PageTransition>
   )
