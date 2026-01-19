@@ -107,7 +107,44 @@ export function GlossarySelectionStep({
   } | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
 
-  // Fetch details logic
+  // Helper: Fetch all terms recursively
+  const fetchFullGlossary = async (id: string): Promise<GlossaryResponse | null> => {
+    try {
+      // 1. Fetch first page with max size allowed by backend to get metadata
+      const firstPage = await GlossaryService.getGlossaryById(id, { size: 100, page: 1 });
+      
+      if (!firstPage.terms || firstPage.terms.pages <= 1) {
+        return firstPage;
+      }
+
+      // 2. Fetch remaining pages in parallel
+      const totalPages = firstPage.terms.pages;
+      const pagePromises = [];
+      for (let p = 2; p <= totalPages; p++) {
+        pagePromises.push(GlossaryService.getGlossaryById(id, { size: 100, page: p }));
+      }
+      
+      const restPages = await Promise.all(pagePromises);
+      
+      // 3. Combine terms
+      const allTerms = [
+        ...(firstPage.terms.items || []),
+        ...restPages.flatMap(p => p.terms?.items || [])
+      ];
+
+      return {
+        ...firstPage,
+        terms: {
+          ...firstPage.terms,
+          items: allTerms,
+          size: allTerms.length, // Update size to reflect total fetched
+        }
+      };
+    } catch (e) {
+      console.error(`Failed to fetch full glossary ${id}`, e);
+      return null;
+    }
+  };
 
   // Fetch details logic
   const fetchDetailsIfNeeded = async (ids: string[]) => {
@@ -120,9 +157,7 @@ export function GlossarySelectionStep({
 
     try {
       const results = await Promise.all(
-        missingIds.map((id) =>
-          GlossaryService.getGlossaryById(id).catch(() => null)
-        )
+        missingIds.map((id) => fetchFullGlossary(id))
       );
 
       setGlossaryDetails((prev) => {
@@ -198,7 +233,11 @@ export function GlossarySelectionStep({
         // 1. Ensure details are fetched for the new glossary
         let details = glossaryDetails[id];
         if (!details) {
-          details = await GlossaryService.getGlossaryById(id);
+          const fullGlossary = await fetchFullGlossary(id);
+          if (!fullGlossary) {
+            throw new Error("Failed to fetch glossary details");
+          }
+          details = fullGlossary;
           // Update cache immediately to avoid re-fetch
           setGlossaryDetails((prev) => ({ ...prev, [id]: details }));
         }

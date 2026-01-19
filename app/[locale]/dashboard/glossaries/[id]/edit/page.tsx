@@ -11,6 +11,7 @@ import { GlossaryForm } from "@/components/glossary/glossary-form";
 import { RefreshCw } from "lucide-react";
 import { getLanguageName } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
+export const dynamic = "force-dynamic";
 
 export default function EditGlossaryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

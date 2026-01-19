@@ -35,10 +35,14 @@ export class GlossaryService {
   /**
    * Get glossary by ID
    */
-  static async getGlossaryById(id: string): Promise<GlossaryResponse> {
+  static async getGlossaryById(
+    id: string,
+    params?: { size?: number; page?: number }
+  ): Promise<GlossaryResponse> {
     try {
       const response = await apiClient.get<GlossaryResponse>(
-        API_CONFIG.ENDPOINTS.GLOSSARIES.BY_ID(id)
+        API_CONFIG.ENDPOINTS.GLOSSARIES.BY_ID(id),
+        { params }
       );
       
       return response.data;

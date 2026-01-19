@@ -12,6 +12,7 @@ import { TranslationService, GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
+export const dynamic = "force-dynamic";
 
 const steps = [
   { id: "document", label: "Document" },

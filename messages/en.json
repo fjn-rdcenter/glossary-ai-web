@@ -11,7 +11,9 @@
         "back": "Back",
         "continue": "Continue",
         "cancel": "Cancel",
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "previous": "Previous",
+        "next": "Next"
     },
     "Header": {
         "welcome": "Welcome back",
@@ -224,7 +226,9 @@
         "noResults": "No glossaries found",
         "searchEmptyHint": "Try a different search term",
         "createFirst": "Create your first glossary to get started",
-        "create": "Create"
+        "create": "Create",
+        "showing": "Showing",
+        "of": "of"
     },
     "History": {
         "historyTitle": "Translation History",
