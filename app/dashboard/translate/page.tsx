@@ -11,7 +11,6 @@ import { TranslationExecutionStep } from "./translating-process/translation-exec
 import { TranslationService, GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from 'next-intl';
 
 const steps = [
   { id: "document", label: "Document" },
@@ -32,7 +31,7 @@ function TranslatePageContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
-  const trml = useTranslations("Translate");
+
 
   // Translation Config
   const [sourceLanguage, setSourceLanguage] = useState("jp");
@@ -282,8 +281,8 @@ function TranslatePageContent() {
         // Case 1: No file selected at all
         toast({
           variant: "destructive",
-          title: trml("error"),
-          description: trml("noDocumentUploaded"),
+          title: "Error",
+          description: "Please upload a document to proceed.",
         });
         return;
       } else if (!documentId && uploadedFile) {
@@ -291,8 +290,8 @@ function TranslatePageContent() {
         // This is the specific fix for "No document uploaded" error later on
         toast({
           variant: "destructive",
-          title: trml("sessionExpired"),
-          description: trml("documentSessionLost"),
+          title: "Session Expired",
+          description: "Document session lost. Please re-upload your file.",
         });
         // Reset state to force re-upload
         setUploadedFile(null);
@@ -347,8 +346,8 @@ function TranslatePageContent() {
     if (!documentId) {
       toast({
         variant: "destructive",
-        title: trml("error"),
-        description: trml("noDocumentUploaded"),
+        title: "Error",
+        description: "No document uploaded.",
       });
       return;
     }
@@ -372,8 +371,8 @@ function TranslatePageContent() {
       setStatus("error");
       toast({
         variant: "destructive",
-        title: trml("error"),
-        description: trml("failedToStartTranslation"),
+        title: "Error",
+        description: "Failed to start translation.",
       });
     }
   };
@@ -406,8 +405,8 @@ function TranslatePageContent() {
       console.error("Download failed", e);
       toast({
         variant: "destructive",
-        title: trml("error"),
-        description: trml("downloadFailed"),
+        title: "Error",
+        description: "Download failed.",
       });
     }
   };

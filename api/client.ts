@@ -129,12 +129,12 @@ apiClient.interceptors.response.use(
             localStorage.removeItem("auth_token");
             // Clear cookie loosely if possible specific to client logic
             document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            const currentPath = window.location.pathname;
-            const isLoginPage = /\/login\/?$/.test(currentPath);
+            const loginPath = `${BASE_PATH}/login`;
 
-            if (!isLoginPage) {
-                window.location.replace(`${BASE_PATH}/`);
+            if (!window.location.pathname.startsWith(loginPath)) {
+              window.location.replace(loginPath);
             }
+             
         }
         return Promise.reject(refreshError);
       } finally {

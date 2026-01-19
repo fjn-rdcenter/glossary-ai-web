@@ -25,7 +25,6 @@ import {
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function DashboardPage() {
     uniqueDocuments: 0,
   });
   const [loading, setLoading] = useState(true);
-  const trml = useTranslations("Dashboard");
 
   // Fetch stats on load
   useEffect(() => {
@@ -137,23 +135,23 @@ export default function DashboardPage() {
 
   const currentStats = [
     {
-      label: "totalTranslation",
+      label: "Total Translations",
       value: loading ? "..." : stats.totalTranslations.toLocaleString(),
-      change: "totalTranslationUnit",
+      change: "Lifetime",
       icon: FileText,
       trend: "neutral",
     },
     {
-      label: "activeGlossaries",
+      label: "Active Glossaries",
       value: loading ? "..." : stats.activeGlossaries.toString(),
-      change: "activeGlossariesUnit",
+      change: "Total",
       icon: BookOpen,
       trend: "neutral",
     },
     {
-      label: "documentsUploaded",
+      label: "Documents Uploaded",
       value: loading ? "..." : stats.uniqueDocuments.toString(),
-      change: "documentsUploadedUnit",
+      change: "Total Unique",
       icon: FileText,
       trend: "neutral",
     },
@@ -165,17 +163,17 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {trml("dashboard")}
+            Dashboard
           </h1>
           <p className="text-muted-foreground mt-1">
-            {trml("dashboardDescription")}
+            Overview of your translation activities and performance.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="gap-2" asChild>
             <Link href="/dashboard/history">
               <History className="w-4 h-4" />
-              {trml("fullHistory")}
+              Full History
             </Link>
           </Button>
           <Button
@@ -184,7 +182,7 @@ export default function DashboardPage() {
           >
             <Link href="/dashboard/translate">
               <Upload className="w-4 h-4" />
-              {trml("newTranslation")}
+              New Translation
             </Link>
           </Button>
         </div>
@@ -195,9 +193,9 @@ export default function DashboardPage() {
         {currentStats.map((stat, i) => {
           // Determine the navigation path based on the stat label
           let href = "/dashboard/history";
-          if (stat.label === "activeGlossaries") {
+          if (stat.label === "Active Glossaries") {
             href = "/dashboard/glossaries";
-          } else if (stat.label === "documentsUploaded") {
+          } else if (stat.label === "Documents Uploaded") {
             href = "/dashboard/history";
           }
 
@@ -207,7 +205,7 @@ export default function DashboardPage() {
                 <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {trml(stat.label) ?? stat.label}
+                      {stat.label}
                     </CardTitle>
                     <stat.icon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
@@ -224,7 +222,7 @@ export default function DashboardPage() {
                             : "text-zinc-500"
                         )}
                       >
-                        {trml(stat.change) ?? stat.change}
+                        {stat.change}
                       </span>{" "}
                       {/* from last month - Removed specific comparison */}
                     </p>
@@ -240,9 +238,10 @@ export default function DashboardPage() {
         {/* Quick Upload */}
         <Card className="w-full border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
           <CardHeader>
-            <CardTitle>{trml("quickUpload")}</CardTitle>
+            <CardTitle>Quick Upload</CardTitle>
             <CardDescription>
-              {trml("quickUploadDescription")}
+              Drag and drop documents here to start a new translation
+              immediately.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -270,11 +269,11 @@ export default function DashboardPage() {
                     <div className="space-y-1 max-w-md mx-auto">
                       <p className="text-lg font-medium">
                         {isDragActive
-                          ? trml("dropFile")
-                          : trml("clickOrDrag")}
+                          ? "Drop your files here"
+                          : "Click or drag files to upload"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {trml("supportedFiles")}
+                        PDF, DOCX, PPTX, XLSX • Up to 50MB per file
                       </p>
                     </div>
                   </div>
@@ -306,7 +305,7 @@ export default function DashboardPage() {
                       size="lg"
                       className="min-w-[220px] gap-2"
                     >
-                      {trml('translateFiles_count', { count: files.length })}
+                      Translate {files.length} file{files.length > 1 && "s"}
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>

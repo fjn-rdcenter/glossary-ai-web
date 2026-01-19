@@ -42,7 +42,6 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
 import { GlossaryResponse, GlossaryTermResponse } from "@/api/types";
 import { getLanguageName } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
 
 export default function GlossaryDetailPage() {
   const params = useParams();
@@ -53,9 +52,6 @@ export default function GlossaryDetailPage() {
   const [glossary, setGlossary] = useState<GlossaryResponse | null>(null);
   const [terms, setTerms] = useState<GlossaryTermResponse[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const trmlCommon = useTranslations("Common");
-  const trmlGlossaries = useTranslations("Glossaries");
 
   // Selection & Deletion state
   const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
@@ -164,7 +160,7 @@ export default function GlossaryDetailPage() {
      return (
         <div className="container mx-auto px-6 py-10 text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-             <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
+             <p className="mt-2 text-muted-foreground">Loading glossary...</p>
         </div>
      );
   }
@@ -172,12 +168,12 @@ export default function GlossaryDetailPage() {
   if (!glossary) {
     return (
       <div className="container mx-auto px-6 py-10 text-center">
-        <h1 className="text-2xl font-semibold">{trmlGlossaries("notFound")}</h1>
+        <h1 className="text-2xl font-semibold">Glossary not found</h1>
         <Button
           className="mt-4"
           onClick={() => router.push("/dashboard/glossaries")}
         >
-          {trmlGlossaries("backToList")}
+          Back to Glossaries
         </Button>
       </div>
     );
@@ -202,12 +198,12 @@ export default function GlossaryDetailPage() {
                 {glossary.name}
               </h1>
               <p className="mt-1 text-muted-foreground">
-                {trmlCommon(glossary.sourceLanguage)} → {trmlCommon(glossary.targetLanguage)} •{" "}
-                {glossary.termCount}{" "}{trmlGlossaries("terms")}
+                {getLanguageName(glossary.sourceLanguage)} → {getLanguageName(glossary.targetLanguage)} •{" "}
+                {glossary.termCount} terms
               </p>
               {/* Description - moved here */}
               <div className="mt-2 text-sm italic text-muted-foreground/80 max-w-2xl">
-                 {glossary.description || trmlGlossaries("noDescription")}
+                 {glossary.description || "No description provided"}
               </div>
             </div>
           </div>
@@ -215,7 +211,7 @@ export default function GlossaryDetailPage() {
             {selectedTerms.size > 0 && (
               <Button variant="destructive" onClick={handleDeleteSelected}>
                 <Trash2 className="mr-2 w-4 h-4" />
-                {trmlGlossaries("delete")}{" "}{selectedTerms.size}
+                Delete {selectedTerms.size}
               </Button>
             )}
             <Button
@@ -223,7 +219,7 @@ export default function GlossaryDetailPage() {
               onClick={() => router.push(`/dashboard/glossaries/${id}/edit`)}
             >
               <Edit className="mr-2 w-4 h-4" />
-              {trmlGlossaries("edit")}
+              Edit
             </Button>
             <Button
               variant="outline"
@@ -234,7 +230,7 @@ export default function GlossaryDetailPage() {
               }}
             >
               <Trash2 className="mr-2 w-4 h-4" />
-                {trmlGlossaries("deleteGlossary")}
+              Delete Glossary
             </Button>
 
             <AlertDialog
@@ -247,28 +243,28 @@ export default function GlossaryDetailPage() {
                     {deleteAction === "glossary" ||
                     (deleteAction === "terms" &&
                       selectedTerms.size === terms.length && terms.length > 0)
-                      ? trmlGlossaries("deleteGlossaryConfirm")
-                      : trmlGlossaries("deleteSelectedTitle")}
+                      ? "Delete Glossary?"
+                      : "Delete Selected Terms?"}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     {deleteAction === "glossary"
-                      ? trmlGlossaries("confirmDeleteGlossary", { glossaryName: glossary.name })
+                      ? `Are you sure you want to delete "${glossary.name}"? This action cannot be undone.`
                       : selectedTerms.size === terms.length && terms.length > 0
-                      ? trmlGlossaries("confirmDeleteAllTerms", { glossaryName: glossary.name })
-                      : trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size })}
+                      ? `You are about to delete all terms. This will permanently delete the "${glossary.name}" glossary. Are you sure?`
+                      : `Are you sure you want to delete ${selectedTerms.size} terms? This action cannot be undone.`}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel
                     onClick={() => setShowDeleteWarning(false)}
                   >
-                    {trmlCommon("cancel")}
+                    Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     onClick={confirmDelete}
                   >
-                    {trmlGlossaries("delete")}
+                    Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -285,7 +281,7 @@ export default function GlossaryDetailPage() {
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={trmlGlossaries("searchTerms")}
+                placeholder="Search terms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 h-10"
@@ -307,11 +303,11 @@ export default function GlossaryDetailPage() {
                       />
                     </TableHead>
                     <TableHead className="font-medium">
-                      {trmlCommon(glossary.sourceLanguage) ?? glossary.sourceLanguage}
+                      {getLanguageName(glossary.sourceLanguage)}
                     </TableHead>
                     <TableHead className="w-12"></TableHead>
                     <TableHead className="font-medium">
-                      {trmlCommon(glossary.targetLanguage) ?? glossary.targetLanguage}
+                      {getLanguageName(glossary.targetLanguage)}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -347,7 +343,7 @@ export default function GlossaryDetailPage() {
 
             {filteredTerms.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">{trmlGlossaries("noTermsFound")}</p>
+                <p className="text-muted-foreground">No terms found</p>
               </div>
             )}
           </CardContent>

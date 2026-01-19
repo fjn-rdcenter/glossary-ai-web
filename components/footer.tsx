@@ -4,49 +4,54 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useContext } from "react";
 import LOGO_RD from "@/public/rd-center-logo.png";
-import { useTranslations } from 'next-intl';
+import { translate } from "@/components/system/language";
+import { LanguageContext } from "@/components/system/languageWrapper";
 
 function Footer() {
-  const trml = useTranslations('Footer');
+  const { language } = useContext(LanguageContext);
   return (
     <footer className="w-full pt-8 divide-y-2">
       <div className="flex justify-center pb-2">
         <div className="w-1/2">
-          <div className="flex gap-8 lg:flex-row flex-col">
-            <div className="col-span-1 flex flex-col items-center">
+          <div className="flex gap-4 lg:flex-row flex-col">
+            <div className="col-span-1">
               <Image
                 src={LOGO_RD}
                 alt={"FUJINET R&D CENTER"}
                 className="object-contain"
                 width={60}
               />
-              <p className="font-bold text-lg whitespace-nowrap">
-                <span className="text-indigo-900">FUJINET R&D</span>
-                <span className="text-orange-500 ml-1">CENTER</span>
-              </p>
+              <span className="w-max flex gap-1">
+                <span className="text-indigo-900 font-bold text-lg">
+                  {"FUJINET R&D "}
+                </span>
+                <span className="text-orange-500 font-bold text-lg">
+                  CENTER
+                </span>
+              </span>
             </div>
             <div className="col-span-2 flex flex-col text-[14px]">
               <p className="font-bold text-[16px]">
-                {trml("contact")}
+                {translate("Contact", language)}
               </p>
               <Link href="https://g.page/FUJINET?share">
-                {trml("address")}
+                {translate("Address", language)}
               </Link>
               <div className="flex flex-wrap">
                 <Link href="tel:+842838477000" className="mr-8">
-                  {trml("phoneVN")}
+                  {translate("PhoneVN", language)}
                 </Link>
                 <Link href="tel:+81355799961">
-                  {trml("phoneJP")}
+                  {translate("PhoneJP", language)}
                 </Link>
               </div>
               <Link href="mailto:info@fujinet.net">
-                {trml("email")}
+                {translate("Email", language)}
               </Link>
             </div>
             <div className="col-span-1 flex flex-col text-[14px]">
               <p className="font-bold text-[16px] w-max">
-                {trml("mainPages")}
+                {translate("MainPages", language)}
               </p>
               <Link className="w-max" href="https://www.fujinet.net/">
                 FUJINET SYSTEMS

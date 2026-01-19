@@ -17,8 +17,8 @@ import { cn, getLanguageName } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlossaryResponse, GlossaryDetailResponse } from "@/lib/types";
 import { GlossaryService } from "@/api/services";
-import { CreateGlossaryDialog } from "@/components/glossary/create-glossary-dialog";
-import { EditGlossaryDialog } from "@/components/glossary/edit-glossary-dialog";
+import { CreateGlossaryDialog } from "../../../../components/glossary/create-glossary-dialog";
+import { EditGlossaryDialog } from "../../../../components/glossary/edit-glossary-dialog";
 import { useMemo } from "react";
 import {
   Tooltip,
@@ -37,7 +37,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from 'next-intl';
 
 interface GlossarySelectionStepProps {
   glossaryOption: "none" | "existing" | "new";
@@ -72,9 +71,6 @@ export function GlossarySelectionStep({
   onBack,
   onRefresh,
 }: GlossarySelectionStepProps) {
-  const trmlCommon = useTranslations("Common");
-  const trmlGlossarySelection = useTranslations("GlossarySelection");
-
   // Filtering
   const filteredGlossaries = glossaries.filter((g) =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -329,7 +325,7 @@ export function GlossarySelectionStep({
             <CardHeader className="pb-0 shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  {trmlGlossarySelection("selectGlossary")}
+                  Select Glossary
                   <span className="text-xs font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                     {selectedGlossaries.length}/5
                   </span>
@@ -340,7 +336,7 @@ export function GlossarySelectionStep({
                   className="h-8"
                 >
                   <Plus className="mr-1.5 w-4 h-4" />
-                  {trmlGlossarySelection("newGlossary")}
+                  Create New
                 </Button>
               </div>
 
@@ -349,7 +345,7 @@ export function GlossarySelectionStep({
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={trmlGlossarySelection("searchGlossary")}
+                  placeholder="Search glossaries..."
                   className="h-9 w-full rounded-md border border-border bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -358,7 +354,7 @@ export function GlossarySelectionStep({
             <CardContent className="flex-1 overflow-y-auto space-y-2 pt-0">
               <div className="pb-1">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {trmlGlossarySelection("listGlossary")}
+                  Glossary List
                 </h3>
               </div>
 
@@ -410,8 +406,8 @@ export function GlossarySelectionStep({
                               )}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {trmlCommon(glossary.sourceLanguage)} →{" "}
-                              {trmlCommon(glossary.targetLanguage)} •{" "}
+                              {getLanguageName(glossary.sourceLanguage)} →{" "}
+                              {getLanguageName(glossary.targetLanguage)} •{" "}
                               {glossary.termCount} terms
                             </p>
                           </div>
@@ -458,7 +454,7 @@ export function GlossarySelectionStep({
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
-                        <p>{trmlGlossarySelection("termTooltip")}</p>
+                        <p>Double-click to view details</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -467,7 +463,7 @@ export function GlossarySelectionStep({
 
               {filteredGlossaries.length === 0 && searchQuery && (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  {trmlGlossarySelection("noGlossaryFound")}
+                  No glossaries found
                 </p>
               )}
             </CardContent>
@@ -484,15 +480,18 @@ export function GlossarySelectionStep({
                     <div>
                       <CardTitle className="text-lg font-semibold">
                         <div className="flex items-center gap-2">
-                          {trmlGlossarySelection("termsPreview")}
+                          Combined Term Preview
                         </div>
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {trmlGlossarySelection.rich("termsSummary", {
-                          termCount: filteredCombinedTerms.length,
-                          glossaryCount: selectedGlossaries.length,
-                          bold: (chunks) => <span className="font-semibold">{chunks}</span>
-                        })}
+                        <span className="font-semibold">
+                          {filteredCombinedTerms.length}
+                        </span>{" "}
+                        terms from{" "}
+                        <span className="font-semibold">
+                          {selectedGlossaries.length}
+                        </span>{" "}
+                        glossaries
                       </p>
                     </div>
 
@@ -501,7 +500,7 @@ export function GlossarySelectionStep({
                       <input
                         value={termQuery}
                         onChange={(e) => setTermQuery(e.target.value)}
-                        placeholder={trmlGlossarySelection("termsSearchPlaceholder")}
+                        placeholder="Search terms..."
                         className="h-8 w-full rounded-md border border-border bg-muted/20 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
@@ -527,7 +526,7 @@ export function GlossarySelectionStep({
                             )}
                           />
                           <span className="font-medium truncate max-w-[100px]">
-                            {g?.name || trmlCommon("loading")}
+                            {g?.name || "Loading..."}
                           </span>
                           <button
                             onClick={() => handleToggleGlossary(gid, false)}
@@ -545,15 +544,15 @@ export function GlossarySelectionStep({
                   {/* Table Header */}
                   <div className="grid grid-cols-[auto_1fr_24px_1fr] gap-4 px-6 py-2 bg-white border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                     <div className="w-1"></div>
-                    <div>{trmlCommon("source")}</div>
+                    <div>Source</div>
                     <div></div>
-                    <div>{trmlCommon("target")}</div>
+                    <div>Target</div>
                   </div>
 
                   {filteredCombinedTerms.length === 0 ? (
                     <div className="h-40 flex flex-col items-center justify-center text-muted-foreground opacity-50 mt-10">
                       <Book className="w-10 h-10 mb-2 stroke-1" />
-                      <p className="text-sm">{trmlGlossarySelection("noTermsDisplay")}</p>
+                      <p className="text-sm">No terms to display</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-border">
@@ -597,10 +596,11 @@ export function GlossarySelectionStep({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      {trmlGlossarySelection("noGlossarySelected")}
+                      No glossary selected
                     </p>
                     <p className="text-xs text-muted-foreground/70 mt-1">
-                      {trmlGlossarySelection("noGlossarySelectedDetail")}
+                      Choose one or more glossaries from the list to view their
+                      terms
                     </p>
                   </div>
                 </div>
@@ -614,10 +614,10 @@ export function GlossarySelectionStep({
       <div className="flex justify-between mt-6">
         <Button variant="ghost" onClick={onBack}>
           <ArrowLeft className="mr-2 w-4 h-4" />
-          {trmlCommon("back")}
+          Back
         </Button>
         <Button onClick={onNext}>
-          {trmlCommon("continue")}
+          Continue
           <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
       </div>
@@ -647,33 +647,31 @@ export function GlossarySelectionStep({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              {trmlGlossarySelection("duplicatedTerms")}
+              Duplicate Terms Detected
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <span className="block">
-                {trmlGlossarySelection.rich('duplicatedTermsMessage', {
-                      count: conflictData?.count || 0,
-                      bold: (chunks) => <strong>{chunks}</strong>
-                    })}
+                This glossary contains <strong>{conflictData?.count}</strong>{" "}
+                terms that overlap with your current selection.
               </span>
               {conflictData?.examples && conflictData.examples.length > 0 && (
                 <span className="block bg-muted/50 p-2 rounded text-xs font-mono text-muted-foreground">
-                  {trmlGlossarySelection("duplicatedTermsExample")}: {conflictData.examples.join(", ")}...
+                  Example: {conflictData.examples.join(", ")}...
                 </span>
               )}
               <span className="block">
-                {trmlGlossarySelection.rich('duplicatedTermsInstruction', {
-                      bold: (chunks) => <strong>{chunks}</strong>
-                    })}
+                If you proceed, these duplicate terms will override or be
+                ignored based on priority (Last Selected wins).{" "}
+                <strong>Do you want to include this glossary?</strong>
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelSelection}>
-              {trmlGlossarySelection("duplicatedTermsExclude")}
+              Exclude
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmSelection}>
-              {trmlGlossarySelection("duplicatedTermsInclude")}
+              Include Glossary
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
