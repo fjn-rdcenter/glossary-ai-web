@@ -125,6 +125,7 @@ export class AuthService {
         {},
         {
           withCredentials: true, // Important: sends cookies with request
+          timeout: 5000, // 5 seconds for refresh check
         }
       );
       

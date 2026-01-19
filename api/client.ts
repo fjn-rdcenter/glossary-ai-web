@@ -103,7 +103,10 @@ apiClient.interceptors.response.use(
         const response = await axios.post(
             `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH}`,
             {}, 
-            { withCredentials: true } // Send cookies
+            { 
+                withCredentials: true,
+                timeout: API_CONFIG.TIMEOUT 
+            } // Send cookies
         );
 
         const newToken = response.data?.data?.access_token || response.data?.access_token || response.data?.token;
