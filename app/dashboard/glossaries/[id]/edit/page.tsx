@@ -10,7 +10,6 @@ import { GlossaryResponse, GlossaryDetailResponse } from "@/lib/types";
 import { GlossaryForm } from "@/components/glossary/glossary-form";
 import { RefreshCw } from "lucide-react";
 import { getLanguageName } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
 
 export default function EditGlossaryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -18,9 +17,6 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
 
   const [glossary, setGlossary] = useState<GlossaryDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const trmlCommon = useTranslations("Common");
-  const trmlGlossaries = useTranslations("Glossaries");
 
   useEffect(() => {
     const fetchGlossaryData = async () => {
@@ -47,7 +43,7 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
       return (
          <div className="container mx-auto px-6 py-10 text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
+            <p className="mt-2 text-muted-foreground">Loading glossary...</p>
          </div>
       );
   }
@@ -55,9 +51,9 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
   if (!glossary) {
     return (
       <div className="container mx-auto px-6 py-10 text-center">
-        <h1 className="text-2xl font-semibold">{trmlGlossaries("notFound")}</h1>
+        <h1 className="text-2xl font-semibold">Glossary not found</h1>
         <Button className="mt-4" onClick={() => router.push("/dashboard/glossaries")}>
-          {trmlGlossaries("backToList")}
+          Back to Glossaries
         </Button>
       </div>
     );
@@ -72,9 +68,9 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-serif font-semibold text-foreground">{trmlGlossaries("editGlossary")}</h1>
+            <h1 className="text-3xl font-serif font-semibold text-foreground">Edit Glossary</h1>
             <p className="mt-1 text-muted-foreground">
-              {trmlCommon(glossary.sourceLanguage) ?? glossary.sourceLanguage} → {trmlCommon(glossary.targetLanguage) ?? glossary.targetLanguage}
+              {getLanguageName(glossary.sourceLanguage)} → {getLanguageName(glossary.targetLanguage)}
             </p>
           </div>
         </div>

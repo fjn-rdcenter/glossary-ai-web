@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { FileCard } from "@/components/file-card";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from 'next-intl';
 // Remove mock data
 // import { languages } from "@/lib/mock-data";
 
@@ -56,8 +55,6 @@ export function DocumentSetupStep({
   onBack,
 }: DocumentSetupStepProps) {
   const { toast } = useToast();
-  const trmlCommon = useTranslations("Common");
-  const trmlDocumentSetup = useTranslations("DocumentSetup");
 
   const handleRemoveFile = () => {
     setUploadedFile(null); // This triggers the logic in parent to clear everything
@@ -115,10 +112,10 @@ export function DocumentSetupStep({
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
-            {trmlDocumentSetup("documentTitle")}
+            Document Setup
           </CardTitle>
           <p className="text-muted-foreground">
-            {trmlDocumentSetup("documentDescription")}
+            Upload your document and choose translation languages
           </p>
         </CardHeader>
 
@@ -193,9 +190,9 @@ export function DocumentSetupStep({
             >
               <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
               <p className="text-muted-foreground">
-                {trmlDocumentSetup("dragAndDrop")}
+                Drag and drop your document here
               </p>
-              <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
+              <p className="text-sm text-muted-foreground mb-4">or</p>
 
               <input
                 type="file"
@@ -216,14 +213,14 @@ export function DocumentSetupStep({
                 onClick={() => document.getElementById("file-upload")?.click()}
               >
                 <Upload className="mr-2 w-4 h-4" />
-                {trmlDocumentSetup("uploadDocument")}
+                Upload Document
               </Button>
             </div>
           )}
 
           {/* ================= LANGUAGE PAIR ================= */}
           <div className="space-y-2">
-            <Label>{trmlDocumentSetup("translationLanguages")}</Label>
+            <Label>Translation Languages</Label>
 
             <div className="flex items-center gap-3">
               {/* Source language */}
@@ -234,7 +231,7 @@ export function DocumentSetupStep({
                 <SelectContent>
                   {SUPPORTED_LANGUAGES.map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
-                      {trmlCommon(lang.code) ?? lang.name}
+                      {lang.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -264,7 +261,7 @@ export function DocumentSetupStep({
                     (l) => l.code !== sourceLanguage
                   ).map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
-                      {trmlCommon(lang.code) ?? lang.name}
+                      {lang.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -276,7 +273,7 @@ export function DocumentSetupStep({
           <div className="flex justify-between pt-2">
             <Button variant="ghost" onClick={onBack}>
               <ArrowLeft className="mr-2 w-4 h-4" />
-              {trmlCommon("back")}
+              Back
             </Button>
 
             <Button
@@ -284,7 +281,7 @@ export function DocumentSetupStep({
               disabled={!uploadedFile || !targetLanguage}
               className="group"
             >
-              {trmlCommon("continue")}
+              Continue
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>

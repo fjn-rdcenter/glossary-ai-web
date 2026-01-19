@@ -3,11 +3,9 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "@/i18n/routing";
-import { useLocale } from "next-intl";
-import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Globe, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +20,59 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { AuthService } from "@/api";
 import { toast } from "sonner";
-import { useTranslations } from 'next-intl';
-import { LanguageSwitcher } from "@/components/language-switcher";
+
+type Language = "en" | "vn" | "jp";
+
+const translations = {
+  en: {
+    welcome: "Sign in",
+    subtitle: "Continue to TranslateSphere",
+    usernameLabel: "Username",
+    usernamePlaceholder: "Enter your username",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Enter your password",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot password?",
+    signIn: "Sign in",
+    requestAccess: "Request access",
+    noAccount: "Don't have an account?",
+    footer: "Developed by Fujinet RD Center",
+    loginSuccess: "Login successful!",
+    loginError: "Login failed. Please check your credentials.",
+  },
+  vn: {
+    welcome: "Đăng nhập",
+    subtitle: "Tiếp tục đến TranslateSphere",
+    usernameLabel: "Tên đăng nhập",
+    usernamePlaceholder: "Nhập tên đăng nhập",
+    passwordLabel: "Mật khẩu",
+    passwordPlaceholder: "Nhập mật khẩu của bạn",
+    rememberMe: "Ghi nhớ đăng nhập",
+    forgotPassword: "Quên mật khẩu?",
+    signIn: "Đăng nhập",
+    requestAccess: "Yêu cầu quyền truy cập",
+    noAccount: "Chưa có tài khoản?",
+    footer: "Phát triển bởi Fujinet RD Center",
+    loginSuccess: "Đăng nhập thành công!",
+    loginError: "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
+  },
+  jp: {
+    welcome: "サインイン",
+    subtitle: "TranslateSphereへ続行",
+    usernameLabel: "ユーザー名",
+    usernamePlaceholder: "ユーザー名を入力",
+    passwordLabel: "パスワード",
+    passwordPlaceholder: "パスワードを入力",
+    rememberMe: "ログイン状態を保持",
+    forgotPassword: "パスワードをお忘れですか？",
+    signIn: "サインイン",
+    requestAccess: "アクセスをリクエスト",
+    noAccount: "アカウントをお持ちでないですか？",
+    footer: "Fujinet RD Centerによって開発されました",
+    loginSuccess: "ログイン成功！",
+    loginError: "ログインに失敗しました。認証情報を確認してください。",
+  },
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,10 +81,14 @@ export default function LoginPage() {
   const [isChecking, setIsChecking] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [language, setLanguage] = useState<Language>("en");
+
+
+
   
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const trml = useTranslations("Login");
+  const t = translations[language];
 
   useEffect(() => {
     const checkSession = async () => {
@@ -47,9 +100,17 @@ export default function LoginPage() {
            return;
         }
 
-        await AuthService.refreshToken();
-        router.push("/dashboard");
-        return; 
+        // Build a check list of indicators
+        const hasRefreshCookie = document.cookie.includes('refresh_token');
+        const hasAuthToken = localStorage.getItem("auth_token"); 
+
+        if (hasRefreshCookie || hasAuthToken) {
+            console.log("Checking session...");
+            // If tokens exist, try to refresh
+            await AuthService.refreshToken();
+            router.push("/dashboard");
+            return; 
+        }
       } catch (error) {
         console.log("Session check failed:", error);
         // Clean up potential stale data if needed
@@ -88,7 +149,7 @@ export default function LoginPage() {
       setErrorMessage(null);
       router.push("/dashboard");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : trml("loginError"));
+      setErrorMessage(error instanceof Error ? error.message : t.loginError);
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
@@ -120,9 +181,9 @@ export default function LoginPage() {
             <Logo size="lg" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-            {trml("signIn")}
+            {t.welcome}
           </h1>
-          <p className="text-sm text-slate-500">{trml("subtitle")}</p>
+          <p className="text-sm text-slate-500">{t.subtitle}</p>
         </div>
 
         {/* Login Card */}
@@ -131,12 +192,12 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-slate-700">
-                  {trml("usernameLabel")}
+                  {t.usernameLabel}
                 </Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder={trml("usernamePlaceholder")}
+                  placeholder={t.usernamePlaceholder}
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -149,21 +210,21 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-slate-700">
-                    {trml("passwordLabel")}
+                    {t.passwordLabel}
                   </Label>
-                  {/* <button
+                  <button
                     type="button"
                     tabIndex={-1}
                     className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
                   >
-                    {t("forgotPassword")}
-                  </button> */}
+                    {t.forgotPassword}
+                  </button>
                 </div>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder={trml("passwordPlaceholder")}
+                    placeholder={t.passwordPlaceholder}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -202,7 +263,7 @@ export default function LoginPage() {
                     className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
                   />
                 ) : (
-                  trml("signIn")
+                  t.signIn
                 )}
               </Button>
 
@@ -220,10 +281,51 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
+        {/* Footer Actions */}
         <div className="flex flex-col items-center gap-4">
-          <LanguageSwitcher />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 font-normal text-slate-500 hover:text-slate-900"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="uppercase">{language}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              <DropdownMenuItem
+                onClick={() => setLanguage("en")}
+                className="gap-2"
+              >
+                <span className="w-4">
+                  {language === "en" && <Check className="w-3 h-3" />}
+                </span>
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLanguage("vn")}
+                className="gap-2"
+              >
+                <span className="w-4">
+                  {language === "vn" && <Check className="w-3 h-3" />}
+                </span>
+                Tiếng Việt
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLanguage("jp")}
+                className="gap-2"
+              >
+                <span className="w-4">
+                  {language === "jp" && <Check className="w-3 h-3" />}
+                </span>
+                日本語
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <p className="text-center text-xs text-slate-400">{trml("footer")}</p>
+          <p className="text-center text-xs text-slate-400">{t.footer}</p>
         </div>
       </div>
     </div>

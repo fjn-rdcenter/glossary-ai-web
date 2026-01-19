@@ -35,7 +35,7 @@ import { GlossaryDetailResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useTranslations } from 'next-intl';
+import { getLanguageName } from "@/lib/utils";
 
 interface EditGlossaryDialogProps {
   open: boolean;
@@ -63,8 +63,6 @@ export function EditGlossaryDialog({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
-  const trmlCommon = useTranslations("Common");
-  const trmlGlossaries = useTranslations("Glossaries");
 
   // State
   const [loading, setLoading] = useState(false);
@@ -119,8 +117,8 @@ export function EditGlossaryDialog({
           console.error(err);
           toast({
             variant: "destructive",
-            title: trmlGlossaries("error"),
-            description: trmlGlossaries("failedToLoadGlossary"),
+            title: "Error",
+            description: "Failed to load glossary",
           });
         })
         .finally(() => setLoading(false));
@@ -156,8 +154,8 @@ export function EditGlossaryDialog({
       if (isDuplicate) {
         toast({
           variant: "destructive",
-          title: trmlGlossaries("termDuplicatedTitle"),
-          description: trmlGlossaries('termDuplicatedMessage', { term: trimmedSource }),
+          title: "Duplicate Term",
+          description: `The term "${trimmedSource}" already exists.`,
         });
         return;
       }
@@ -387,15 +385,15 @@ export function EditGlossaryDialog({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <DialogTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
-                {trmlGlossaries("editTitle")}
+                Edit Glossary
                 {hasChanges && (
                   <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                    {trmlGlossaries("unsavedChanges")}
+                    Unsaved Changes
                   </Badge>
                 )}
               </DialogTitle>
               <DialogDescription>
-                {trmlGlossaries("editDescription")}
+                Modify glossary details and manage terms.
               </DialogDescription>
             </div>
             {/* Quick Stats or Actions could go here */}
@@ -405,7 +403,7 @@ export function EditGlossaryDialog({
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin mb-2" />
-            {trmlCommon("loading")}
+            Loading Glossary Data...
           </div>
         ) : (
           /* Main Split Layout */
@@ -415,7 +413,7 @@ export function EditGlossaryDialog({
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
                   <Settings2 className="w-4 h-4" />
-                  {trmlGlossaries("settings")}
+                  Glossary Settings
                 </div>
 
                 <div className="space-y-1.5">
@@ -423,7 +421,7 @@ export function EditGlossaryDialog({
                     htmlFor="glossary-name"
                     className="text-xs uppercase font-bold text-muted-foreground"
                   >
-                    {trmlGlossaries("name")} <span className="text-red-500">*</span>
+                    Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="glossary-name"
@@ -438,18 +436,18 @@ export function EditGlossaryDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">
-                        {trmlCommon("sourceLanguage")}
+                        Source Lang
                       </Label>
                       <div className="h-10 px-3 py-2 text-sm bg-muted/50 rounded-md border text-muted-foreground flex items-center">
-                        {trmlCommon(glossary.sourceLanguage)}
+                        {getLanguageName(glossary.sourceLanguage)}
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">
-                        {trmlCommon("targetLanguage")}
+                        Target Lang
                       </Label>
                       <div className="h-10 px-3 py-2 text-sm bg-muted/50 rounded-md border text-muted-foreground flex items-center">
-                        {trmlCommon(glossary.targetLanguage)}
+                        {getLanguageName(glossary.targetLanguage)}
                       </div>
                     </div>
                   </div>
@@ -460,13 +458,13 @@ export function EditGlossaryDialog({
                     htmlFor="description"
                     className="text-xs uppercase font-bold text-muted-foreground"
                   >
-                    {trmlGlossaries("description")}
+                    Description
                   </Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder={trmlGlossaries("descriptionPlaceholder")}
+                    placeholder="Optional context..."
                     className="bg-muted/30 min-h-[80px] resize-none"
                   />
                 </div>
@@ -478,14 +476,14 @@ export function EditGlossaryDialog({
               <div className="p-6 flex-1 flex flex-col bg-slate-50/50">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-4">
                   <Plus className="w-4 h-4" />
-                  {trmlGlossaries("addTerms")}
+                  Add New Terms
                 </div>
 
                 <div className="space-y-4 p-4 border rounded-xl bg-white shadow-sm">
                   <div className="grid grid-cols-2 gap-3 items-end">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">
-                        {trmlCommon("source")}
+                        Source
                       </Label>
                       <Input
                         ref={sourceInputRef}
@@ -497,7 +495,7 @@ export function EditGlossaryDialog({
                             setNewTermTarget(val);
                           }
                         }}
-                        placeholder={trmlGlossaries("sourceText")}
+                        placeholder="Source text..."
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && newTermSource.trim()) {
                             targetInputRef.current?.focus();
@@ -508,7 +506,7 @@ export function EditGlossaryDialog({
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">
-                        {trmlCommon("target")}
+                        Target
                       </Label>
                       <Input
                         ref={targetInputRef}
@@ -517,7 +515,7 @@ export function EditGlossaryDialog({
                           setNewTermTarget(e.target.value);
                           setIsTargetEdited(true);
                         }}
-                        placeholder={trmlGlossaries("targetText")}
+                        placeholder="Translation..."
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleAddNewTerm();
                         }}
@@ -531,7 +529,7 @@ export function EditGlossaryDialog({
                     onClick={handleAddNewTerm}
                     disabled={!newTermSource.trim()}
                   >
-                    {trmlGlossaries("addTo")}
+                    Add to List
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                       ENTER
                     </kbd>
@@ -539,7 +537,7 @@ export function EditGlossaryDialog({
                 </div>
 
                 <div className="mt-6 text-center">
-                  <p className="text-xs text-muted-foreground mb-3">- {trmlCommon("or").toUpperCase()} -</p>
+                  <p className="text-xs text-muted-foreground mb-3">- OR -</p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -549,8 +547,8 @@ export function EditGlossaryDialog({
                     }
                   >
                     {entryMode === "manual"
-                      ? trmlGlossaries("importFromFile")
-                      : trmlGlossaries("backToManualEntry")}
+                      ? "Import from File"
+                      : "Back to Manual Entry"}
                   </Button>
                 </div>
               </div>
@@ -562,14 +560,14 @@ export function EditGlossaryDialog({
               <div className="flex items-center justify-between px-6 py-3 border-b bg-white sticky top-0 z-10">
                 <div className="flex items-center gap-2">
                   <List className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-sm font-semibold">{trmlGlossaries("previewTerms")}</h3>
+                  <h3 className="text-sm font-semibold">Terms</h3>
                   <div className="flex gap-1">
                     <span className="bg-muted px-2 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground">
-                      {activeCount} 
+                      {activeCount} Active
                     </span>
                     {deletedCount > 0 && (
                       <span className="bg-red-100 px-2 py-0.5 rounded-full text-[10px] font-medium text-red-600">
-                        {deletedCount} {trmlGlossaries("deleted")}
+                        {deletedCount} Deleted
                       </span>
                     )}
                   </div>
@@ -582,7 +580,7 @@ export function EditGlossaryDialog({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="h-8 pl-8 text-xs bg-muted/30"
-                      placeholder={trmlGlossaries("searchTermsPlaceholder")}
+                      placeholder="Search terms..."
                     />
                   </div>
                 )}
@@ -608,13 +606,13 @@ export function EditGlossaryDialog({
                       <Upload className="w-10 h-10 text-gray-600" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      {trmlGlossaries("termsUpload")}
+                      Click to upload .txt or .csv file
                     </h3>
                     <p className="text-sm text-gray-500 mb-2">
-                      {trmlGlossaries("termsUploadFormat")}
+                      Files must follow the format:
                     </p>
                     <p className="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1 rounded mb-4">
-                      {trmlGlossaries("termsUploadExample")}
+                      source term, target term
                     </p>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
                       <svg
@@ -630,7 +628,7 @@ export function EditGlossaryDialog({
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
-                      <span>{trmlGlossaries("termsUploadMaxSize")}</span>
+                      <span>Max file size: 5MB</span>
                     </div>
                   </div>
 
@@ -650,9 +648,9 @@ export function EditGlossaryDialog({
               ) : (
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="grid grid-cols-[1fr_24px_1fr_40px] gap-4 px-6 py-2 bg-muted/20 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <div>{trmlCommon("source")}</div>
+                    <div>Source</div>
                     <div></div>
-                    <div>{trmlCommon("target")}</div>
+                    <div>Target</div>
                     <div></div>
                   </div>
 
@@ -663,7 +661,7 @@ export function EditGlossaryDialog({
                     {filteredTerms.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                         <Book className="w-12 h-12 mb-2 stroke-1" />
-                        <p className="text-sm">{trmlGlossaries("noTermsDisplay")}</p>
+                        <p className="text-sm">No terms found</p>
                       </div>
                     ) : (
                       filteredTerms.map((term) => {
@@ -785,14 +783,14 @@ export function EditGlossaryDialog({
                 <>
                   <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-amber-600 font-medium">
-                    {trmlGlossaries("unsavedChangesPending")}
+                    Unsaved changes pending
                   </span>
                 </>
               )}
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                {trmlCommon("cancel")}
+                Cancel
               </Button>
               <Button
                 onClick={handleSave}
@@ -804,7 +802,7 @@ export function EditGlossaryDialog({
                 ) : (
                   <Save className="w-4 h-4 mr-2" />
                 )}
-                {trmlGlossaries("save")}
+                Save Changes
               </Button>
             </div>
           </div>
