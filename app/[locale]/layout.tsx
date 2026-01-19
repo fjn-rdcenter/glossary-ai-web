@@ -55,7 +55,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body
+      <body suppressHydrationWarning
         className={`${inter.variable} ${playfair.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>

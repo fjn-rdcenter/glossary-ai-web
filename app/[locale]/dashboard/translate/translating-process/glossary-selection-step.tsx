@@ -15,6 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, getLanguageName } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { GlossaryResponse, GlossaryDetailResponse } from "@/lib/types";
 import { GlossaryService } from "@/api/services";
 import { CreateGlossaryDialog } from "@/components/glossary/create-glossary-dialog";
@@ -101,36 +107,7 @@ export function GlossarySelectionStep({
   } | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
 
-  // Colors for selection (up to 5)
-  const SELECTION_COLORS = [
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-purple-500",
-    "bg-orange-500",
-    "bg-pink-500",
-  ];
-
-  const SELECTION_BG_COLORS = [
-    "bg-blue-50",
-    "bg-green-50",
-    "bg-purple-50",
-    "bg-orange-50",
-    "bg-pink-50",
-  ];
-
-  const SELECTION_BORDER_COLORS = [
-    "border-blue-200",
-    "border-green-200",
-    "border-purple-200",
-    "border-orange-200",
-    "border-pink-200",
-  ];
-
-  // Helper to get color index
-  const getGlossaryColorIndex = (id: string) => {
-    const index = selectedGlossaries.indexOf(id);
-    return index !== -1 ? index : -1;
-  };
+  // Fetch details logic
 
   // Fetch details logic
   const fetchDetailsIfNeeded = async (ids: string[]) => {
@@ -187,13 +164,13 @@ export function GlossarySelectionStep({
     }
 
     // If viewing selection
-    return selectedGlossaries.flatMap((gid, index) => {
+    return selectedGlossaries.flatMap((gid) => {
       const details = glossaryDetails[gid];
       if (!details?.terms?.items) return [];
       return details.terms.items.map((t) => ({
         ...t,
         glossaryId: gid,
-        colorIndex: index,
+        // Removed colorIndex dependency
       }));
     });
   }, [selectedGlossaries, viewingGlossaryId, glossaryDetails]);
@@ -213,7 +190,8 @@ export function GlossarySelectionStep({
 
   const handleToggleGlossary = async (id: string, checked: boolean) => {
     if (checked) {
-      if (selectedGlossaries.length >= 5) return;
+      // Limit removed
+      // if (selectedGlossaries.length >= 5) return;
 
       setValidatingId(id);
       try {
@@ -244,6 +222,7 @@ export function GlossarySelectionStep({
         } else {
           // NO CONFLICT -> Select immediately
           setSelectedGlossaries([...selectedGlossaries, id]);
+          
           setGlossaryOption("existing");
           setViewingGlossaryId(null);
         }
@@ -251,6 +230,7 @@ export function GlossarySelectionStep({
         console.error("Failed to validate glossary", error);
         // Fallback: select anyway? or show error? Let's select to not block user.
         setSelectedGlossaries([...selectedGlossaries, id]);
+        
         setGlossaryOption("existing");
         setViewingGlossaryId(null);
       } finally {
@@ -259,6 +239,7 @@ export function GlossarySelectionStep({
     } else {
       const newSelected = selectedGlossaries.filter((gId) => gId !== id);
       setSelectedGlossaries(newSelected);
+      
       if (newSelected.length === 0) {
         setGlossaryOption("none");
         setViewingGlossaryId(null); // Clear view completely
@@ -308,12 +289,7 @@ export function GlossarySelectionStep({
     }
   };
 
-  // Filter combined terms
-  const filteredCombinedTerms = combinedTerms.filter(
-    (t) =>
-      t.source.toLowerCase().includes(termQuery.toLowerCase()) ||
-      t.target.toLowerCase().includes(termQuery.toLowerCase())
-  );
+
 
   return (
     <motion.div
@@ -330,9 +306,6 @@ export function GlossarySelectionStep({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   {trmlGlossarySelection("selectGlossary")}
-                  <span className="text-xs font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                    {selectedGlossaries.length}/5
-                  </span>
                 </CardTitle>
                 <Button
                   size="sm"
@@ -364,7 +337,6 @@ export function GlossarySelectionStep({
 
               {filteredGlossaries.map((glossary) => {
                 const isSelected = selectedGlossaries.includes(glossary.id);
-                const colorIndex = getGlossaryColorIndex(glossary.id);
                 const isValidating = validatingId === glossary.id;
 
                 return (
@@ -380,28 +352,11 @@ export function GlossarySelectionStep({
                           className={cn(
                             "p-3 rounded-lg border cursor-pointer transition flex items-center justify-between gap-3 relative overflow-hidden select-none group",
                             isSelected
-                              ? cn(
-                                  "border-transparent ring-1 ring-inset",
-                                  SELECTION_BG_COLORS[colorIndex],
-                                  "ring-" +
-                                    SELECTION_COLORS[colorIndex].replace(
-                                      "bg-",
-                                      ""
-                                    )
-                                )
+                              ? "bg-secondary/40 border-primary/20"
                               : "hover:bg-secondary/50",
                             isValidating && "opacity-70 pointer-events-none"
                           )}
                         >
-                          {isSelected && (
-                            <div
-                              className={cn(
-                                "absolute left-0 top-0 bottom-0 w-1",
-                                SELECTION_COLORS[colorIndex]
-                              )}
-                            />
-                          )}
-
                           <div className="flex-1 min-w-0 pl-1">
                             <p className="font-medium text-sm truncate flex items-center gap-2">
                               {glossary.name}
@@ -416,8 +371,9 @@ export function GlossarySelectionStep({
                             </p>
                           </div>
 
-                          {/* Inline Edit Button */}
+                          {/* Inline Edit Button & Color Picker */}
                           <div className="flex items-center gap-1">
+
                             <Button
                               variant="ghost"
                               size="icon"
@@ -438,19 +394,12 @@ export function GlossarySelectionStep({
                                   checked as boolean
                                 )
                               }
-                              disabled={
-                                (!isSelected &&
-                                  selectedGlossaries.length >= 5) ||
-                                isValidating
-                              }
+                              disabled={isValidating}
                               onClick={(e) => e.stopPropagation()}
                               className={cn(
                                 "h-5 w-5 border-2",
                                 isSelected
-                                  ? cn(
-                                      "border-transparent text-white",
-                                      SELECTION_COLORS[colorIndex]
-                                    )
+                                  ? "border-transparent bg-primary text-primary-foreground"
                                   : "border-primary/50"
                               )}
                             />
@@ -489,7 +438,7 @@ export function GlossarySelectionStep({
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
                         {trmlGlossarySelection.rich("termsSummary", {
-                          termCount: filteredCombinedTerms.length,
+                          termCount: combinedTerms.length, // total terms
                           glossaryCount: selectedGlossaries.length,
                           bold: (chunks) => <span className="font-semibold">{chunks}</span>
                         })}
@@ -506,87 +455,90 @@ export function GlossarySelectionStep({
                       />
                     </div>
                   </div>
-
-                  {/* Legend */}
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {selectedGlossaries.map((gid, idx) => {
-                      const g = glossaries.find((g) => g.id === gid);
-                      return (
-                        <div
-                          key={gid}
-                          className={cn(
-                            "text-[10px] px-2 py-0.5 rounded-full border flex items-center gap-1.5",
-                            SELECTION_BG_COLORS[idx],
-                            SELECTION_BORDER_COLORS[idx]
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              SELECTION_COLORS[idx]
-                            )}
-                          />
-                          <span className="font-medium truncate max-w-[100px]">
-                            {g?.name || trmlCommon("loading")}
-                          </span>
-                          <button
-                            onClick={() => handleToggleGlossary(gid, false)}
-                            className="ml-1 opacity-50 hover:opacity-100"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </CardHeader>
 
-                <CardContent className="flex-1 overflow-y-auto p-0 bg-slate-50/50">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1fr_24px_1fr] gap-4 px-6 py-2 bg-white border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider sticky top-0 z-10 shadow-sm">
-                    <div className="w-1"></div>
-                    <div>{trmlCommon("source")}</div>
-                    <div></div>
-                    <div>{trmlCommon("target")}</div>
-                  </div>
+                <CardContent className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+                  <Accordion type="multiple" className="space-y-2">
+                    {selectedGlossaries.map((gid) => {
+                      const g = glossaries.find((g) => g.id === gid);
+                      const details = glossaryDetails[gid];
+                      const terms = details?.terms?.items || [];
+                      
+                      const filteredTerms = terms.filter(
+                        (t) =>
+                          t.source.toLowerCase().includes(termQuery.toLowerCase()) ||
+                          t.target.toLowerCase().includes(termQuery.toLowerCase())
+                      );
+                      
+                      if (!g) return null;
 
-                  {filteredCombinedTerms.length === 0 ? (
-                    <div className="h-40 flex flex-col items-center justify-center text-muted-foreground opacity-50 mt-10">
-                      <Book className="w-10 h-10 mb-2 stroke-1" />
-                      <p className="text-sm">{trmlGlossarySelection("noTermsDisplay")}</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-border">
-                      {filteredCombinedTerms.map((term, index) => {
-                        const colorIndex =
-                          term.colorIndex !== -1 ? term.colorIndex : 0;
-                        const isCombined = selectedGlossaries.length > 0;
-
-                        return (
-                          <div
-                            key={`${term.glossaryId}-${term.id}-${index}`}
-                            className="grid grid-cols-[auto_1fr_24px_1fr] gap-4 px-6 py-3 items-center bg-white hover:bg-muted/30 transition-colors group"
-                          >
-                            <div
-                              className={cn(
-                                "w-1.5 h-1.5 rounded-full shrink-0",
-                                isCombined
-                                  ? SELECTION_COLORS[colorIndex]
-                                  : "bg-primary/30"
-                              )}
-                            />
-                            <div className="text-sm font-medium text-foreground">
-                              {term.source}
+                      return (
+                        <AccordionItem value={gid} key={gid} className="bg-white border rounded-lg px-4 shadow-sm">
+                          <AccordionTrigger className="hover:no-underline py-3">
+                            <span className="flex items-center justify-between w-full pr-4">
+                              <span className="font-medium text-sm flex items-center gap-2">
+                                {g.name}
+                                <span className="text-xs text-muted-foreground font-normal bg-secondary px-2 py-0.5 rounded-full">
+                                  {filteredTerms.length} / {g.termCount}
+                                </span>
+                              </span>
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive shrink-0 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleGlossary(gid, false);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.stopPropagation();
+                                    handleToggleGlossary(gid, false);
+                                  }
+                                }}
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </span>
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="pt-2 pb-4">
+                               {filteredTerms.length === 0 ? (
+                                <div className="text-center py-4 text-xs text-muted-foreground italic">
+                                  {trmlGlossarySelection("noTermsDisplay")}
+                                </div>
+                               ) : (
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="grid grid-cols-[1fr_24px_1fr] gap-4 px-4 py-2 bg-muted/30 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    <div>{trmlCommon("source")}</div>
+                                    <div></div>
+                                    <div>{trmlCommon("target")}</div>
+                                  </div>
+                                  <div className="divide-y divide-border bg-white text-xs">
+                                    {filteredTerms.map((term, idx) => (
+                                      <div key={idx} className="grid grid-cols-[1fr_24px_1fr] gap-4 px-4 py-2.5 items-center hover:bg-muted/10">
+                                        <div className="font-medium text-foreground">{term.source}</div>
+                                        <MoveRight className="w-3 h-3 text-muted-foreground/30" />
+                                        <div className="text-primary font-medium">{term.target}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                               )}
                             </div>
-                            <MoveRight className="w-3.5 h-3.5 text-muted-foreground/30" />
-                            <div className="text-sm text-primary font-medium">
-                              {term.target}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                  
+                  {selectedGlossaries.length === 0 && (
+                     <div className="h-40 flex flex-col items-center justify-center text-muted-foreground opacity-50 mt-10">
+                        <Book className="w-10 h-10 mb-2 stroke-1" />
+                        <p className="text-sm">{trmlGlossarySelection("noTermsDisplay")}</p>
+                      </div>
                   )}
+
                 </CardContent>
               </>
             ) : (
