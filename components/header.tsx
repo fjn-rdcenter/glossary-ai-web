@@ -1,14 +1,13 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Search, LogOut } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Logo } from "@/components/logo"
-import { AuthService } from "@/api/services"
+import Link from "next/link";
+import { Search, LogOut, PlayCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Logo } from "@/components/logo";
+import { AuthService } from "@/api/services";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +15,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/router";
 
 export function Header() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function Header() {
       try {
         const userData = await AuthService.getCurrentUser();
         if (userData) {
-           setUser(userData);
+          setUser(userData);
         }
       } catch (error) {
         console.error("Failed to fetch user", error);
@@ -49,10 +49,13 @@ export function Header() {
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center gap-4 w-full max-w-md">
         {/* Logo - Back to Dashboard */}
-        <Link href="/dashboard" className="shrink-0 transition-opacity hover:opacity-80">
+        <Link
+          href="/dashboard"
+          className="shrink-0 transition-opacity hover:opacity-80"
+        >
           <Logo size="sm" />
         </Link>
-        
+
         <div className="relative w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -65,15 +68,22 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Welcome back,</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+            Welcome back,
+          </p>
           <p className="text-sm font-medium leading-tight">{username}</p>
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+            <Button
+              variant="ghost"
+              className="relative h-9 w-9 rounded-full p-0"
+            >
               <Avatar className="h-9 w-9">
-                <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>
+                  {username.charAt(0).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
@@ -84,7 +94,7 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={handleLogout}>
+            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => AuthService.logout().then(() => window.location.href = "/login")}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>
@@ -92,5 +102,5 @@ export function Header() {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }
