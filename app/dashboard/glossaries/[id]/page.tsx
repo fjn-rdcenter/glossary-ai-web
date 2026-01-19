@@ -14,12 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -43,6 +38,8 @@ import { GlossaryService } from "@/api/services";
 import { GlossaryResponse, GlossaryTermResponse } from "@/api/types";
 import { getLanguageName } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default function GlossaryDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -60,7 +57,6 @@ export default function GlossaryDetailPage() {
     null
   );
 
-
   useEffect(() => {
     if (id === "new") {
       router.replace("/dashboard/glossaries/new");
@@ -75,13 +71,12 @@ export default function GlossaryDetailPage() {
       // Fetch Glossary Details
       const glossaryData = await GlossaryService.getGlossaryById(id);
       setGlossary(glossaryData);
-      
+
       if (glossaryData.terms) {
-          setTerms(glossaryData.terms.items);
+        setTerms(glossaryData.terms.items);
       } else {
-          setTerms([]);
+        setTerms([]);
       }
-      
     } catch (error) {
       console.error("Failed to fetch glossary details", error);
     } finally {
@@ -126,7 +121,9 @@ export default function GlossaryDetailPage() {
     try {
       if (
         deleteAction === "glossary" ||
-        (deleteAction === "terms" && selectedTerms.size === terms.length && terms.length > 0)
+        (deleteAction === "terms" &&
+          selectedTerms.size === terms.length &&
+          terms.length > 0)
       ) {
         // Delete entire glossary
         await GlossaryService.deleteGlossary(glossary.id);
@@ -134,17 +131,17 @@ export default function GlossaryDetailPage() {
       } else if (deleteAction === "terms") {
         // Delete specific terms
         await Promise.all(
-            Array.from(selectedTerms).map(termId => 
-                GlossaryService.deleteTerm(glossary.id, termId)
-            )
+          Array.from(selectedTerms).map((termId) =>
+            GlossaryService.deleteTerm(glossary.id, termId)
+          )
         );
-        
+
         // Refresh or local update
         setTerms((prev) => prev.filter((t) => !selectedTerms.has(t.id)));
         setSelectedTerms(new Set());
-        
+
         // Also update glossary term count if possible or refetch
-        fetchGlossaryData(); 
+        fetchGlossaryData();
       }
     } catch (error) {
       console.error("Delete failed", error);
@@ -157,12 +154,12 @@ export default function GlossaryDetailPage() {
   if (id === "new") return null;
 
   if (loading) {
-     return (
-        <div className="container mx-auto px-6 py-10 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-             <p className="mt-2 text-muted-foreground">Loading glossary...</p>
-        </div>
-     );
+    return (
+      <div className="container mx-auto px-6 py-10 text-center">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="mt-2 text-muted-foreground">Loading glossary...</p>
+      </div>
+    );
   }
 
   if (!glossary) {
@@ -203,7 +200,7 @@ export default function GlossaryDetailPage() {
               </p>
               {/* Description - moved here */}
               <div className="mt-2 text-sm italic text-muted-foreground/80 max-w-2xl">
-                 {glossary.description || "No description provided"}
+                {glossary.description || "No description provided"}
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export function Header() {
   const router = useRouter();
@@ -41,8 +41,8 @@ export function Header() {
   const username = displayUser.username.replace("@fujinet.net", "");
 
   const handleLogout = async () => {
-      await AuthService.logout();
-      router.push("/login");
+    await AuthService.logout();
+    router.push("/login");
   };
 
   return (
@@ -94,7 +94,14 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => AuthService.logout().then(() => window.location.href = "/login")}>
+            <DropdownMenuItem
+              className="text-red-600 cursor-pointer"
+              onClick={() =>
+                AuthService.logout().then(
+                  () => (window.location.href = "/login")
+                )
+              }
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

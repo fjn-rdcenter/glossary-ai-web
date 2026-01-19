@@ -12,6 +12,8 @@ import { TranslationService, GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
+export const dynamic = "force-dynamic";
+
 const steps = [
   { id: "document", label: "Document" },
   { id: "glossary", label: "Glossary" },
@@ -31,7 +33,6 @@ function TranslatePageContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
-
 
   // Translation Config
   const [sourceLanguage, setSourceLanguage] = useState("jp");
@@ -54,7 +55,6 @@ function TranslatePageContent() {
   const [status, setStatus] = useState<TranslationStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [jobId, setJobId] = useState<string | null>(null);
-
 
   // Polling State
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
@@ -166,7 +166,6 @@ function TranslatePageContent() {
     );
   }, [selectedGlossaries]);
 
-
   useEffect(() => {
     if (documentId) sessionStorage.setItem("documentId", documentId);
     else sessionStorage.removeItem("documentId");
@@ -192,7 +191,6 @@ function TranslatePageContent() {
       fetchGlossaries();
     }
   }, [currentStep]);
-
 
   const stopPolling = useCallback(() => {
     if (pollingInterval.current) {
@@ -397,7 +395,9 @@ function TranslatePageContent() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${targetLanguage.toUpperCase()}-${uploadedFile?.name || "document"}`;
+      a.download = `${targetLanguage.toUpperCase()}-${
+        uploadedFile?.name || "document"
+      }`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

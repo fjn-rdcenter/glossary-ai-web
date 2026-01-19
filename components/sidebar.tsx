@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { AuthService } from "@/api/services/auth.service";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
@@ -27,9 +28,9 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -131,7 +132,7 @@ export function Sidebar() {
                 className="w-full flex items-center gap-3 justify-start text-zinc-400 hover:text-white hover:bg-white/5"
                 asChild
               >
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 text-left"
                 >

@@ -26,6 +26,8 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
@@ -47,7 +49,7 @@ export default function DashboardPage() {
         ]);
 
         // Calculate unique documents
-        const uniqueDocs = new Set(jobs.map(j => j.sourceDocument)).size;
+        const uniqueDocs = new Set(jobs.map((j) => j.sourceDocument)).size;
 
         setStats({
           totalTranslations: jobs.length,
@@ -103,8 +105,9 @@ export default function DashboardPage() {
       "application/vnd.ms-powerpoint": [".ppt"],
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         [".pptx"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        [".xlsx"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+        ".xlsx",
+      ],
     },
     multiple: false,
   });
