@@ -2,10 +2,9 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe } from "lucide-react"
+import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe, PlayCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
-import { Button } from "@/components/ui/button"
 import { AuthService } from "@/api/services"
 import {
   Sidebar as SidebarUI,
@@ -25,6 +24,7 @@ const navItems = [
   { href: "/dashboard/translate", label: "Translate", icon: FileText },
   { href: "/dashboard/glossaries", label: "Glossaries", icon: BookOpen },
   { href: "/dashboard/history", label: "History", icon: History },
+  { href: "/user-guidance", label: "User Guidance", icon: PlayCircle },
 ]
 
 export function Sidebar() {
