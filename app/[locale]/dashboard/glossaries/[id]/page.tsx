@@ -381,7 +381,11 @@ export default function GlossaryDetailPage() {
             {totalTerms > 0 && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                   {trmlGlossaries("showing")} {((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, totalTerms)} {trmlGlossaries("of")} {totalTerms}
+                  {trmlGlossaries("showing", {
+                    start: ((page - 1) * pageSize) + 1,
+                    end: Math.min(page * pageSize, totalTerms),
+                    total: totalTerms,
+                  })}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

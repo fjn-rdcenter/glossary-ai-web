@@ -2,7 +2,9 @@
     "Common": {
         "en": "英語",
         "vn": "ベトナム語",
+        "vi": "ベトナム語",
         "jp": "日本語",
+        "ja": "日本語",
         "source": "原語",
         "target": "訳語",
         "sourceLanguage": "原文の言語",
@@ -11,7 +13,9 @@
         "back": "戻る",
         "continue": "次へ",
         "cancel": "キャンセル",
-        "loading": "読み込み中..."
+        "loading": "読み込み中...",
+        "previous": "前へ",
+        "next": "次へ"
     },
     "Header": {
         "welcome": "ようこそ",
@@ -81,11 +85,11 @@
         "downloadFailed": "ダウンロードに失敗しました。"
     },
     "DocumentSetup": {
-        "documentTitle": "Document Setup",
-        "documentDescription": "Upload your document and choose translation languages",
-        "dragAndDrop": "Drag and drop your document here",
-        "uploadDocument": "Upload Document",
-        "translationLanguages": "Translation Languages"
+        "documentTitle": "ドキュメント設定",
+        "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
+        "dragAndDrop": "ここにドキュメントをドラッグ＆ドロップしてください",
+        "uploadDocument": "ドキュメントをアップロード",
+        "translationLanguages": "翻訳言語"
     },
     "GlossarySelection": {
         "selectGlossary": "用語集を選択",
@@ -225,7 +229,8 @@
         "noResults": "用語集が見つかりません",
         "searchEmptyHint": "別のキーワードを試してください",
         "createFirst": "最初の用語集を作成して始めましょう",
-        "create": "作成"
+        "create": "作成",
+        "showing": "{total} 件中 {start}～{end} 件を表示"
     },
     "History": {
         "historyTitle": "翻訳履歴",

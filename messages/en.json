@@ -2,7 +2,9 @@
     "Common": {
         "en": "English",
         "vn": "Vietnamese",
+        "vi": "Vietnamese",
         "jp": "Japanese",
+        "ja": "Japanese",
         "source": "Source",
         "target": "Target",
         "sourceLanguage": "Source Language",
@@ -228,8 +230,7 @@
         "searchEmptyHint": "Try a different search term",
         "createFirst": "Create your first glossary to get started",
         "create": "Create",
-        "showing": "Showing",
-        "of": "of"
+        "showing": "Showing {start} to {end} of {total} {total, plural, one {glossary} other {glossaries}}"
     },
     "History": {
         "historyTitle": "Translation History",

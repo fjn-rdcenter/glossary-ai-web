@@ -2,7 +2,9 @@
     "Common": {
         "en": "Tiếng Anh",
         "vn": "Tiếng Việt",
+        "vi": "Tiếng Việt",
         "jp": "Tiếng Nhật",
+        "ja": "Tiếng Nhật",
         "source": "Thuật ngữ gốc",
         "target": "Thuật ngữ đích",
         "sourceLanguage": "Ngôn ngữ gốc",
@@ -11,7 +13,9 @@
         "back": "Quay lại",
         "continue": "Tiếp tục",
         "cancel": "Hủy",
-        "loading": "Đang tải..."
+        "loading": "Đang tải...",
+        "previous": "Trước",
+        "next": "Tiếp"
     },
     "Header": {
         "welcome": "Chào mừng",
@@ -81,11 +85,11 @@
         "downloadFailed": "Tải xuống không thành công."
     },
     "DocumentSetup": {
-        "documentTitle": "Document Setup",
-        "documentDescription": "Upload your document and choose translation languages",
-        "dragAndDrop": "Drag and drop your document here",
-        "uploadDocument": "Upload Document",
-        "translationLanguages": "Translation Languages"
+        "documentTitle": "Thiết lập tài liệu",
+        "documentDescription": "Tải lên tài liệu của bạn và chọn ngôn ngữ dịch",
+        "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
+        "uploadDocument": "Tải lên tài liệu",
+        "translationLanguages": "Ngôn ngữ dịch"
     },
     "GlossarySelection": {
         "selectGlossary": "Chọn bảng thuật ngữ",
@@ -225,7 +229,8 @@
         "noResults": "Không tìm thấy bảng thuật ngữ",
         "searchEmptyHint": "Thử từ khóa khác",
         "createFirst": "Tạo bảng thuật ngữ đầu tiên để bắt đầu",
-        "create": "Tạo"
+        "create": "Tạo",
+        "showing": "Hiển thị {start}-{end} trên {total} thuật ngữ"
     },
     "History": {
         "historyTitle": "Lịch sử dịch",
@@ -247,7 +252,7 @@
         "viewDetails": "Xem chi tiết",
         "downloadOriginal": "Tải tệp gốc",
         "downloadTranslated": "Tải tệp đã dịch",
-        "showing": "Hiển thị {start}-{end} trong tổng {total} {total, plural, one {bản dịch} other {bản dịch}}",
+        "showing": "Hiển thị {start}-{end} trong tổng {total} bản dịch",
         "prev": "Trước",
         "next": "Tiếp",
         "docInfo": "Thông tin tài liệu",
