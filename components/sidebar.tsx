@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation"
 import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
-import { Button } from "@/components/ui/button"
 import { AuthService } from "@/api/services"
 import {
   Sidebar as SidebarUI,
