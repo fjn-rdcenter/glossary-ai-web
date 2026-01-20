@@ -37,6 +37,9 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
 import { GlossaryResponse, GlossaryTermResponse } from "@/api/types";
 import { getLanguageName } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
+
+export const dynamic = "force-dynamic";
 
 export default function GlossaryDetailPage() {
   const params = useParams();
@@ -48,6 +51,9 @@ export default function GlossaryDetailPage() {
   const [terms, setTerms] = useState<GlossaryTermResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
+
   // Selection & Deletion state
   const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -56,25 +62,34 @@ export default function GlossaryDetailPage() {
   );
 
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalTerms, setTotalTerms] = useState(0);
+
   useEffect(() => {
     if (id === "new") {
       router.replace("/dashboard/glossaries/new");
       return;
     }
     fetchGlossaryData();
-  }, [id, router]);
+  }, [id, router, page, pageSize]); // Add page and pageSize dependencies
 
   const fetchGlossaryData = async () => {
     setLoading(true);
     try {
-      // Fetch Glossary Details
-      const glossaryData = await GlossaryService.getGlossaryById(id);
+      // Fetch Glossary Details with pagination
+      const glossaryData = await GlossaryService.getGlossaryById(id, { page, size: pageSize });
       setGlossary(glossaryData);
 
       if (glossaryData.terms) {
-        setTerms(glossaryData.terms.items);
+          setTerms(glossaryData.terms.items);
+          setTotalPages(glossaryData.terms.pages || 1);
+          setTotalTerms(glossaryData.terms.total || 0);
       } else {
-        setTerms([]);
+          setTerms([]);
+          setTotalPages(1);
+          setTotalTerms(0);
       }
       
     } catch (error) {
@@ -82,6 +97,14 @@ export default function GlossaryDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(p => p + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (page > 1) setPage(p => p - 1);
   };
 
   const filteredTerms = terms.filter(
@@ -151,24 +174,24 @@ export default function GlossaryDetailPage() {
 
   if (id === "new") return null;
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-6 py-10 text-center">
-        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-        <p className="mt-2 text-muted-foreground">Loading glossary...</p>
-      </div>
-    );
+  if (loading && !glossary) { // Only show full loading if glossary not loaded yet
+     return (
+        <div className="container mx-auto px-6 py-10 text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+             <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
+        </div>
+     );
   }
 
   if (!glossary) {
     return (
       <div className="container mx-auto px-6 py-10 text-center">
-        <h1 className="text-2xl font-semibold">Glossary not found</h1>
+        <h1 className="text-2xl font-semibold">{trmlGlossaries("notFound")}</h1>
         <Button
           className="mt-4"
           onClick={() => router.push("/dashboard/glossaries")}
         >
-          Back to Glossaries
+          {trmlGlossaries("backToList")}
         </Button>
       </div>
     );
@@ -193,13 +216,12 @@ export default function GlossaryDetailPage() {
                 {glossary.name}
               </h1>
               <p className="mt-1 text-muted-foreground">
-                {getLanguageName(glossary.sourceLanguage)} →{" "}
-                {getLanguageName(glossary.targetLanguage)} •{" "}
-                {glossary.termCount} terms
+                {trmlCommon(glossary.sourceLanguage)} → {trmlCommon(glossary.targetLanguage)} •{" "}
+                {glossary.termCount}{" "}{trmlGlossaries("terms")}
               </p>
               {/* Description - moved here */}
               <div className="mt-2 text-sm italic text-muted-foreground/80 max-w-2xl">
-                {glossary.description || "No description provided"}
+                 {glossary.description || trmlGlossaries("noDescription")}
               </div>
             </div>
           </div>
@@ -207,7 +229,7 @@ export default function GlossaryDetailPage() {
             {selectedTerms.size > 0 && (
               <Button variant="destructive" onClick={handleDeleteSelected}>
                 <Trash2 className="mr-2 w-4 h-4" />
-                Delete {selectedTerms.size}
+                {trmlGlossaries("delete")}{" "}{selectedTerms.size}
               </Button>
             )}
             <Button
@@ -215,7 +237,7 @@ export default function GlossaryDetailPage() {
               onClick={() => router.push(`/dashboard/glossaries/${id}/edit`)}
             >
               <Edit className="mr-2 w-4 h-4" />
-              Edit
+              {trmlGlossaries("edit")}
             </Button>
             <Button
               variant="outline"
@@ -226,7 +248,7 @@ export default function GlossaryDetailPage() {
               }}
             >
               <Trash2 className="mr-2 w-4 h-4" />
-              Delete Glossary
+                {trmlGlossaries("deleteGlossary")}
             </Button>
 
             <AlertDialog
@@ -239,28 +261,28 @@ export default function GlossaryDetailPage() {
                     {deleteAction === "glossary" ||
                     (deleteAction === "terms" &&
                       selectedTerms.size === terms.length && terms.length > 0)
-                      ? "Delete Glossary?"
-                      : "Delete Selected Terms?"}
+                      ? trmlGlossaries("deleteGlossaryConfirm")
+                      : trmlGlossaries("deleteSelectedTitle")}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     {deleteAction === "glossary"
-                      ? `Are you sure you want to delete "${glossary.name}"? This action cannot be undone.`
+                      ? trmlGlossaries("confirmDeleteGlossary", { glossaryName: glossary.name })
                       : selectedTerms.size === terms.length && terms.length > 0
-                      ? `You are about to delete all terms. This will permanently delete the "${glossary.name}" glossary. Are you sure?`
-                      : `Are you sure you want to delete ${selectedTerms.size} terms? This action cannot be undone.`}
+                      ? trmlGlossaries("confirmDeleteAllTerms", { glossaryName: glossary.name })
+                      : trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel
                     onClick={() => setShowDeleteWarning(false)}
                   >
-                    Cancel
+                    {trmlCommon("cancel")}
                   </AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     onClick={confirmDelete}
                   >
-                    Delete
+                    {trmlGlossaries("delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -277,7 +299,7 @@ export default function GlossaryDetailPage() {
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search terms..."
+                placeholder={trmlGlossaries("searchTerms")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 h-10"
@@ -299,11 +321,11 @@ export default function GlossaryDetailPage() {
                       />
                     </TableHead>
                     <TableHead className="font-medium">
-                      {getLanguageName(glossary.sourceLanguage)}
+                      {trmlCommon(glossary.sourceLanguage) ?? glossary.sourceLanguage}
                     </TableHead>
                     <TableHead className="w-12"></TableHead>
                     <TableHead className="font-medium">
-                      {getLanguageName(glossary.targetLanguage)}
+                      {trmlCommon(glossary.targetLanguage) ?? glossary.targetLanguage}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -331,13 +353,50 @@ export default function GlossaryDetailPage() {
                       <TableCell>{term.target}</TableCell>
                     </motion.tr>
                   ))}
+                  {loading && (
+                      <TableRow>
+                          <TableCell colSpan={4} className="h-24 text-center">
+                              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                          </TableCell>
+                      </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
 
-            {filteredTerms.length === 0 && (
+            {filteredTerms.length === 0 && !loading && (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No terms found</p>
+                <p className="text-muted-foreground">{trmlGlossaries("noTermsFound")}</p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalTerms > 0 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                   {trmlGlossaries("showing")} {((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, totalTerms)} {trmlGlossaries("of")} {totalTerms}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={page === 1 || loading}
+                  >
+                    {trmlCommon("previous")}
+                  </Button>
+                  <div className="text-sm font-medium">
+                     {page} / {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={page >= totalPages || loading}
+                  >
+                    {trmlCommon("next")}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

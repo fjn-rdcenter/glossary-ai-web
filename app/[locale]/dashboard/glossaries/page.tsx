@@ -39,6 +39,7 @@ import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 export default function GlossariesPage() {
   const router = useRouter();
@@ -48,12 +49,15 @@ export default function GlossariesPage() {
   const [selectedGlossaries, setSelectedGlossaries] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
+
   const fetchGlossaries = async () => {
     setLoading(true);
     try {
       // Fetch all for now. Backend supports pagination.
       // Might want to implement pagination in UI later.
-      const response = await GlossaryService.getGlossaries();
+      const response = await GlossaryService.getGlossaries(); 
       setGlossaries(Array.isArray(response) ? response : []);
     } catch (error) {
       console.error("Failed to fetch glossaries", error);
@@ -127,16 +131,16 @@ export default function GlossariesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-serif font-semibold text-foreground">
-              Glossaries
+              {trmlGlossaries("glossariesTitle")}
             </h1>
             <p className="mt-1 text-muted-foreground">
-              Manage your custom terminology profiles
+              {trmlGlossaries("glossariesSubtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={fetchGlossaries} disabled={loading} className="mr-2">
                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+               {trmlGlossaries("refresh")}
             </Button>
             {selectedGlossaries.size > 0 && (
               <Button
@@ -144,7 +148,7 @@ export default function GlossariesPage() {
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="mr-2 w-4 h-4" />
-                Delete {selectedGlossaries.size}
+                {trmlGlossaries("delete")}{" "}{selectedGlossaries.size}
               </Button>
             )}
             <Button
@@ -152,7 +156,7 @@ export default function GlossariesPage() {
               className="group"
             >
               <Plus className="mr-2 w-4 h-4" />
-              Create Glossary
+              {trmlGlossaries("createGlossary")}
               <ArrowRight className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </Button>
           </div>
@@ -165,7 +169,7 @@ export default function GlossariesPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              placeholder="Search glossaries..."
+              placeholder={trmlGlossaries("searchGlossaries")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12 bg-card"
@@ -180,7 +184,7 @@ export default function GlossariesPage() {
                 }
                 onCheckedChange={toggleSelectAll}
               />
-              <span className="text-sm text-muted-foreground">Select All</span>
+              <span className="text-sm text-muted-foreground">{trmlGlossaries("selectAll")}</span>
             </div>
           )}
         </div>
@@ -189,106 +193,105 @@ export default function GlossariesPage() {
       {/* Glossary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-             <div className="col-span-full text-center py-10 text-muted-foreground">Loading glossaries...</div>
+             <div className="col-span-full text-center py-10 text-muted-foreground">{trmlGlossaries("loadingList")}</div>
         ) : filteredGlossaries.map((glossary, index) => (
-            <SlideUp key={glossary.id} delay={0.1 + index * 0.05}>
-              <Card
-                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full cursor-pointer"
-                onClick={() =>
-                  router.push(`/dashboard/glossaries/${glossary.id}`)
-                }
-              >
-                <CardContent className="p-6 flex flex-col h-full">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedGlossaries.has(glossary.id)}
-                        onCheckedChange={() =>
-                          toggleGlossarySelection(glossary.id)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                        <BookOpen className="w-6 h-6" />
-                      </div>
+          <SlideUp key={glossary.id} delay={0.1 + index * 0.05}>
+            <Card
+              className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full cursor-pointer"
+              onClick={() =>
+                router.push(`/dashboard/glossaries/${glossary.id}`)
+              }
+            >
+              <CardContent className="p-6 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedGlossaries.has(glossary.id)}
+                      onCheckedChange={() =>
+                        toggleGlossarySelection(glossary.id)
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                      <BookOpen className="w-6 h-6" />
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(`/dashboard/glossaries/${glossary.id}`)
-                          }
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/glossaries/${glossary.id}/edit`
-                            )
-                          }
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={(e) => {
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/dashboard/glossaries/${glossary.id}`)
+                        }
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        {trmlGlossaries("view")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/glossaries/${glossary.id}/edit`
+                          )
+                        }
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        {trmlGlossaries("edit")}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(glossary.id);
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {trmlGlossaries("delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-                  <h3 className="font-semibold text-lg text-foreground mb-1">
-                    {glossary.name}
-                  </h3>
-                  <div className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 min-h-[40px]">
-                    {glossary.description ? (
-                      glossary.description
-                    ) : (
-                    <span className="italic opacity-50">No description provided</span>
-                    )}
-                  </div>
+                <h3 className="font-semibold text-lg text-foreground mb-1">
+                  {glossary.name}
+                </h3>
+                <div className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 min-h-[40px]">
+                  {glossary.description ? (
+                    glossary.description
+                  ) : (
+                    <span className="italic opacity-50">{trmlGlossaries("noDescription")}</span>
+                  )}
+                </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <span className="font-medium text-foreground">
-                        {glossary.termCount}
-                      </span>{" "}
-                      terms
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-border" />
-                    <span>
-                      {getLanguageName(glossary.sourceLanguage)} →{" "}
-                      {getLanguageName(glossary.targetLanguage)}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium text-foreground">
+                      {glossary.termCount}
+                    </span>{" "}
+                    {trmlGlossaries("terms")}
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-border" />
+                  <span>
+                    {trmlCommon(glossary.sourceLanguage)} → {trmlCommon(glossary.targetLanguage)}
+                  </span>
+                </div>
 
-                  <div className="mt-4 pt-4 border-t border-border flex items-center text-xs text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5 mr-1" />
-                    Updated {formatDate(glossary.updatedAt)}
-                  </div>
-                </CardContent>
-              </Card>
-            </SlideUp>
+                <div className="mt-4 pt-4 border-t border-border flex items-center text-xs text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5 mr-1" />
+                  {trmlGlossaries("updated")} {formatDate(glossary.updatedAt)}
+                </div>
+              </CardContent>
+            </Card>
+          </SlideUp>
         ))}
       </div>
 
@@ -300,17 +303,17 @@ export default function GlossariesPage() {
               <BookOpen className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No glossaries found
+              {trmlGlossaries("noResults")}
             </h3>
             <p className="text-muted-foreground mb-6">
               {searchQuery
-                ? "Try a different search term"
-                : "Create your first glossary to get started"}
+                ? trmlGlossaries("searchEmptyHint")
+                : trmlGlossaries("createFirst")}
             </p>
             {!searchQuery && (
               <Button onClick={() => router.push("/dashboard/glossaries/new")}>
                 <Plus className="mr-2 w-4 h-4" />
-                Create Glossary
+                {trmlGlossaries("create")}
               </Button>
             )}
           </div>
@@ -324,7 +327,7 @@ export default function GlossariesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Glossaries?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedGlossaries.size}{" "}
+              **Are you sure you want to delete{" "}{selectedGlossaries.size}{" "}
               glossaries? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -334,7 +337,7 @@ export default function GlossariesPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={deleteSelectedGlossaries}
             >
-              Delete
+              **Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
