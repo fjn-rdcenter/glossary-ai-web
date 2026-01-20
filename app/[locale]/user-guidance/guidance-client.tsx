@@ -23,11 +23,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useTranslations } from "next-intl";
 
 type Feature = "translation" | "history" | "glossary" | "demo-video";
 
 export function GuidanceClient() {
   const [activeFeature, setActiveFeature] = useState<Feature>("translation");
+  const trml = useTranslations("UserGuidance");
 
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
@@ -35,7 +37,7 @@ export function GuidanceClient() {
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm sticky top-8">
         <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
           <h2 className="font-semibold text-gray-900 dark:text-white">
-            Features
+            {trml("features")}
           </h2>
         </div>
         <div className="p-2 space-y-1">
@@ -45,7 +47,7 @@ export function GuidanceClient() {
               "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group",
               activeFeature === "translation"
                 ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
             )}
           >
             <div
@@ -53,12 +55,14 @@ export function GuidanceClient() {
                 "p-2 rounded-lg transition-colors",
                 activeFeature === "translation"
                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300",
               )}
             >
               <Languages size={18} />
             </div>
-            <span className="font-medium text-sm">Translation Process</span>
+            <span className="font-medium text-sm">
+              {trml("translationProcess")}
+            </span>
             {activeFeature === "translation" && (
               <ChevronRight size={16} className="ml-auto text-blue-500" />
             )}
@@ -70,7 +74,7 @@ export function GuidanceClient() {
               "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group",
               activeFeature === "history"
                 ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-sm ring-1 ring-purple-200 dark:ring-purple-800"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
             )}
           >
             <div
@@ -78,12 +82,14 @@ export function GuidanceClient() {
                 "p-2 rounded-lg transition-colors",
                 activeFeature === "history"
                   ? "bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300",
               )}
             >
               <History size={18} />
             </div>
-            <span className="font-medium text-sm">Translation History</span>
+            <span className="font-medium text-sm">
+              {trml("translationHistory")}
+            </span>
             {activeFeature === "history" && (
               <ChevronRight size={16} className="ml-auto text-purple-500" />
             )}
@@ -95,7 +101,7 @@ export function GuidanceClient() {
               "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group",
               activeFeature === "glossary"
                 ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 shadow-sm ring-1 ring-green-200 dark:ring-green-800"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
             )}
           >
             <div
@@ -103,12 +109,14 @@ export function GuidanceClient() {
                 "p-2 rounded-lg transition-colors",
                 activeFeature === "glossary"
                   ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300",
               )}
             >
               <BookOpen size={18} />
             </div>
-            <span className="font-medium text-sm">Manage Glossary</span>
+            <span className="font-medium text-sm">
+              {trml("manageGlossary")}
+            </span>
             {activeFeature === "glossary" && (
               <ChevronRight size={16} className="ml-auto text-green-500" />
             )}
@@ -120,7 +128,7 @@ export function GuidanceClient() {
               "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group",
               activeFeature === "demo-video"
                 ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm ring-1 ring-red-200 dark:ring-red-800"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
             )}
           >
             <div
@@ -128,12 +136,12 @@ export function GuidanceClient() {
                 "p-2 rounded-lg transition-colors",
                 activeFeature === "demo-video"
                   ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300",
               )}
             >
               <PlayCircle size={18} />
             </div>
-            <span className="font-medium text-sm">Demo Video</span>
+            <span className="font-medium text-sm">{trml("demoVideo")}</span>
             {activeFeature === "demo-video" && (
               <ChevronRight size={16} className="ml-auto text-red-500" />
             )}
@@ -151,10 +159,10 @@ export function GuidanceClient() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Demo Video
+                  {trml("demoVideo")}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Watch our demonstration video
+                  {trml("demoVideoSubtitle")}
                 </p>
               </div>
             </div>
@@ -172,18 +180,19 @@ export function GuidanceClient() {
                 </div>
                 <div className="mt-6">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                    Welcome to TranslateSphere
+                    {trml("demoVideoWelcome")}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-                    In this video, we will walk you through the core features of
-                    TranslateSphere, from uploading your first document to
-                    managing your glossaries.
+                    {trml("demoVideoDescription")}
                   </p>
                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex gap-3 text-sm text-yellow-800 dark:text-yellow-200">
-                    <span className="shrink-0 font-bold">Note:</span>
+                    <span className="shrink-0 font-bold">
+                      {trml("demoVideoNote")}
+                    </span>
                     <p>
-                      Please turn on <strong>Subtitles/CC</strong> in the video
-                      player to see the detailed guidance for each step!
+                      {trml.rich("demoVideoNoteText", {
+                        strong: (chunks) => <strong>{chunks}</strong>,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -199,10 +208,10 @@ export function GuidanceClient() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  How to Use Translation
+                  {trml("howToUseTranslation")}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Follow these simple steps
+                  {trml("followSteps")}
                 </p>
               </div>
             </div>
@@ -227,11 +236,10 @@ export function GuidanceClient() {
                               1
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Select Files & Choose Languages
+                              {trml("step1Title")}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                              Upload your documents and select the source and
-                              target languages for translation.
+                              {trml("step1Description")}
                             </p>
                           </div>
                         </div>
@@ -253,11 +261,10 @@ export function GuidanceClient() {
                               2
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Choose Glossaries
+                              {trml("step2Title")}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                              Select any relevant glossaries to ensure accurate
-                              terminology translation.
+                              {trml("step2Description")}
                             </p>
                           </div>
                         </div>
@@ -279,11 +286,10 @@ export function GuidanceClient() {
                               3
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Review Settings
+                              {trml("step3Title")}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                              Check your configuration to make sure everything
-                              is set up correctly before proceeding.
+                              {trml("step3Description")}
                             </p>
                           </div>
                         </div>
@@ -305,11 +311,10 @@ export function GuidanceClient() {
                               4
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Start Translation & Download
+                              {trml("step4Title")}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                              Begin the translation process and download the
-                              files once completed.
+                              {trml("step4Description")}
                             </p>
                           </div>
                         </div>
@@ -332,10 +337,10 @@ export function GuidanceClient() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Translation History
+                  {trml("historyTitle")}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Track and manage your past jobs
+                  {trml("historySubtitle")}
                 </p>
               </div>
             </div>
@@ -347,12 +352,10 @@ export function GuidanceClient() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    View Past Jobs
+                    {trml("viewPastJobsTitle")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Access a complete list of your previous translations. Each
-                    entry includes details like the date, file type, source and
-                    target languages, and the final status of the translation.
+                    {trml("viewPastJobsDescription")}
                   </p>
                 </div>
               </div>
@@ -363,12 +366,10 @@ export function GuidanceClient() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Smart Search
+                    {trml("smartSearchTitle")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Quickly find specific translations by searching for file
-                    names or unique job IDs. This is helpful when you need to
-                    locate a specific document from weeks ago.
+                    {trml("smartSearchDescription")}
                   </p>
                 </div>
               </div>
@@ -379,12 +380,10 @@ export function GuidanceClient() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Re-download Files
+                    {trml("redownloadTitle")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Need a file again? You can easily download your original
-                    uploaded documents or the resulting translated files at any
-                    time from your history records.
+                    {trml("redownloadDescription")}
                   </p>
                 </div>
               </div>
@@ -400,10 +399,10 @@ export function GuidanceClient() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Managing Glossaries
+                  {trml("glossaryTitle")}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Control your terminology
+                  {trml("glossarySubtitle")}
                 </p>
               </div>
             </div>
@@ -416,23 +415,21 @@ export function GuidanceClient() {
                       <Plus size={24} />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Create & Import
+                      {trml("createImportTitle")}
                     </h3>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed">
-                    Start by creating a new glossary to define your preferred
-                    terminology. You can build it term-by-term or import an
-                    existing text file (.txt) to populate it instantly.
+                    {trml("createImportDescription")}
                   </p>
                   <p className="text-gray-500 dark:text-gray-400 text-xs mb-6 font-mono bg-gray-100 dark:bg-gray-900/50 p-2 rounded border border-gray-200 dark:border-gray-700">
-                    Format: source_term, target_term
+                    {trml("createImportFormat")}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs font-medium">
                     <span className="px-2.5 py-1 rounded-md bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800">
-                      Manual Creation
+                      {trml("manualCreation")}
                     </span>
                     <span className="px-2.5 py-1 rounded-md bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800">
-                      Text File Import
+                      {trml("textFileImport")}
                     </span>
                   </div>
                 </div>
@@ -445,20 +442,18 @@ export function GuidanceClient() {
                       <Settings size={24} />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Edit & Manage
+                      {trml("editManageTitle")}
                     </h3>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed">
-                    Keep your glossaries up to date. You can edit definitions,
-                    add new terms as your project evolves, or delete glossaries
-                    that are no longer needed.
+                    {trml("editManageDescription")}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs font-medium">
                     <span className="px-2.5 py-1 rounded-md bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-                      Edit Terms
+                      {trml("editTerms")}
                     </span>
                     <span className="px-2.5 py-1 rounded-md bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-                      Delete Glossary
+                      {trml("deleteGlossary")}
                     </span>
                   </div>
                 </div>

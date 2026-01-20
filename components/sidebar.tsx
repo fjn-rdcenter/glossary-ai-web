@@ -2,10 +2,9 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, BookOpen, History, LogOut, Menu, X, PlayCircle } from "lucide-react"
+import { LayoutDashboard, FileText, BookOpen, History, LogOut, PlayCircle, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/logo"
-import { Button } from "@/components/ui/button"
 import { AuthService } from "@/api/services"
 import {
   Sidebar as SidebarUI,
