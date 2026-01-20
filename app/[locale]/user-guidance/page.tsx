@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { GuidanceClient } from "./guidance-client";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export async function generateMetadata(): Promise<Metadata> {
   const trml = await getTranslations("UserGuidance");
@@ -31,13 +32,16 @@ function UserGuidanceContent() {
 
   return (
     <>
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {trml("backToMain")}
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {trml("backToMain")}
+        </Link>
+        <LanguageSwitcher />
+      </div>
       <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
         {trml("title")}
       </h1>
