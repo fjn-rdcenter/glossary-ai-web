@@ -181,9 +181,30 @@ export function CreateGlossaryDialog({
     if (!file) return;
 
     const reader = new FileReader();
+    
+    reader.onerror = () => {
+      event.target.value = "";
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
+    
     reader.onload = (e) => {
       const content = e.target?.result as string;
       if (!content) return;
+
+      // Check for replacement characters indicating encoding issues
+      if (content.includes("\ufffd")) {
+        event.target.value = "";
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("encodingError"),
+          description: trmlGlossaries("encodingErrorMessage"),
+        });
+        return;
+      }
 
       const newTerms = content
         .split(/\r?\n/)
@@ -248,7 +269,7 @@ export function CreateGlossaryDialog({
         }
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(file, "UTF-8");
   };
 
   const handleSave = async () => {

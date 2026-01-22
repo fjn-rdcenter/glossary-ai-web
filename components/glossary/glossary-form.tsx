@@ -218,9 +218,30 @@ export function GlossaryForm({
     if (!importedFile) return;
 
     const reader = new FileReader();
+    
+    reader.onerror = () => {
+      setImportedFile(null);
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
+    
     reader.onload = (event) => {
         const text = event.target?.result as string;
         if (!text) return;
+
+        // Check for replacement characters indicating encoding issues
+        if (text.includes("\ufffd")) {
+          setImportedFile(null);
+          toast({
+            variant: "destructive",
+            title: trmlGlossaries("encodingError"),
+            description: trmlGlossaries("encodingErrorMessage"),
+          });
+          return;
+        }
 
         const lines = text.split(/\r?\n/);
         const importedTerms: UITerm[] = lines
@@ -252,7 +273,7 @@ export function GlossaryForm({
             setImportedFile(null);
         }
     };
-    reader.readAsText(importedFile);
+    reader.readAsText(importedFile, "UTF-8");
   };
 
   const handleSave = async () => {
