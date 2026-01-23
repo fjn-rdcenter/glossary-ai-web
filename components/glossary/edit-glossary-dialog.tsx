@@ -47,6 +47,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from 'next-intl';
 import { getErrorMessage } from "@/lib/error-utils";
+import { FileDropzone } from "@/components/ui/file-dropzone";
+
+
+
 
 interface EditGlossaryDialogProps {
   open: boolean;
@@ -217,9 +221,27 @@ export function EditGlossaryDialog({
     if (!file) return;
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      event.target.value = "";
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
     reader.onload = (e) => {
       const content = e.target?.result as string;
       if (!content) return;
+
+      if (content.includes("\ufffd")) {
+        event.target.value = "";
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("encodingError"),
+          description: trmlGlossaries("encodingErrorMessage"),
+        });
+        return;
+      }
 
       const newTerms = content
         .split(/\r?\n/)
@@ -289,7 +311,7 @@ export function EditGlossaryDialog({
         }
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(file, "UTF-8");
   };
 
   const handleTermEdit = (
@@ -637,48 +659,20 @@ export function EditGlossaryDialog({
               {/* Content Area */}
               {entryMode === "import" ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
-                  <div
-                    className="w-full max-w-lg bg-white rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() =>
-                      document.getElementById("edit-file-upload")?.click()
-                    }
-                  >
-                    <input
-                      type="file"
-                      id="edit-file-upload"
-                      className="hidden"
-                      accept=".txt, .csv"
-                      onChange={handleFileUpload}
-                    />
-                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mb-6">
-                      <Upload className="w-10 h-10 text-gray-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      {trmlGlossaries("termsUpload")}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      {trmlGlossaries("termsUploadFormat")}
-                    </p>
-                    <p className="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1 rounded mb-4">
-                      {trmlGlossaries("termsUploadExample")}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <span>{trmlGlossaries("termsUploadMaxSize")}</span>
-                    </div>
-                  </div>
+                     <FileDropzone
+                        className="w-full max-w-lg bg-white"
+                        onFileSelect={(file) => {
+                             // Synthesize event to match existing handler signature
+                             const syntheticEvent = {
+                                 target: { files: [file], value: '' }
+                             } as unknown as React.ChangeEvent<HTMLInputElement>;
+                             handleFileUpload(syntheticEvent);
+                         }}
+                        accept={{
+                             'text/plain': ['.txt'],
+                             'text/csv': ['.csv']
+                         }}
+                     />
 
                   {/* Import Message */}
                   {importMessage && (

@@ -333,14 +333,27 @@ export function GlossarySelectionStep({
     }
   };
 
-  const handleEditSuccess = (updatedGlossary: GlossaryDetailResponse) => {
+  const handleEditSuccess = async (updatedGlossary: GlossaryDetailResponse) => {
     setEditingGlossaryId(null);
     onRefresh();
-    // Update cache with fresh data
-    setGlossaryDetails((prev) => ({
-      ...prev,
-      [updatedGlossary.id]: updatedGlossary,
-    }));
+    
+    // [FIX] Re-fetch the FULL glossary to ensure we have all terms (not just the first page returned by update API)
+    setLoadingDetails(prev => new Set([...prev, updatedGlossary.id]));
+    try {
+        const fullGlossary = await fetchFullGlossary(updatedGlossary.id);
+        if (fullGlossary) {
+            setGlossaryDetails((prev) => ({
+              ...prev,
+              [updatedGlossary.id]: fullGlossary,
+            }));
+        }
+    } finally {
+        setLoadingDetails(prev => {
+            const next = new Set(prev);
+            next.delete(updatedGlossary.id);
+            return next;
+        });
+    }
   };
 
   return (
