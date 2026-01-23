@@ -51,6 +51,8 @@ import { GlossarySummary } from "@/components/glossary/glossary-summary";
 import { useTranslations } from 'next-intl';
 import { useToast } from "@/components/ui/use-toast"; // [NEW] Link to toast
 import { getErrorMessage } from "@/lib/error-utils"; // [NEW] Link to error util
+import { FileDropzone } from "@/components/ui/file-dropzone"; // [NEW] Import Dropzone
+
 
 // Internal type for UI management
 type UITerm = {
@@ -238,9 +240,28 @@ export function GlossaryForm({
     if (!importedFile) return;
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      setImportedFile(null);
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
+    
     reader.onload = (event) => {
         const text = event.target?.result as string;
         if (!text) return;
+
+        if (text.includes("\ufffd")) {
+          setImportedFile(null);
+          toast({
+            variant: "destructive",
+            title: trmlGlossaries("encodingError"),
+            description: trmlGlossaries("encodingErrorMessage"),
+          });
+          return;
+        }
 
         const lines = text.split(/\r?\n/);
         const importedTerms: UITerm[] = lines
@@ -272,7 +293,7 @@ export function GlossaryForm({
             setImportedFile(null);
         }
     };
-    reader.readAsText(importedFile);
+    reader.readAsText(importedFile, "UTF-8");
   };
 
   const handleSave = async () => {
@@ -600,17 +621,16 @@ export function GlossaryForm({
                                </div>
                            </div>
                         ) : (
-                           <div className="py-4">
-                               <Upload className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                               <p className="text-sm font-medium mb-1">Upload Terms File</p>
-                               <p className="text-xs text-muted-foreground mb-4 max-w-xs mx-auto">
-                                   {trmlGlossaries("importHint")}
-                               </p>
-                               <input type="file" accept=".txt, .csv" onChange={handleFileImport} className="hidden" id="file-import-modal" />
-                               <Button asChild variant="default" size="sm">
-                                   <label htmlFor="file-import-modal" className="cursor-pointer">{trmlGlossaries("selectFile")}</label>
-                               </Button>
-                           </div>
+
+                           <FileDropzone
+                             onFileSelect={(file) => {
+                                 setImportedFile(file);
+                             }}
+                             accept={{
+                                 'text/plain': ['.txt'],
+                                 'text/csv': ['.csv']
+                             }}
+                           />
                         )}
                     </div>
                 </TabsContent>
