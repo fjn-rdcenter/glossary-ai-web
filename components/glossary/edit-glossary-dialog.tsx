@@ -16,7 +16,17 @@ import {
   AlertCircle,
   FileText,
   Upload,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from 'next-intl';
+import { getErrorMessage } from "@/lib/error-utils";
 
 interface EditGlossaryDialogProps {
   open: boolean;
@@ -70,6 +81,12 @@ export function EditGlossaryDialog({
   const [loading, setLoading] = useState(false);
   const [glossary, setGlossary] = useState<GlossaryDetailResponse | null>(null);
 
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+
   // Form State
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -98,7 +115,7 @@ export function EditGlossaryDialog({
   useEffect(() => {
     if (open && glossaryId) {
       setLoading(true);
-      GlossaryService.getGlossaryById(glossaryId)
+      GlossaryService.getGlossaryById(glossaryId, { size: 100 })
         .then((data) => {
           setGlossary(data as GlossaryDetailResponse);
           setName(data.name);
@@ -288,15 +305,23 @@ export function EditGlossaryDialog({
   };
 
   const markAsDeleted = (termId: string) => {
-    setTerms((prev) =>
-      prev.map((t) => (t.id === termId ? { ...t, isDeleted: true } : t))
-    );
+    setTerms((prev) => {
+      const term = prev.find((t) => t.id === termId);
+      if (term?.isNew) {
+        return prev.filter((t) => t.id !== termId);
+      }
+      return prev.map((t) => (t.id === termId ? { ...t, isDeleted: true } : t));
+    });
   };
 
   const undoDelete = (termId: string) => {
-    setTerms((prev) =>
-      prev.map((t) => (t.id === termId ? { ...t, isDeleted: false } : t))
-    );
+    setTerms((prev) => {
+      const term = prev.find((t) => t.id === termId);
+      if (term?.isNew) {
+        return prev.filter((t) => t.id !== termId);
+      }
+      return prev.map((t) => (t.id === termId ? { ...t, isDeleted: false } : t));
+    });
   };
 
   const handleSave = async () => {
@@ -310,7 +335,7 @@ export function EditGlossaryDialog({
       if (name !== glossary.name || description !== glossary.description) {
         await GlossaryService.updateGlossary(glossaryId, {
           name,
-          description: description, // Pass as is, allowing empty string to clear it
+          description: description,
         });
       }
 
@@ -347,15 +372,36 @@ export function EditGlossaryDialog({
         );
       }
 
+      // Fetch updated data
       const updated = await GlossaryService.getGlossaryById(glossaryId);
-      onSuccess(updated as GlossaryDetailResponse);
+      
+      // [FIX] Update local calculation to fix stale backend count
+      const activeCount = terms.filter((t) => !t.isDeleted).length;
+      
+      // Also filter out the explicitly deleted items from the received list
+      // to ensure the list view matches the count if backend is stale
+      const deletedIds = new Set(deleted.map((t) => t.id));
+      const validItems = (updated.terms?.items || []).filter(
+        (t) => !deletedIds.has(t.id)
+      );
+
+      const patchedUpdated = {
+         ...updated,
+         termCount: activeCount,
+         terms: {
+            ...updated.terms,
+            items: validItems,
+            size: validItems.length
+         }
+      };
+
+      onSuccess(patchedUpdated as GlossaryDetailResponse);
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: err.message || "Failed to save changes",
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(err),
       });
     } finally {
       setIsSaving(false);
@@ -810,6 +856,26 @@ export function EditGlossaryDialog({
           </div>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

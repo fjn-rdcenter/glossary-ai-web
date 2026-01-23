@@ -179,7 +179,7 @@ export default function DashboardPage() {
             </Link>
           </Button>
           <Button
-            className="gap-2 bg-zinc-900 text-white hover:bg-zinc-800"
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             asChild
           >
             <Link href="/dashboard/translate">
@@ -198,13 +198,13 @@ export default function DashboardPage() {
           if (stat.label === "activeGlossaries") {
             href = "/dashboard/glossaries";
           } else if (stat.label === "documentsUploaded") {
-            href = "/dashboard/history";
+            href = "/dashboard/documents";
           }
 
           return (
             <SlideUp key={stat.label} delay={i * 0.1}>
               <Link href={href}>
-                <Card className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5">
+                <Card className="bg-secondary cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
                       {trml(stat.label) ?? stat.label}
@@ -238,7 +238,7 @@ export default function DashboardPage() {
 
       <div className="space-y-6 max-w-full">
         {/* Quick Upload */}
-        <Card className="w-full border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
+        <Card className="w-full border-2 border-dashed border-border bg-muted/50">
           <CardHeader>
             <CardTitle>{trml("quickUpload")}</CardTitle>
             <CardDescription>
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                     {...getRootProps()}
                     className={cn(
                       "w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px]",
-                      "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm",
+                      "bg-card border border-border shadow-sm",
                       "hover:border-primary/50 hover:shadow-md",
                       isDragActive && "border-primary ring-2 ring-primary/20"
                     )}

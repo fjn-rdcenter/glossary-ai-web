@@ -15,7 +15,36 @@
         "cancel": "Cancel",
         "loading": "Loading...",
         "previous": "Previous",
-        "next": "Next"
+        "next": "Next",
+        "error": "Error",
+        "close": "Close",
+        "openMenu": "Open menu",
+        "actions": "Actions",
+        "download": "Download",
+        "delete": "Delete",
+        "pageOf": "Page {current} of {total}",
+        "pickDate": "Pick a date",
+        "refresh": "Refresh"
+    },
+    "Documents": {
+        "title": "Uploaded Documents",
+        "searchDocuments": "Search documents...",
+        "description": "Manage your uploaded documents.",
+        "fetchError": "Failed to fetch documents",
+        "deleteSuccess": "Document deleted successfully",
+        "deleteError": "Failed to delete document",
+        "downloadError": "Failed to download document",
+        "noDocuments": "No documents found",
+        "deleteTitle": "Are you sure?",
+        "deleteConfirmation": "This action cannot be undone. This will permanently delete the document.",
+        "columns": {
+            "name": "Name",
+            "uploadedAt": "Uploaded At",
+            "size": "Size",
+            "type": "Type",
+            "usageCount": "Usage Count"
+        },
+        "showing": "Showing {start} to {end} of {total} {total, plural, one {document} other {documents}}"
     },
     "Header": {
         "welcome": "Welcome back",
@@ -23,10 +52,9 @@
     },
     "Footer": {
         "contact": "Contact",
-        "address": "Floor 9, Block C, Waseco Building, 10 Pho Quang Street, Tan Son Hoa Ward, Ho Chi Minh City",
-        "phoneVN": "(VN) (84-28) 3847-7000",
-        "phoneJP": "(JP) (81-3) 5579-9961",
-        "email": "Email: info@fujinet.net",
+        "address": "Address: Waseco Building, Block B, 3F, Room 302, 10 Pho Quang Street, Tan Son Hoa Ward, Ho Chi Minh City",
+        "phone": "Internal Ext: 5903",
+        "email": "Email: rdcenter@fujinet.net",
         "mainPages": "Main Pages"
     },
     "Sidebar": {
@@ -44,7 +72,7 @@
         "Translate": "Translate"
     },
     "Login": {
-        "subtitle": "Continue to TranslateSphere",
+        "subtitle": "Continue to GlossaryAI",
         "usernameLabel": "Username",
         "usernamePlaceholder": "Enter your username",
         "passwordLabel": "Password",
@@ -269,7 +297,7 @@
     },
     "UserGuidance": {
         "title": "User Guidance",
-        "description": "Master TranslateSphere with our step-by-step guides for translation, history tracking, and glossary management.",
+        "description": "Master GlossaryAI with our step-by-step guides for translation, history tracking, and glossary management.",
         "backToMain": "Back to Main Page",
         "features": "Features",
         "translationProcess": "Translation Process",
@@ -277,8 +305,8 @@
         "manageGlossary": "Manage Glossary",
         "demoVideo": "Demo Video",
         "demoVideoSubtitle": "Watch our demonstration video",
-        "demoVideoWelcome": "Welcome to TranslateSphere",
-        "demoVideoDescription": "In this video, we will walk you through the core features of TranslateSphere, from uploading your first document to managing your glossaries.",
+        "demoVideoWelcome": "Welcome to GlossaryAI",
+        "demoVideoDescription": "In this video, we will walk you through the core features of GlossaryAI, from uploading your first document to managing your glossaries.",
         "demoVideoNote": "Note:",
         "demoVideoNoteText": "Please turn on <strong>Subtitles/CC</strong> in the video player to see the detailed guidance for each step!",
         "howToUseTranslation": "How to Use Translation",

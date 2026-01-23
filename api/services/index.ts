@@ -4,5 +4,6 @@
  */
 
 export * from "./auth.service";
-export * from "./glossary.service";
 export * from "./translation.service";
+export * from "./glossary.service";
+export * from "./document.service";

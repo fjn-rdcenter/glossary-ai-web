@@ -10,8 +10,19 @@ import { GlossarySelectionStep } from "./translating-process/glossary-selection-
 import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
 import { TranslationService, GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
+
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 const steps = [
@@ -34,6 +45,13 @@ function TranslatePageContent() {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const trml = useTranslations("Translate");
+  const trmlCommon = useTranslations("Common");
+
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // Translation Config
   const [sourceLanguage, setSourceLanguage] = useState("jp");
@@ -231,10 +249,9 @@ function TranslatePageContent() {
       } else if (jobStatus.status === "failed") {
         setStatus("error");
         stopPolling();
-        toast({
-          variant: "destructive",
-          title: "Translation Failed",
-          description: jobStatus.errorMessage,
+        setErrorDialog({
+          open: true,
+          message: jobStatus.errorMessage || "Translation failed",
         });
       } else if (jobStatus.status === "cancelled") {
         setStatus("cancelled");
@@ -272,28 +289,25 @@ function TranslatePageContent() {
           );
         } catch (error) {
           console.error("Upload failed", error);
-          toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: "Failed to upload document. Please try again.",
+          setErrorDialog({
+            open: true,
+            message: "Failed to upload document. Please try again.",
           });
           return; // Stop navigation
         }
       } else if (!documentId && !uploadedFile) {
         // Case 1: No file selected at all
-        toast({
-          variant: "destructive",
-          title: trml("error"),
-          description: trml("noDocumentUploaded"),
+        setErrorDialog({
+          open: true,
+          message: trml("noDocumentUploaded"),
         });
         return;
       } else if (!documentId && uploadedFile) {
         // Case 2: File appears uploaded (metadata exists) but ID is missing (session lost/inconsistent)
         // This is the specific fix for "No document uploaded" error later on
-        toast({
-          variant: "destructive",
-          title: trml("sessionExpired"),
-          description: trml("documentSessionLost"),
+        setErrorDialog({
+          open: true,
+          message: trml("documentSessionLost"),
         });
         // Reset state to force re-upload
         setUploadedFile(null);
@@ -346,10 +360,9 @@ function TranslatePageContent() {
 
   const handleStartTranslation = async () => {
     if (!documentId) {
-      toast({
-        variant: "destructive",
-        title: trml("error"),
-        description: trml("noDocumentUploaded"),
+      setErrorDialog({
+        open: true,
+        message: trml("noDocumentUploaded"),
       });
       return;
     }
@@ -371,10 +384,9 @@ function TranslatePageContent() {
     } catch (error) {
       console.error("Translation Start Failed", error);
       setStatus("error");
-      toast({
-        variant: "destructive",
-        title: trml("error"),
-        description: trml("failedToStartTranslation"),
+      setErrorDialog({
+        open: true,
+        message: trml("failedToStartTranslation"),
       });
     }
   };
@@ -405,10 +417,9 @@ function TranslatePageContent() {
       window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Download failed", e);
-      toast({
-        variant: "destructive",
-        title: trml("error"),
-        description: trml("downloadFailed"),
+      setErrorDialog({
+        open: true,
+        message: trml("downloadFailed"),
       });
     }
   };
@@ -540,6 +551,27 @@ function TranslatePageContent() {
           />
         )}
       </AnimatePresence>
+
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }

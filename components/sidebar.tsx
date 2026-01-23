@@ -43,11 +43,11 @@ export function Sidebar() {
   return (
     <SidebarUI 
       side="right" 
-      className="dark border-l border-zinc-800 text-white [--sidebar:oklch(0.145_0_0)] [--sidebar-foreground:oklch(0.985_0_0)] [--sidebar-border:oklch(0.269_0_0)] [--sidebar-accent:oklch(0.269_0_0)]"
+      className="bg-sidebar border-l border-sidebar-border text-sidebar-foreground"
     >
-      <SidebarHeader className="h-16 flex flex-row items-center justify-start p-0 px-5 border-b border-zinc-800/50 gap-0">
-        <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
-          <Logo size="sm" className="[&_span]:text-white [&_path]:stroke-white shrink-0" />
+      <SidebarHeader className="h-24 flex flex-row items-center justify-center p-0 border-b border-sidebar-border gap-0">
+        <Link href="/dashboard" className="flex items-center justify-center gap-2 w-full" onClick={() => setOpenMobile(false)}>
+          <Logo size="md" variant="full" className="shrink-0 text-sidebar-foreground" imageClassName="bg-[#e0f7fa] rounded-md p-2" />
         </Link>
       </SidebarHeader>
 
@@ -61,15 +61,15 @@ export function Sidebar() {
                   asChild
                   isActive={isActive}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-white/10 text-white hover:bg-white/15"
-                      : "text-zinc-400 hover:text-white hover:bg-white/5",
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
                   )}
                   onClick={() => setOpenMobile(false)}
                 >
                   <Link href={item.href}>
-                    <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-white" : "text-zinc-400")} />
+                    <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/70")} />
                     <span>{trml(item.label) ?? item.label}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -79,12 +79,13 @@ export function Sidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-zinc-800/50">
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
         <SidebarMenu className="space-y-1">
           <SidebarMenuItem>
             <LanguageSwitcher align="end" asChild>
               <SidebarMenuButton
-                className="w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto text-zinc-400 hover:text-white hover:bg-white/5"
+                id="sidebar-language-switcher"
+                className="w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-2xl"
               >
                 <Globe className="w-5 h-5 shrink-0" />
                 <span className="uppercase">{locale}</span>
@@ -93,10 +94,10 @@ export function Sidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto text-zinc-400 hover:text-white hover:bg-white/5 group"
+              className="w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 group rounded-2xl"
               onClick={handleLogout}
             >
-              <LogOut className="w-5 h-5 shrink-0 transition-colors group-hover:text-white" />
+              <LogOut className="w-5 h-5 shrink-0 transition-colors group-hover:text-red-400" />
               <span>{trml("signOut")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

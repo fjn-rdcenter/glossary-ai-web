@@ -15,7 +15,14 @@
         "cancel": "キャンセル",
         "loading": "読み込み中...",
         "previous": "前へ",
-        "next": "次へ"
+        "next": "次へ",
+        "error": "エラー",
+        "pickDate": "日付を選択",
+        "refresh": "更新"
+    },
+    "Documents": {
+        "searchDocuments": "ドキュメントを検索...",
+        "showing": "{total} 件中 {start}～{end} 件を表示"
     },
     "Header": {
         "welcome": "ようこそ",
@@ -23,10 +30,9 @@
     },
     "Footer": {
         "contact": "お問い合わせ",
-        "address": "ベトナム国ホーチミン市タンソンホア区フォークアン通り10番地ワセコビルディングCブロック9階",
-        "phoneVN": "(VN) (84-28) 3847-7000",
-        "phoneJP": "(JP) (81-3) 5579-9961",
-        "email": "メール: info@fujinet.net",
+        "address": "住所: Waseco Building, Block B, 3F, Room 302, 10 Pho Quang Street, Tan Son Hoa Ward, Ho Chi Minh City",
+        "phone": "内線: 5903",
+        "email": "メール: rdcenter@fujinet.net",
         "mainPages": "メインページ"
     },
     "Sidebar": {
@@ -44,7 +50,7 @@
         "Translate": "翻訳"
     },
     "Login": {
-        "subtitle": "TranslateSphereへ続行",
+        "subtitle": "GlossaryAIへ続行",
         "usernameLabel": "ユーザー名",
         "usernamePlaceholder": "ユーザー名を入力",
         "passwordLabel": "パスワード",
@@ -269,7 +275,7 @@
     },
     "UserGuidance": {
         "title": "ご利用ガイド",
-        "description": "TranslateSphereの翻訳、履歴管理、用語集管理について、ステップバイステップでご案内します。",
+        "description": "GlossaryAIの翻訳、履歴管理、用語集管理について、ステップバイステップでご案内します。",
         "backToMain": "メインページに戻る",
         "features": "機能",
         "translationProcess": "翻訳プロセス",
@@ -277,8 +283,8 @@
         "manageGlossary": "用語集の管理",
         "demoVideo": "デモ動画",
         "demoVideoSubtitle": "デモ動画をご覧ください",
-        "demoVideoWelcome": "TranslateSphereへようこそ",
-        "demoVideoDescription": "この動画では、最初のドキュメントのアップロードから用語集の管理まで、TranslateSphereの主要機能をご案内します。",
+        "demoVideoWelcome": "GlossaryAIへようこそ",
+        "demoVideoDescription": "この動画では、最初のドキュメントのアップロードから用語集の管理まで、GlossaryAIの主要機能をご案内します。",
         "demoVideoNote": "注意：",
         "demoVideoNoteText": "各ステップの詳細なガイダンスを確認するには、動画プレーヤーで<strong>字幕/CC</strong>をオンにしてください！",
         "howToUseTranslation": "翻訳機能の使い方",

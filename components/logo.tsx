@@ -1,36 +1,52 @@
 import { cn } from "@/lib/utils"
-import LOGO_RD from "@/public/rd-center-logo.png";
-import Image from "next/image";
+import Image from "next/image"
+import GlossaryLogo from "@/public/glossaryai-logo.svg"
+import GlossaryLogoWithText from "@/public/glossaryai-logo-with-text.svg"
 
 interface LogoProps {
   className?: string
+  imageClassName?: string
   size?: "sm" | "md" | "lg"
+  variant?: "icon" | "full"
 }
 
-export function Logo({ className, size = "md" }: LogoProps) {
-  const sizes = {
-    sm: "h-6 w-6",
-    md: "h-8 w-8",
-    lg: "h-10 w-10",
-  }
+const logoSizes = {
+  sm: "h-10 w-auto",
+  md: "h-20 w-auto",
+  lg: "h-48 w-auto",
+}
 
+const textSizes = {
+  sm: "text-lg",
+  md: "text-xl",
+  lg: "text-4xl",
+}
+
+export function Logo({ className, imageClassName, size = "lg", variant = "icon" }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Image
-        src={LOGO_RD}
-        alt="Logo"
-        className={cn("object-contain", sizes[size])}
-      />
-      <span
+        src={variant === "full" ? GlossaryLogoWithText : GlossaryLogo}
         className={cn(
-          "font-serif font-semibold tracking-tight text-foreground",
-          size === "sm" && "text-lg",
-          size === "md" && "text-xl",
-          size === "lg" && "text-2xl",
+          logoSizes[size],
+          "shrink-0",
+          imageClassName
         )}
-      >
-        TranslateSphere
-      </span>
+        alt="GlossaryAI Logo"
+        aria-hidden
+      />
+
+      {variant === "icon" && (
+        <span
+          className={cn(
+            "font-serif font-semibold tracking-tight",
+            textSizes[size]
+          )}
+        >
+          <span className="text-[#203658]">Glossary</span>
+          <span className="text-[#f16518]">AI</span>
+        </span>
+      )}
     </div>
   )
 }

@@ -78,7 +78,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
               <Avatar className="h-9 w-9">
-                <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">{username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

@@ -27,8 +27,7 @@ export class GlossaryService {
       
       return response.data.items || [];
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.getGlossaries");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -47,8 +46,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.getGlossaryById");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -66,8 +64,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.createGlossary");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -86,8 +83,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.updateGlossary");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -98,8 +94,7 @@ export class GlossaryService {
     try {
       await apiClient.delete(API_CONFIG.ENDPOINTS.GLOSSARIES.BY_ID(id));
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.deleteGlossary");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -118,8 +113,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.addTerm");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -139,8 +133,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.updateTerm");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 
@@ -153,8 +146,7 @@ export class GlossaryService {
         API_CONFIG.ENDPOINTS.GLOSSARIES.TERM_BY_ID(glossaryId, termId)
       );
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.deleteTerm");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
   /**
@@ -172,8 +164,7 @@ export class GlossaryService {
       
       return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "GlossaryService.upsertTerms");
-      throw new Error(ApiErrorHandler.parseError(error));
+      throw error;
     }
   }
 }

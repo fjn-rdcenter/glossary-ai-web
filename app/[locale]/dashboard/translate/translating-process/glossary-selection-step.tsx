@@ -10,6 +10,7 @@ import {
   X,
   Book,
   Info,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from 'next-intl';
+import { useToast } from "@/components/ui/use-toast";
+import { getErrorMessage } from "@/lib/error-utils";
 
 interface GlossarySelectionStepProps {
   glossaryOption: "none" | "existing" | "new";
@@ -80,6 +83,12 @@ export function GlossarySelectionStep({
 }: GlossarySelectionStepProps) {
   const trmlCommon = useTranslations("Common");
   const trmlGlossarySelection = useTranslations("GlossarySelection");
+
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // Filtering
   const filteredGlossaries = glossaries.filter((g) =>
@@ -142,6 +151,11 @@ export function GlossarySelectionStep({
       };
     } catch (e) {
       console.error(`Failed to fetch full glossary ${id}`, e);
+
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(e),
+      });
       return null;
     }
   };
@@ -235,7 +249,8 @@ export function GlossarySelectionStep({
         if (!details) {
           const fullGlossary = await fetchFullGlossary(id);
           if (!fullGlossary) {
-            throw new Error("Failed to fetch glossary details");
+            // Already handled in fetchFullGlossary but double check
+             throw new Error("Failed to fetch glossary details");
           }
           details = fullGlossary;
           // Update cache immediately to avoid re-fetch
@@ -267,11 +282,16 @@ export function GlossarySelectionStep({
         }
       } catch (error) {
         console.error("Failed to validate glossary", error);
-        // Fallback: select anyway? or show error? Let's select to not block user.
-        setSelectedGlossaries([...selectedGlossaries, id]);
+        setErrorDialog({
+          open: true,
+          message: getErrorMessage(error),
+        });
         
-        setGlossaryOption("existing");
-        setViewingGlossaryId(null);
+        // Fallback: select anyway? or show error? Let's select to not block user.
+        // setSelectedGlossaries([...selectedGlossaries, id]);
+        
+        // setGlossaryOption("existing");
+        // setViewingGlossaryId(null);
       } finally {
         setValidatingId(null);
       }
@@ -316,19 +336,12 @@ export function GlossarySelectionStep({
   const handleEditSuccess = (updatedGlossary: GlossaryDetailResponse) => {
     setEditingGlossaryId(null);
     onRefresh();
-    // Invalidate cache for this glossary to refresh terms
-    setGlossaryDetails((prev) => {
-      const next = { ...prev };
-      delete next[updatedGlossary.id];
-      return next;
-    });
-    // Trigger fetch again if selected
-    if (selectedGlossaries.includes(updatedGlossary.id)) {
-      fetchDetailsIfNeeded([updatedGlossary.id]);
-    }
+    // Update cache with fresh data
+    setGlossaryDetails((prev) => ({
+      ...prev,
+      [updatedGlossary.id]: updatedGlossary,
+    }));
   };
-
-
 
   return (
     <motion.div
@@ -377,6 +390,8 @@ export function GlossarySelectionStep({
               {filteredGlossaries.map((glossary) => {
                 const isSelected = selectedGlossaries.includes(glossary.id);
                 const isValidating = validatingId === glossary.id;
+                // Prefer cached/updated details for term count
+                const displayTermCount = glossaryDetails[glossary.id]?.termCount ?? glossary.termCount;
 
                 return (
                   <TooltipProvider key={glossary.id}>
@@ -406,7 +421,7 @@ export function GlossarySelectionStep({
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {trmlCommon(glossary.sourceLanguage)} →{" "}
                               {trmlCommon(glossary.targetLanguage)} •{" "}
-                              {glossary.termCount} terms
+                              {displayTermCount} terms
                             </p>
                           </div>
 
@@ -518,7 +533,7 @@ export function GlossarySelectionStep({
                               <span className="font-medium text-sm flex items-center gap-2">
                                 {g.name}
                                 <span className="text-xs text-muted-foreground font-normal bg-secondary px-2 py-0.5 rounded-full">
-                                  {filteredTerms.length} / {g.termCount}
+                                  {filteredTerms.length} / {terms.length}
                                 </span>
                               </span>
                               <span
@@ -668,7 +683,30 @@ export function GlossarySelectionStep({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+
       </AlertDialog>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+               {/* Use a default AlertTriangle if not imported, or just text for now. Checking imports... Import AlertTriangle is missing in this file? No, it's there? Let's check imports. Yes, Info is there. AlertTriangle NOT imported. I will add it to the imports separately or use Info for now. Wait, I will add AlertTriangle to imports in a separate chunk to be safe. Actually, I can use Info for now or add Import. Let's add Import. */}
+               {/* Checking imports: ArrowLeft, ArrowRight, Plus, Search, MoveRight, Edit2, X, Book, Info. Missing AlertTriangle. */}
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </motion.div>
   );
 }

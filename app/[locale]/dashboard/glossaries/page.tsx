@@ -13,6 +13,7 @@ import {
   Calendar,
   ArrowRight,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,8 @@ import { GlossaryService } from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
+import { useToast } from "@/components/ui/use-toast";
+import { getErrorMessage } from "@/lib/error-utils";
 
 export default function GlossariesPage() {
   const router = useRouter();
@@ -48,9 +51,16 @@ export default function GlossariesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedGlossaries, setSelectedGlossaries] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   const trmlCommon = useTranslations("Common");
   const trmlGlossaries = useTranslations("Glossaries");
+  const { toast } = useToast();
 
   const fetchGlossaries = async () => {
     setLoading(true);
@@ -60,7 +70,10 @@ export default function GlossariesPage() {
       const response = await GlossaryService.getGlossaries(); 
       setGlossaries(Array.isArray(response) ? response : []);
     } catch (error) {
-      console.error("Failed to fetch glossaries", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     } finally {
       setLoading(false);
     }
@@ -105,8 +118,15 @@ export default function GlossariesPage() {
         newSet.delete(id);
         return newSet;
       });
+      toast({
+        title: trmlGlossaries("deleted"),
+        description: trmlGlossaries("deleteSuccess"),
+      });
     } catch (error) {
-      console.error("Failed to delete glossary", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     }
   };
 
@@ -119,8 +139,16 @@ export default function GlossariesPage() {
       setGlossaries((prev) => prev.filter((g) => !selectedGlossaries.has(g.id)));
       setSelectedGlossaries(new Set());
       setShowDeleteDialog(false);
+      
+      toast({
+        title: trmlGlossaries("deleted"),
+        description: trmlGlossaries("deleteSelectedSuccess", { count: selectedGlossaries.size }),
+      });
     } catch (error) {
-      console.error("Failed to delete selected glossaries", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     }
   };
 
@@ -338,6 +366,26 @@ export default function GlossariesPage() {
               onClick={deleteSelectedGlossaries}
             >
               **Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

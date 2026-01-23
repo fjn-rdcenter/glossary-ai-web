@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -49,6 +49,8 @@ import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { GlossaryDetailResponse } from "@/lib/types";
 import { GlossarySummary } from "@/components/glossary/glossary-summary";
 import { useTranslations } from 'next-intl';
+import { useToast } from "@/components/ui/use-toast"; // [NEW] Link to toast
+import { getErrorMessage } from "@/lib/error-utils"; // [NEW] Link to error util
 
 // Internal type for UI management
 type UITerm = {
@@ -92,9 +94,16 @@ export function GlossaryForm({
   );
   // Track deleted terms in edit mode
   const [deletedTermIds, setDeletedTermIds] = useState<Set<string>>(new Set());
+  
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   const trmlCommon = useTranslations("Common");
   const trmlGlossaries = useTranslations("Glossaries");
+  const { toast } = useToast(); // [NEW] Hook usage
 
   // Initialize data
   useEffect(() => {
@@ -116,8 +125,19 @@ export function GlossaryForm({
     }
   }, [initialData]);
 
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
   const addTerm = () => {
     setTerms([...terms, { id: `new-${Date.now()}`, source: "", target: "" }]);
+    // Scroll to bottom to show new term
+    setTimeout(() => {
+      if (tableContainerRef.current) {
+        tableContainerRef.current.scrollTo({
+          top: tableContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   const removeTerm = (id: string) => {
@@ -312,7 +332,11 @@ export function GlossaryForm({
         onSuccess(resultGlossary);
 
     } catch (error) {
-        console.error("Save failed", error);
+        // Show Dialog instead of Toast
+        setErrorDialog({
+            open: true,
+            message: getErrorMessage(error),
+        });
     } finally {
         setIsSaving(false);
     }
@@ -443,8 +467,11 @@ export function GlossaryForm({
                     </div>
                   )}
 
-                  <div className="border border-border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                    <Table>
+                  <div 
+                    ref={tableContainerRef}
+                    className="border border-border rounded-lg max-h-[400px] overflow-auto relative"
+                  >
+                    <table className="w-full caption-bottom text-sm">
                       <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
                           <TableHead className="w-12">
@@ -530,7 +557,7 @@ export function GlossaryForm({
                           ))}
                         </AnimatePresence>
                       </TableBody>
-                    </Table>
+                    </table>
                   </div>
                   
                   {hasDuplicates && (
@@ -623,6 +650,26 @@ export function GlossaryForm({
             <AlertDialogCancel>{trmlCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteAllTerms} className="bg-destructive text-destructive-foreground">
                {trmlGlossaries("proceed")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

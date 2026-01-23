@@ -30,7 +30,9 @@ export const API_CONFIG = {
     
     // Documents
     DOCUMENTS: {
+      SOURCE: "/api/v2/documents/source",
       DOWNLOAD: (id: string) => `/api/v2/documents/download/${id}`,
+      DELETE: (id: string) => `/api/v2/documents/${id}`,
     },
 
     // Translations

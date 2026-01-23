@@ -13,7 +13,17 @@ import {
   Settings2,
   List,
   Book,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +49,7 @@ import { GlossaryDetailResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { getErrorMessage } from "@/lib/error-utils";
 import { useTranslations } from 'next-intl';
 
 interface CreateGlossaryDialogProps {
@@ -94,6 +105,12 @@ export function CreateGlossaryDialog({
 
   // Status
   const [isSaving, setIsSaving] = useState(false);
+  
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // Reset when opening
   useEffect(() => {
@@ -126,10 +143,9 @@ export function CreateGlossaryDialog({
       const isDuplicate = terms.some((t) => t.source === trimmedSource);
 
       if (isDuplicate) {
-        toast({
-          variant: "destructive",
-          title: trmlGlossaries('termDuplicatedTitle'),
-          description: trmlGlossaries('termDuplicatedMessage', { term: trimmedSource }),
+        setErrorDialog({
+          open: true,
+          message: trmlGlossaries('termDuplicatedMessage', { term: trimmedSource }),
         });
         return;
       }
@@ -288,10 +304,9 @@ export function CreateGlossaryDialog({
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: err.message || "Failed to create glossary",
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(err),
       });
     } finally {
       setIsSaving(false);
@@ -706,6 +721,26 @@ export function CreateGlossaryDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
