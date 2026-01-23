@@ -31,10 +31,9 @@ const geistMono = localFont(
 )
 
 export const metadata: Metadata = {
-  title: "TranslateSphere - Professional Translation Platform",
+  title: "GlossaryAI - Professional Translation Platform",
   description:
     "Premium document translation with custom glossaries and seamless workflow",
-  generator: "v0.app",
 };
 
 export const viewport: Viewport = {

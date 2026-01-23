@@ -15,7 +15,36 @@
         "cancel": "Hủy",
         "loading": "Đang tải...",
         "previous": "Trước",
-        "next": "Tiếp"
+        "next": "Tiếp",
+        "error": "Lỗi",
+        "close": "Đóng",
+        "openMenu": "Mở menu",
+        "actions": "Thao tác",
+        "download": "Tải xuống",
+        "delete": "Xóa",
+        "pageOf": "Trang {current} / {total}",
+        "pickDate": "Chọn ngày",
+        "refresh": "Làm mới"
+    },
+    "Documents": {
+        "title": "Tài liệu đã tải lên",
+        "searchDocuments": "Tìm kiếm tài liệu...",
+        "description": "Quản lý các tài liệu bạn đã tải lên.",
+        "fetchError": "Không thể tải danh sách tài liệu",
+        "deleteSuccess": "Xóa tài liệu thành công",
+        "deleteError": "Xóa tài liệu thất bại",
+        "downloadError": "Tải tài liệu thất bại",
+        "noDocuments": "Không tìm thấy tài liệu nào",
+        "deleteTitle": "Bạn có chắc chắn không?",
+        "deleteConfirmation": "Hành động này không thể hoàn tác. Tài liệu sẽ bị xóa vĩnh viễn.",
+        "columns": {
+            "name": "Tên",
+            "uploadedAt": "Ngày tải lên",
+            "size": "Kích thước",
+            "type": "Loại",
+            "usageCount": "Số lần sử dụng"
+        },
+        "showing": "Hiển thị {start}-{end} trên tổng số {total} tài liệu"
     },
     "Header": {
         "welcome": "Chào mừng",
@@ -23,10 +52,9 @@
     },
     "Footer": {
         "contact": "Liên hệ",
-        "address": "Tầng 9, Tòa C, Tòa nhà Waseco, 10 Phổ Quang, Phường Tân Sơn Nhì, TP. Hồ Chí Minh",
-        "phoneVN": "(VN) (84-28) 3847-7000",
-        "phoneJP": "(JP) (81-3) 5579-9961",
-        "email": "Email: info@fujinet.net",
+        "address": "Địa chỉ: Phòng 302, Tầng 3, Tòa B, Tòa nhà Waseco, 10 Phổ Quang, Phường Tân Sơn Hòa, TP. Hồ Chí Minh",
+        "phone": "Số nội bộ: 5903",
+        "email": "Email: rdcenter@fujinet.net",
         "mainPages": "Trang chính"
     },
     "Sidebar": {
@@ -44,7 +72,7 @@
         "Translate": "Dịch"
     },
     "Login": {
-        "subtitle": "Tiếp tục đến TranslateSphere",
+        "subtitle": "Tiếp tục đến GlossaryAI",
         "usernameLabel": "Tên đăng nhập",
         "usernamePlaceholder": "Nhập tên đăng nhập",
         "passwordLabel": "Mật khẩu",
@@ -269,7 +297,7 @@
     },
     "UserGuidance": {
         "title": "Hướng dẫn sử dụng",
-        "description": "Làm chủ TranslateSphere với hướng dẫn từng bước về dịch thuật, theo dõi lịch sử và quản lý bảng thuật ngữ.",
+        "description": "Làm chủ GlossaryAI với hướng dẫn từng bước về dịch thuật, theo dõi lịch sử và quản lý bảng thuật ngữ.",
         "backToMain": "Quay lại trang chính",
         "features": "Tính năng",
         "translationProcess": "Quy trình dịch thuật",
@@ -277,8 +305,8 @@
         "manageGlossary": "Quản lý bảng thuật ngữ",
         "demoVideo": "Video hướng dẫn",
         "demoVideoSubtitle": "Xem video hướng dẫn chi tiết",
-        "demoVideoWelcome": "Chào mừng đến với TranslateSphere",
-        "demoVideoDescription": "Trong video này, chúng tôi sẽ hướng dẫn bạn các tính năng cốt lõi của TranslateSphere, từ việc tải lên tài liệu đầu tiên đến quản lý bảng thuật ngữ.",
+        "demoVideoWelcome": "Chào mừng đến với GlossaryAI",
+        "demoVideoDescription": "Trong video này, chúng tôi sẽ hướng dẫn bạn các tính năng cốt lõi của GlossaryAI, từ việc tải lên tài liệu đầu tiên đến quản lý bảng thuật ngữ.",
         "demoVideoNote": "Lưu ý:",
         "demoVideoNoteText": "Vui lòng bật <strong>Phụ đề/CC</strong> trong trình phát video để xem hướng dẫn chi tiết cho từng bước!",
         "howToUseTranslation": "Cách sử dụng tính năng dịch",

@@ -57,12 +57,11 @@ export interface PaginatedResponse<T> {
 }
 
 export interface ApiError {
-  error?: {
-    message: string;
-    code?: string;
-  };
-  message?: string;
-  detail?: string | { msg: string }[];
+  message: string;
+  status_code?: number;
+  detail?: any;
+  error_code?: string;
+  code?: string; // backwards compatibility
 }
 
 export interface ApiResponse<T> {
@@ -194,4 +193,29 @@ export interface TranslationHistoryResponse {
 }
 
 // Alias for compatibility if needed
+// Alias for compatibility if needed
 export type TranslationJobResponse = TranslationStatusResponse;
+
+export interface SourceDocumentResponse {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+  usageCount: number;
+}
+
+export interface SourceDocumentPaginatedResponse {
+  items: SourceDocumentResponse[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+export type SourceDocumentSortField =
+  | "name"
+  | "uploadedAt"
+  | "size"
+  | "type"
+  | "usageCount";

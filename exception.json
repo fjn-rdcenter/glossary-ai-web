@@ -1,0 +1,495 @@
+{
+    "unauthorized": {
+        "success": false,
+        "code": 401,
+        "message": "Invalid or expired token",
+        "detail": null,
+        "error_code": null
+    },
+    "invalid_request": {
+        "success": false,
+        "code": 422,
+        "message": "Validation Error",
+        "detail": [
+            {
+                "type": "missing",
+                "loc": [
+                    "body",
+                    "username"
+                ],
+                "msg": "Field required",
+                "input": null
+            }
+        ],
+        "error_code": "VALIDATION_ERROR"
+    },
+    "/api/v2/auth/login": {
+        "connect_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Connection failed",
+            "error_code": null
+        },
+        "login_failed": {
+            "success": false,
+            "code": 401,
+            "message": "Invalid username or password",
+            "detail": null,
+            "error_code": null
+        }
+    },
+    "/api/v2/auth/refresh-token": {
+        "refresh_token_missing": {
+            "success": false,
+            "code": 401,
+            "message": "Refresh token missing",
+            "detail": null,
+            "error_code": null
+        },
+        "could_not_validate_token": {
+            "success": false,
+            "code": 401,
+            "message": "Could not validate credentials",
+            "detail": null,
+            "error_code": null
+        },
+        "refresh_token_invalid": {
+            "success": false,
+            "code": 401,
+            "message": "Invalid or revoked refresh token",
+            "detail": null,
+            "error_code": null
+        }
+    },
+    "/api/v2/auth/me": {
+        "user_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Resource not found",
+            "detail": "User not found",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/glossaries": {
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Error fetching glossaries: ...",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/glossaries/{glossary_id}": {
+        "not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Error fetching glossary ...: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/glossaries": {
+        "bad_request": {
+            "success": false,
+            "code": 400,
+            "message": "Bad request",
+            "detail": "Source language 'sf' is not allowed",
+            "error_code": null
+        },
+        "existing_glossary": {
+            "success": false,
+            "code": 409,
+            "message": "Conflict",
+            "detail": "A glossary with the name 'Tech Terms' already exists.",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error creating glossary: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error creating glossary: ...",
+            "error_code": null
+        }
+    },
+    "PUT /api/v2/glossaries": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "bad_request": {
+            "success": false,
+            "code": 400,
+            "message": "Bad request",
+            "detail": "Source language 'aa' is not allowed",
+            "error_code": null
+        },
+        "existing_glossary": {
+            "success": false,
+            "code": 409,
+            "message": "Update failed due to integrity constraint: ...",
+            "detail": null,
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Update failed due to database error: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Update failed due to unexpected error: ...",
+            "error_code": null
+        }
+    },
+    "DELETE /api/v2/glossaries/{glossary_id}": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error deleting glossary ...: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Delete failed due to unexpected error: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/glossaries/{glossary_id}/terms/upsert": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "conflict": {
+            "success": false,
+            "code": 409,
+            "message": "Conflict",
+            "detail": "Batch operation failed due to data integrity:",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error: ...",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/glossaries/{glossary_id}/terms/{term_id}": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "term_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Term not found",
+            "detail": null,
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Error fetching term ...: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/glossaries/{glossary_id}/terms": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "conflict": {
+            "success": false,
+            "code": 409,
+            "message": "Conflict",
+            "detail": "Term with source '123' already exists in this glossary.",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error adding term: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error adding term: ...",
+            "error_code": null
+        }
+    },
+    "PUT /api/v2/glossaries/{glossary_id}/terms/{term_id}": {
+        "glossary_or_term_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Resource not found",
+            "detail": "Glossary or Term not found",
+            "error_code": null
+        },
+        "conflict": {
+            "success": false,
+            "code": 409,
+            "message": "Conflict",
+            "detail": "Term with source '123' already exists in this glossary.",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error updating term ...: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error updating term ...: ...",
+            "error_code": null
+        }
+    },
+    "DELETE /api/v2/glossaries/{glossary_id}/terms/{term_id}": {
+        "glossary_or_term_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Resource not found",
+            "detail": "Glossary or Term not found",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error deleting term ...: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error deleting term ...: ...",
+            "error_code": null
+        }
+    },
+    "DELETE /api/v2/glossaries/{glossary_id}/terms/delete": {
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": null,
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Database error deleting terms: ...",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error deleting terms: ...",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/documents": {
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Error fetching documents for user ...: ...",
+            "error_code": null
+        }
+    },
+    "DELETE /api/v2/documents/{document_id}": {
+        "document_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Document not found",
+            "detail": null,
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Failed to delete document ...: ...",
+            "error_code": null
+        },
+        "storage_delete_error": {
+            "success": false,
+            "code": 500,
+            "message": "Storage delete error",
+            "detail": "Failed to delete document ...: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/documents/upload": {
+        "file_type_not_allowed": {
+            "success": false,
+            "code": 400,
+            "message": "File type not allowed",
+            "detail": null,
+            "error_code": null
+        },
+        "storage_error": {
+            "success": false,
+            "code": 500,
+            "message": "Storage error",
+            "detail": "Failed to upload document ...: ...",
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Failed to upload document ...: ...",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/documents/download/{document_id}": {
+        "document_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Document not found",
+            "detail": null,
+            "error_code": null
+        },
+        "storage_error": {
+            "success": false,
+            "code": 500,
+            "message": "Storage error",
+            "detail": "Failed to download document ...: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/translations": {
+        "bad_request": {
+            "success": false,
+            "code": 400,
+            "message": "Bad request",
+            "detail": "Source language 'sr' is not allowed",
+            "error_code": null
+        },
+        "document_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Document not found",
+            "detail": null,
+            "error_code": null
+        },
+        "glossary_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Glossary not found",
+            "detail": "Glossary selected not found",
+            "error_code": null
+        },
+        "too_many_requests": {
+            "success": false,
+            "code": 429,
+            "message": "You have too many active translation jobs (max 1). Please wait for them to complete.",
+            "detail": null,
+            "error_code": null
+        },
+        "database_error": {
+            "success": false,
+            "code": 500,
+            "message": "Database error",
+            "detail": "Could not create translation job record.",
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Task queueing failed, please try again later.",
+            "error_code": null
+        }
+    },
+    "GET /api/v2/translations/{translation_id}/sse": {
+        "translation_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Translation job not found",
+            "detail": null,
+            "error_code": null
+        },
+        "server_error": {
+            "success": false,
+            "code": 500,
+            "message": "Internal server error",
+            "detail": "Unexpected error: ...",
+            "error_code": null
+        }
+    },
+    "POST /api/v2/translations/{translation_id}/cancel": {
+        "translation_not_found": {
+            "success": false,
+            "code": 404,
+            "message": "Translation job not found",
+            "detail": null,
+            "error_code": null
+        },
+        "bad_request": {
+            "success": false,
+            "code": 400,
+            "message": "Cannot cancel job with status ...",
+            "detail": null,
+            "error_code": null
+        }
+    }
+}

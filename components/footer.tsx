@@ -11,8 +11,8 @@ function Footer() {
   return (
     <footer className="w-full pt-8 divide-y-2">
       <div className="flex justify-center pb-2">
-        <div className="w-1/2">
-          <div className="flex gap-8 lg:flex-row flex-col">
+        <div className="w-3/4">
+          <div className="flex gap-8 lg:flex-row flex-col justify-between">
             <div className="col-span-1 flex flex-col items-center">
               <Image
                 src={LOGO_RD}
@@ -29,18 +29,13 @@ function Footer() {
               <p className="font-bold text-[16px]">
                 {trml("contact")}
               </p>
-              <Link href="https://g.page/FUJINET?share">
+              <Link className="w-max" href="https://g.page/FUJINET?share">
                 {trml("address")}
               </Link>
               <div className="flex flex-wrap">
-                <Link href="tel:+842838477000" className="mr-8">
-                  {trml("phoneVN")}
-                </Link>
-                <Link href="tel:+81355799961">
-                  {trml("phoneJP")}
-                </Link>
+                {trml("phone")}
               </div>
-              <Link href="mailto:info@fujinet.net">
+              <Link className="w-max" href="mailto:rdcenter@fujinet.net">
                 {trml("email")}
               </Link>
             </div>

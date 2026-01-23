@@ -8,7 +8,7 @@ import { getTranslations } from "next-intl/server";
 export async function generateMetadata(): Promise<Metadata> {
   const trml = await getTranslations("UserGuidance");
   return {
-    title: `${trml("title")} | TranslateSphere`,
+    title: `${trml("title")} | GlossaryAI`,
     description: trml("description"),
   };
 }

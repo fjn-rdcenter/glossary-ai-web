@@ -17,12 +17,14 @@ export function LanguageSwitcher({
   className,
   align = "center",
   asChild = false,
-  children
+  children,
+  id
 }: { 
   className?: string;
   align?: "start" | "center" | "end";
   asChild?: boolean;
   children?: React.ReactNode;
+  id?: string;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -37,6 +39,7 @@ export function LanguageSwitcher({
       <DropdownMenuTrigger asChild={asChild || !children}>
         {children ? children : (
           <Button
+            id={id}
             variant="ghost"
             size="sm"
             className={cn(

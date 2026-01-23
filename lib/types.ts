@@ -222,6 +222,30 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
+export interface SourceDocumentResponse {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+  usageCount: number;
+}
+
+export interface SourceDocumentPaginatedResponse {
+  items: SourceDocumentResponse[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+export type SourceDocumentSortField =
+  | "name"
+  | "uploadedAt"
+  | "size"
+  | "type"
+  | "usageCount";
+
 // Aliases for compatibility during migration if needed
 export type TranslationStatusResponse = TranslationJobResponse;
 export type TranslationHistoryResponse = TranslationJobResponse;

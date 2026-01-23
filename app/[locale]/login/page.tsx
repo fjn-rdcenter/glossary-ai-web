@@ -97,7 +97,7 @@ export default function LoginPage() {
 
   if (isChecking) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f2f6fc]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <motion.div
             animate={{ rotate: 360 }}
             transition={{
@@ -112,119 +112,122 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#f2f6fc] p-4">
-      <div className="w-full max-w-[400px] space-y-6">
-        {/* Header Section */}
-        <div className="text-center space-y-2">
-          <div className="flex flex-col items-center justify-center mb-6">
-            <Logo size="lg" />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-            {trml("signIn")}
-          </h1>
-          <p className="text-sm text-slate-500">{trml("subtitle")}</p>
-        </div>
+    <div className="min-h-screen w-full flex flex-col bg-[#f2f6fc] p-4">
+      {/* Top Section - Logo */}
+      <div className="flex justify-center pt-8 md:pt-12">
+        <Logo size="lg" />
+      </div>
 
-        {/* Login Card */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-700">
-                  {trml("usernameLabel")}
-                </Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder={trml("usernamePlaceholder")}
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (errorMessage) setErrorMessage(null); // Clear error when typing
-                  }}
-                  className="h-10 bg-white border-slate-300 focus-visible:ring-slate-400"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-slate-700">
-                    {trml("passwordLabel")}
+      {/* Middle Section - Sign In Box */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="w-full max-w-[560px] space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              {trml("signIn")}
+            </h1>
+          </div>
+
+          {/* Login Card */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-slate-700">
+                    {trml("usernameLabel")}
                   </Label>
-                  {/* <button
-                    type="button"
-                    tabIndex={-1}
-                    className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
-                  >
-                    {t("forgotPassword")}
-                  </button> */}
-                </div>
-                <div className="relative">
                   <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={trml("passwordPlaceholder")}
-                    value={password}
+                    id="username"
+                    type="text"
+                    placeholder={trml("usernamePlaceholder")}
+                    value={username}
                     onChange={(e) => {
-                      setPassword(e.target.value);
+                      setUsername(e.target.value);
                       if (errorMessage) setErrorMessage(null); // Clear error when typing
                     }}
-                    className="h-10 pr-10 bg-white border-slate-300 focus-visible:ring-slate-400"
+                    className="h-10 bg-white border-slate-300 focus-visible:ring-slate-400"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-slate-700">
+                      {trml("passwordLabel")}
+                    </Label>
+                    {/* <button
+                      type="button"
+                      tabIndex={-1}
+                      className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
+                    >
+                      {t("forgotPassword")}
+                    </button> */}
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder={trml("passwordPlaceholder")}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errorMessage) setErrorMessage(null); // Clear error when typing
+                      }}
+                      className="h-10 pr-10 bg-white border-slate-300 focus-visible:ring-slate-400"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-10 bg-slate-900 hover:bg-slate-800 text-white transition-all"
-              >
-                {isLoading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "linear",
-                    }}
-                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                  />
-                ) : (
-                  trml("signIn")
-                )}
-              </Button>
-
-              {/* Error Message */}
-              {errorMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3 text-center"
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
                 >
-                  {errorMessage}
-                </motion.div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "linear",
+                      }}
+                      className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    trml("signIn")
+                  )}
+                </Button>
 
-        <div className="flex flex-col items-center gap-4">
-          <LanguageSwitcher />
-
-          <p className="text-center text-xs text-slate-400">{trml("footer")}</p>
+                {/* Error Message */}
+                {errorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3 text-center"
+                  >
+                    {errorMessage}
+                  </motion.div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+
+      {/* Bottom Section - Footer & Language */}
+      <div className="mt-auto flex flex-col items-center gap-4 py-8">
+        <LanguageSwitcher id="login-language-switcher" />
+        <p className="text-center text-xs text-slate-400">{trml("footer")}</p>
       </div>
     </div>
   );

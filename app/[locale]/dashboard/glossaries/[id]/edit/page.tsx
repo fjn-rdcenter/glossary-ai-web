@@ -27,9 +27,16 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
     const fetchGlossaryData = async () => {
       setLoading(true);
       try {
-        const data = await GlossaryService.getGlossaryById(id);
-        // Cast to Detail because ID fetch returns terms
-        setGlossary(data as GlossaryDetailResponse);
+        // Try to fetch with larger size first
+        try {
+          const data = await GlossaryService.getGlossaryById(id, { size: 100 });
+          setGlossary(data as GlossaryDetailResponse);
+        } catch (err) {
+          console.warn("Failed to fetch all terms, falling back to default...", err);
+          // Fallback to default pagination if large size fails (e.g. backend limit)
+          const data = await GlossaryService.getGlossaryById(id);
+          setGlossary(data as GlossaryDetailResponse);
+        }
       } catch (error) {
         console.error("Failed to fetch glossary", error);
       } finally {
@@ -46,7 +53,7 @@ export default function EditGlossaryPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
       return (
-         <div className="container mx-auto px-6 py-10 text-center">
+         <div className="container mx-auto px-6 py-10 text-center" suppressHydrationWarning>
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
             <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
          </div>

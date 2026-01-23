@@ -10,6 +10,7 @@ import {
   Search,
   ArrowRight,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,8 @@ import { GlossaryService } from "@/api/services";
 import { GlossaryResponse, GlossaryTermResponse } from "@/api/types";
 import { getLanguageName } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
+import { useToast } from "@/components/ui/use-toast";
+import { getErrorMessage } from "@/lib/error-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +61,7 @@ export default function GlossaryDetailPage() {
 
   const trmlCommon = useTranslations("Common");
   const trmlGlossaries = useTranslations("Glossaries");
+  const { toast } = useToast();
 
   // Selection & Deletion state
   const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
@@ -65,6 +69,12 @@ export default function GlossaryDetailPage() {
   const [deleteAction, setDeleteAction] = useState<"glossary" | "terms" | null>(
     null
   );
+  
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
 
   const [page, setPage] = useState(1);
@@ -99,6 +109,10 @@ export default function GlossaryDetailPage() {
       
     } catch (error) {
       console.error("Failed to fetch glossary details", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     } finally {
       setLoading(false);
     }
@@ -154,6 +168,10 @@ export default function GlossaryDetailPage() {
         // Delete entire glossary
         await GlossaryService.deleteGlossary(glossary.id);
         router.push("/dashboard/glossaries");
+        toast({
+          title: trmlGlossaries("deleted"),
+          description: trmlGlossaries("confirmDeleteGlossary", { glossaryName: glossary.name }),
+        });
       } else if (deleteAction === "terms") {
         // Delete specific terms
         await Promise.all(
@@ -168,9 +186,18 @@ export default function GlossaryDetailPage() {
         
         // Also update glossary term count if possible or refetch
         fetchGlossaryData(); 
+       
+        toast({
+            title: trmlGlossaries("deleted"),
+            description: trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size }),
+        });
       }
     } catch (error) {
       console.error("Delete failed", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     } finally {
       setShowDeleteWarning(false);
       setDeleteAction(null);
@@ -315,7 +342,7 @@ export default function GlossaryDetailPage() {
             <div className="border border-border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-secondary/50">
+                  <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
                         checked={
@@ -341,7 +368,7 @@ export default function GlossaryDetailPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
+                      className="border-b border-border last:border-0 transition-colors"
                     >
                       <TableCell>
                         <Checkbox
@@ -413,6 +440,26 @@ export default function GlossaryDetailPage() {
           </CardContent>
         </Card>
       </SlideUp>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }

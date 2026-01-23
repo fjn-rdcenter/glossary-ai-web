@@ -6,6 +6,7 @@ import {
   FileText,
   Trash2,
   ArrowRightLeft,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,16 @@ import {
 import { FileCard } from "@/components/file-card";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 // Remove mock data
 // import { languages } from "@/lib/mock-data";
 
@@ -55,9 +66,14 @@ export function DocumentSetupStep({
   onNext,
   onBack,
 }: DocumentSetupStepProps) {
-  const { toast } = useToast();
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
+
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   const handleRemoveFile = () => {
     setUploadedFile(null); // This triggers the logic in parent to clear everything
@@ -84,10 +100,9 @@ export function DocumentSetupStep({
     const isValidType = allowedExtensions.some((ext) => fileName.endsWith(ext));
 
     if (!isValidType) {
-      toast({
-        variant: "destructive",
-        title: "Invalid File Type",
-        description: "Please upload only PowerPoint, Word, Excel, or PDF files.",
+      setErrorDialog({
+        open: true,
+        message: "Please upload only PowerPoint, Word, Excel, or PDF files.",
       });
       return;
     }
@@ -290,6 +305,26 @@ export function DocumentSetupStep({
           </div>
         </CardContent>
       </Card>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 import {
   Search,
   Filter,
@@ -51,6 +52,7 @@ import { TranslationService } from "@/api/services";
 import { TranslationJobResponse, TranslationHistoryResponse, StatusEnum } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
 import { TranslationDetailDialog } from "@/components/history/translation-detail-dialog";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useTranslations } from 'next-intl';
 
 export default function HistoryPage() {
@@ -58,7 +60,9 @@ export default function HistoryPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<TranslationJobResponse | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortField, setSortField] = useState<"name" | "status" | "date">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const trmlCommon = useTranslations("Common");
   const trmlHistory = useTranslations("History");
@@ -144,14 +148,63 @@ export default function HistoryPage() {
     }
   };
 
+  const handleSort = (field: "name" | "status" | "date") => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
   // Client-side filtering and pagination
-  const filteredHistory = jobs.filter((job) => {
-     const matchesStatus =
-       statusFilter === "all" || job.status === statusFilter;
+  const filteredHistory = jobs
+    .filter((job) => {
+      const matchesStatus =
+        statusFilter === "all" || job.status === statusFilter;
       // Add search logic if needed
-      const matchesSearch = searchTerm === "" || (job.sourceDocumentName || job.sourceDocument).toLowerCase().includes(searchTerm.toLowerCase());
-     return matchesStatus && matchesSearch;
-  });
+      const matchesSearch =
+        searchTerm === "" ||
+        (job.sourceDocumentName || job.sourceDocument)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+      
+      let matchesDate = true;
+      if (dateRange?.from) {
+        const jobDate = new Date(job.startedAt);
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        
+        matchesDate = matchesDate && jobDate >= fromDate;
+        
+        if (dateRange.to) {
+          const toDate = new Date(dateRange.to);
+          toDate.setHours(23, 59, 59, 999);
+          matchesDate = matchesDate && jobDate <= toDate;
+        }
+      }
+
+      return matchesStatus && matchesSearch && matchesDate;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          const nameA = a.sourceDocumentName || a.sourceDocument;
+          const nameB = b.sourceDocumentName || b.sourceDocument;
+          comparison = nameA.localeCompare(nameB);
+          break;
+        case "status":
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case "date":
+          const dateA = new Date(a.startedAt).getTime();
+          const dateB = new Date(b.startedAt).getTime();
+          comparison = dateA - dateB;
+          break;
+      }
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
 
   const paginatedHistory = filteredHistory.slice(
       (pagination.page - 1) * pagination.size,
@@ -193,24 +246,25 @@ export default function HistoryPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-[800px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={trmlHistory("searchDocuments")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-white dark:bg-zinc-950"
+            className="pl-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700"
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] bg-white dark:bg-zinc-950">
+            <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700">
               <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder={trmlHistory("status")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{trmlHistory("allStatus")}</SelectItem>
-              <SelectItem value="completed">{trmlHistory("statusTranslating")}</SelectItem>
+              <SelectItem value="completed">{trmlHistory("statusCompleted")}</SelectItem>
               <SelectItem value="translating">{trmlHistory("statusTranslating")}</SelectItem>
               <SelectItem value="pending">{trmlHistory("statusPending")}</SelectItem>
               <SelectItem value="failed">{trmlHistory("statusFailed")}</SelectItem>
@@ -221,13 +275,40 @@ export default function HistoryPage() {
 
       <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-zinc-50 dark:bg-zinc-900">
+          <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">{trmlHistory("colDocument")}</TableHead>
-              <TableHead>{trmlHistory("status")}</TableHead>
-              <TableHead>{trmlHistory("colLanguages")}</TableHead>
-              <TableHead>{trmlHistory("colDate")}</TableHead>
-              <TableHead className="text-right">{trmlHistory("colActions")}</TableHead>
+              <TableHead className="w-[40%] min-w-[300px]">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-1 p-0 font-medium hover:bg-transparent text-muted-foreground hover:text-foreground"
+                >
+                  {trmlHistory("colDocument")}
+                  <ArrowUpDown className={`h-4 w-4 ${sortField === "name" ? "opacity-100" : "opacity-30"}`} />
+                </Button>
+              </TableHead>
+              <TableHead className="w-[120px]">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("status")}
+                  className="flex items-center gap-1 p-0 font-medium hover:bg-transparent text-muted-foreground hover:text-foreground"
+                >
+                  {trmlHistory("status")}
+                  <ArrowUpDown className={`h-4 w-4 ${sortField === "status" ? "opacity-100" : "opacity-30"}`} />
+                </Button>
+              </TableHead>
+              <TableHead className="w-[200px]">{trmlHistory("colLanguages")}</TableHead>
+              <TableHead className="w-[150px]">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("date")}
+                  className="flex items-center gap-1 p-0 font-medium hover:bg-transparent text-muted-foreground hover:text-foreground"
+                >
+                  {trmlHistory("colDate")}
+                  <ArrowUpDown className={`h-4 w-4 ${sortField === "date" ? "opacity-100" : "opacity-30"}`} />
+                </Button>
+              </TableHead>
+              <TableHead className="w-[70px] text-right">{trmlHistory("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,19 +326,15 @@ export default function HistoryPage() {
               </TableRow>
             ) : (
               paginatedHistory.map((job) => (
-                <TableRow key={job.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
+                <TableRow key={job.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                         <FileText className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[200px]" title={job.sourceDocumentName || job.sourceDocument}>
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[400px]" title={job.sourceDocumentName || job.sourceDocument}>
                            {job.sourceDocumentName || job.sourceDocument}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {/* Mock size if not available */}
-                          -
                         </div>
                       </div>
                     </div>
