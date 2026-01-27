@@ -2,33 +2,8 @@ import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/toaster";
 import "../globals.css";
-import localFont from 'next/font/local';
 import {getMessages} from 'next-intl/server';
 import { NextIntlClientProvider } from "next-intl";
-
-const inter = localFont(
-  {
-    src: './fonts/Inter-VariableFont_opsz,wght.ttf',
-    display: 'swap',
-    variable: '--font-inter',
-  }
-)
-
-const playfair = localFont(
-  {
-    src: './fonts/Playfair-VariableFont_opsz,wdth,wght.ttf',
-    display: 'swap',
-    variable: '--font-playfair',
-  }
-)
-
-const geistMono = localFont(
-  {
-    src: './fonts/Geist-VariableFont_wght.ttf',
-    display: 'swap',
-    variable: '--font-geist-mono',
-  }
-)
 
 export const metadata: Metadata = {
   title: "GlossaryAI - Professional Translation Platform",
@@ -54,8 +29,23 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+          rel="stylesheet"
+        />
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root {
+            --font-inter: 'Inter', sans-serif;
+            --font-playfair: 'Playfair Display', serif;
+            --font-geist-mono: 'Geist', monospace;
+          }
+        ` }} />
+      </head>
       <body suppressHydrationWarning
-        className={`${inter.variable} ${playfair.variable} ${geistMono.variable} font-sans antialiased`}
+        className="font-sans antialiased"
       >
         <NextIntlClientProvider messages={messages}>
           {children}

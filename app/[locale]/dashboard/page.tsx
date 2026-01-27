@@ -241,9 +241,9 @@ export default function DashboardPage() {
         <Card className="w-full border-2 border-dashed border-border bg-muted/50">
           <CardHeader>
             <CardTitle>{trml("quickUpload")}</CardTitle>
-            <CardDescription>
+            {/* <CardDescription>
               {trml("quickUploadDescription")}
-            </CardDescription>
+            </CardDescription> */}
           </CardHeader>
           <CardContent>
             <AnimatePresence mode="wait">

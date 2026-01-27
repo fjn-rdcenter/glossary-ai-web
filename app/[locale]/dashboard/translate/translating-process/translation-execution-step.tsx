@@ -13,8 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileCard } from "@/components/file-card";
 import { TranslationStatus } from "../page";
-import { SUPPORTED_LANGUAGES } from "@/lib/constants";
-import { getLanguageName } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
 
 interface TranslationExecutionStepProps {
@@ -118,7 +116,7 @@ export function TranslationExecutionStep({
                 </p>
               </div>
               {selectedGlossaryList.length === 0 ? (
-                <p className="font-medium">No glossary selected</p>
+                <p className="font-medium">{trmlTranslationExecution("noGlossarySelected")}</p>
               ) : (
                 <div className="space-y-3">
                   {selectedGlossaryList.map((glossary) => (
@@ -130,8 +128,8 @@ export function TranslationExecutionStep({
                         <div>
                           <p className="font-medium text-sm">{glossary.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {getLanguageName(glossary.sourceLanguage)} →{" "}
-                            {getLanguageName(glossary.targetLanguage)}
+                            {trmlCommon(glossary.sourceLanguage)} →{" "}
+                            {trmlCommon(glossary.targetLanguage)}
                           </p>
                         </div>
                         <div className="text-xs font-medium bg-secondary px-2 py-1 rounded-md">
@@ -151,7 +149,7 @@ export function TranslationExecutionStep({
                 {trmlCommon("back")}
               </Button>
               <Button onClick={() => onStepChange(3)} className="group">
-                {trmlTranslationExecution("startTranslation")}
+                {trmlCommon("continue")}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
