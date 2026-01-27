@@ -402,6 +402,7 @@ function TranslatePageContent() {
     }
     setStatus("cancelled");
     setProgress(0);
+    setJobId(null);
   };
 
   const handleDownload = async () => {
