@@ -101,7 +101,7 @@
         "quickUploadDescription": "Drag and drop documents here to start a new translation immediately.",
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag files to upload",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB per file",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}"
     },
     "Translate": {
@@ -146,7 +146,7 @@
         "document": "Document",
         "glossariesCount": "{count, plural, one {Glossary} other {Glossaries}}",
         "termsCount": "{count, plural, one {term} other {terms}}",
-        "startTranslation": "Start Translation",
+        "noGlossarySelected": "No glossary selected",
         "translateTilte": "Ready to Translate",
         "translateDescription": "Click below to start the translation process",
         "startTranslating": "Start Translating",
