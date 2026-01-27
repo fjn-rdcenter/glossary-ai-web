@@ -84,7 +84,7 @@ export function GlossaryForm({
   const [targetLanguage, setTargetLanguage] = useState("vn");
   const [activeTab, setActiveTab] = useState("manual");
   const [terms, setTerms] = useState<UITerm[]>([
-    { id: "1", source: "", target: "" },
+    { id: "new-initial", source: "", target: "" },
   ]);
   const [importedFile, setImportedFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -327,10 +327,12 @@ export function GlossaryForm({
         }
 
         const validTermsToSave = terms.filter(t => t.source.trim() && t.target.trim());
-        
+        const isNewTerm = (id: string) => {
+          return id.startsWith("new-") || id.startsWith("imported-") || /^\d+$/.test(id);
+        }
         // 1. Separate terms into new/imported vs existing/edited
-        const newTermsToUpsert = validTermsToSave.filter(t => t.id.startsWith("new-") || t.id.startsWith("imported-"));
-        const existingTermsToUpdate = validTermsToSave.filter(t => !t.id.startsWith("new-") && !t.id.startsWith("imported-"));
+        const newTermsToUpsert = validTermsToSave.filter(t => isNewTerm(t.id));
+        const existingTermsToUpdate = validTermsToSave.filter(t => !isNewTerm(t.id));
 
         // 2. Batch Upsert New Terms
         if (newTermsToUpsert.length > 0) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import {
@@ -98,6 +98,10 @@ export default function HistoryPage() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [searchTerm, statusFilter, dateRange]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= pagination.totalPages) {
@@ -210,6 +214,9 @@ export default function HistoryPage() {
       (pagination.page - 1) * pagination.size,
       pagination.page * pagination.size
   );
+
+  const filteredTotal = filteredHistory.length;
+  const filteredTotalPages = Math.ceil(filteredTotal / pagination.size);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -401,9 +408,9 @@ export default function HistoryPage() {
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
             {trmlHistory("showing", {
-              start: (pagination.page - 1) * pagination.size + 1,
-              end: Math.min(pagination.page * pagination.size, pagination.total),
-              total: pagination.total,
+              start: filteredTotal > 0 ? (pagination.page - 1) * pagination.size + 1 : 0,
+              end: Math.min(pagination.page * pagination.size, filteredTotal),
+              total: filteredTotal,
             })}
         </div>
         <div className="flex items-center gap-2">
@@ -420,7 +427,7 @@ export default function HistoryPage() {
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page >= pagination.totalPages}
+            disabled={pagination.page >= filteredTotalPages}
           >
             {trmlHistory("next")}
             <ChevronRight className="h-4 w-4" />
