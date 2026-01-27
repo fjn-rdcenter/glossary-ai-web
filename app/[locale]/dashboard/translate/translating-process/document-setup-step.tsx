@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { FileCard } from "@/components/file-card";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
@@ -51,6 +52,8 @@ interface DocumentSetupStepProps {
   setSourceLanguage: (lang: string) => void;
   targetLanguage: string;
   setTargetLanguage: (lang: string) => void;
+  translateImages: boolean;
+  setTranslateImages: (value: boolean) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -63,6 +66,8 @@ export function DocumentSetupStep({
   setSourceLanguage,
   targetLanguage,
   setTargetLanguage,
+  translateImages,
+  setTranslateImages,
   onNext,
   onBack,
 }: DocumentSetupStepProps) {
@@ -287,6 +292,26 @@ export function DocumentSetupStep({
             </div>
           </div>
 
+          {/* ================= IMAGE TRANSLATION OPTION ================= */}
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/20">
+            <div className="space-y-0.5">
+              <Label
+                htmlFor="translate-images"
+                className="text-base cursor-pointer"
+              >
+                {trmlDocumentSetup("translateImages")}
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {trmlDocumentSetup("translateImagesDescription")}
+              </p>
+            </div>
+            <Switch
+              id="translate-images"
+              checked={translateImages}
+              onCheckedChange={setTranslateImages}
+            />
+          </div>
+
           {/* ================= ACTIONS ================= */}
           <div className="flex justify-between pt-2">
             <Button variant="ghost" onClick={onBack}>
@@ -315,12 +340,12 @@ export function DocumentSetupStep({
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -117,7 +117,9 @@
         "documentDescription": "Tải lên tài liệu của bạn và chọn ngôn ngữ dịch",
         "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
         "uploadDocument": "Tải lên tài liệu",
-        "translationLanguages": "Ngôn ngữ dịch"
+        "translationLanguages": "Ngôn ngữ dịch",
+        "translateImages": "Dịch hình ảnh",
+        "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu"
     },
     "GlossarySelection": {
         "selectGlossary": "Chọn bảng thuật ngữ",

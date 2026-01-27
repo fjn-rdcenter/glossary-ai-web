@@ -95,7 +95,9 @@
         "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
         "dragAndDrop": "ここにドキュメントをドラッグ＆ドロップしてください",
         "uploadDocument": "ドキュメントをアップロード",
-        "translationLanguages": "翻訳言語"
+        "translationLanguages": "翻訳言語",
+        "translateImages": "画像を翻訳",
+        "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳"
     },
     "GlossarySelection": {
         "selectGlossary": "用語集を選択",

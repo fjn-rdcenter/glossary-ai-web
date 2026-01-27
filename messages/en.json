@@ -117,7 +117,9 @@
         "documentDescription": "Upload your document and choose translation languages",
         "dragAndDrop": "Drag and drop your document here",
         "uploadDocument": "Upload Document",
-        "translationLanguages": "Translation Languages"
+        "translationLanguages": "Translation Languages",
+        "translateImages": "Translate Images",
+        "translateImagesDescription": "Extract and translate text from images in your document"
     },
     "GlossarySelection": {
         "selectGlossary": "Select Glossary",
