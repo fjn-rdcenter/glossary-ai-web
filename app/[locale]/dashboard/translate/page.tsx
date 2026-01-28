@@ -69,6 +69,7 @@ function TranslatePageContent() {
   } | null>(null);
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [translateImages, setTranslateImages] = useState<boolean>(false);
 
   // Translation Job State
   const [status, setStatus] = useState<TranslationStatus>("idle");
@@ -375,6 +376,7 @@ function TranslatePageContent() {
         sourceLanguage,
         targetLanguage,
         documentId: documentId,
+        isTranslateImage: translateImages,
         glossaries:
           glossaryOption === "existing" ? selectedGlossaries : undefined,
       });
@@ -489,23 +491,14 @@ function TranslatePageContent() {
               }
               // If it's metadata (from storage) -> update meta
               setUploadedFile(file);
-              // If null (removed)
-              if (!file) {
-                setUploadedFile(null);
-                setDocumentId(null);
-                setFileToUpload(null);
-                sessionStorage.removeItem("uploadedFile");
-                sessionStorage.removeItem("documentId");
-                return;
-              }
-              // If it's metadata (from storage) -> update meta
-              setUploadedFile(file);
             }}
             setFileToUpload={setFileToUpload} // Pass this down
             sourceLanguage={sourceLanguage}
             setSourceLanguage={setSourceLanguage}
             targetLanguage={targetLanguage}
             setTargetLanguage={setTargetLanguage}
+            translateImages={translateImages}
+            setTranslateImages={setTranslateImages}
             onNext={handleNext}
             onBack={handleBack}
           />
