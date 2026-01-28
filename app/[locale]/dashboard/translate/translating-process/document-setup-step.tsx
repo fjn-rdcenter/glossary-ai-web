@@ -119,8 +119,6 @@ export function DocumentSetupStep({
     };
     setUploadedFile(fileData);
     setFileToUpload(file);
-    setUploadedFile(fileData);
-    setFileToUpload(file);
     // sessionStorage.setItem("uploadedFile", JSON.stringify(fileData)); // REMOVED: Premature saving causing ghost state
   };
 

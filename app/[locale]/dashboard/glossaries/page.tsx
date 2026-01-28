@@ -353,10 +353,38 @@ export default function GlossariesPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Glossaries?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {selectedGlossaries.size === 1
+                ? trmlGlossaries("deleteGlossaryConfirm")
+                : trmlGlossaries("deleteGlossariesTile")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              **Are you sure you want to delete{" "}{selectedGlossaries.size}{" "}
-              glossaries? This action cannot be undone.
+              {selectedGlossaries.size === 1 ? (
+                trmlGlossaries("confirmDeleteGlossary", {
+                  glossaryName: glossaries.find((g) => selectedGlossaries.has(g.id))?.name || "",
+                })
+              ) : (
+                <>
+                  {trmlGlossaries("deleteGlossariesConfirm", { count: selectedGlossaries.size })
+                    .split(selectedGlossaries.size.toString())
+                    .map((part, index, arr) => (
+                      <span key={index}>
+                        {part}
+                        {index < arr.length - 1 && (
+                          <span
+                            className="font-semibold underline decoration-dotted cursor-help"
+                            title={
+                              glossaries.filter((g) => selectedGlossaries.has(g.id))
+                                .map((g) => g.name)
+                                .join("\n")}
+                          >
+                            {selectedGlossaries.size}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

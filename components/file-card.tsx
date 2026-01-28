@@ -80,7 +80,7 @@ export function FileCard({
       </div>
 
       {/* File Info */}
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0 overflow-hidden text-left">
         <p className="font-medium text-foreground truncate" title={name}>
           {name}
         </p>

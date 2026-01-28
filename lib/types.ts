@@ -162,6 +162,7 @@ export interface TranslationJobCreate {
   documentId: string;
   sourceLanguage: string;
   targetLanguage: string;
+  isTranslateImage?: boolean;
   glossaries?: string[];
 }
 
