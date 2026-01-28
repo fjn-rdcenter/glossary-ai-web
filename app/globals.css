@@ -4,78 +4,89 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Polished Palette: Accessible & Friendly UI */
-  /* Shadow Grey #161925 */
-  /* Twilight Indigo #23395b */
-  /* Rich Cerulean #406e8e */
-  /* Powder Blue #8ea8c3 */
-  /* Light Aqua #e0f7fa (Custom) */
-  /* Frozen Water #cbf7ed */
+  /* User Specified 5-Level Palette */
+  /* Level 1 (Darkest - Text/Sidebar): #0F2854 */
+  /* Level 2 (Primary - Button/Brand): #1C4D8D */
+  /* Level 3 (Secondary - Icon/Border): #4988C4 */
+  /* Level 4 (Highlight/Hover): #BDE8F5 */
+  /* Level 5 (Background): #EFFCFF */
 
-  --background: #e0f7fa; /* Light Aqua - Fresh Base */
-  --foreground: #161925; /* Shadow Grey - High Contrast Text */
-  --card: #ffffff; /* White - Clean Surface */
-  --card-foreground: #161925; /* Shadow Grey */
-  --popover: #ffffff; /* White */
-  --popover-foreground: #161925;
-  --primary: #23395b; /* Twilight Indigo - High Contrast Button (>9:1) */
-  --primary-foreground: #ffffff;
-  --secondary: #cbf7ed; /* Frozen Water - Soft Secondary */
-  --secondary-foreground: #23395b; /* Twilight Indigo */
-  --muted: #e0f7fa; /* Light Aqua */
-  --muted-foreground: #406e8e; /* Rich Cerulean - Readable Muted Text (>4.5:1) */
-  --accent: #e0f7fa; /* Light Aqua - Subtle Hover */
-  --accent-foreground: #23395b; /* Twilight Indigo */
+  --background: #EFFCFF; /* Level 5 */
+  --foreground: #0F2854; /* Level 1 */
+
+  --card: #FFFFFF;
+  --card-foreground: #0F2854; /* Level 1 */
+
+  --popover: #FFFFFF;
+  --popover-foreground: #0F2854; /* Level 1 */
+
+  --primary: #1C4D8D; /* Level 2 */
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #BDE8F5; /* Level 4 */
+  --secondary-foreground: #0F2854; /* Level 1 */
+
+  --muted: #BDE8F5; /* Level 4 (for muted backgrounds) */
+  --muted-foreground: #4988C4; /* Level 3 */
+
+  --accent: #BDE8F5; /* Level 4 (Highlight/Hover - IMPORTANT) */
+  --accent-foreground: #0F2854; /* Level 1 */
+
   --destructive: oklch(0.55 0.15 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: #8ea8c3; /* Powder Blue - Soft Definition */
-  --input: #ffffff; /* White Input */
-  --ring: #406e8e; /* Rich Cerulean Focus */
+
+  --border: #4988C4; /* Level 3 */
+  --input: #FFFFFF;
+  --ring: #4988C4; /* Level 3 */
+
   --chart-1: oklch(0.55 0.06 230);
   --chart-2: oklch(0.65 0.05 200);
   --chart-3: oklch(0.45 0.04 250);
   --chart-4: oklch(0.6 0.04 220);
   --chart-5: oklch(0.7 0.03 210);
+
   --radius: 0.75rem;
-  --sidebar: #406e8e; /* Rich Cerulean - New Sidebar Background */
-  --sidebar-foreground: #ffffff; /* White Text */
-  --sidebar-primary: #ffffff; /* White Active Icon/Text */
-  --sidebar-primary-foreground: #406e8e; /* Rich Cerulean Text on Active */
-  --sidebar-accent: #23395b; /* Twilight Indigo - Darker Blue Hover */
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #406e8e; /* Seamless Border */
-  --sidebar-ring: #ffffff;
+
+  --sidebar: #0F2854; /* Level 1 */
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #1C4D8D; /* Level 2 */
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1C4D8D; /* Level 2 (Hover on sidebar) */
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1C4D8D; /* Level 2 (Subtle border for dark sidebar) */
+  --sidebar-ring: #BDE8F5; /* Level 4 */
 
   --success: oklch(0.65 0.15 155);
   --success-foreground: oklch(0.98 0 0);
   --warning: oklch(0.75 0.1 85);
   --warning-foreground: oklch(0.25 0.02 60);
 
-  /* Footer background token */
-  --footer: #ffffff; /* White */
+  --footer: #FFFFFF;
 }
 
 .dark {
-  /* Dark Mode - Keeping true dark for contrast/utility if toggled */
+  /* Dark Mode - Keeping existing or adapting? 
+     User request didn't specify dark mode. 
+     Keeping these safe defaults or previous values to avoid breaking dark mode. */
   --background: #161925;
-  --foreground: #cbf7ed;
-  --card: #23395b;
-  --card-foreground: #cbf7ed;
-  --popover: #23395b;
-  --popover-foreground: #cbf7ed;
-  --primary: #406e8e;
-  --primary-foreground: #ffffff;
-  --secondary: #23395b;
-  --secondary-foreground: #cbf7ed;
-  --muted: #23395b;
+  --foreground: #EFFCFF;
+  --card: #0F2854;
+  --card-foreground: #EFFCFF;
+  --popover: #0F2854;
+  --popover-foreground: #EFFCFF;
+  --primary: #4988C4;
+  --primary-foreground: #FFFFFF;
+  --secondary: #0F2854;
+  --secondary-foreground: #EFFCFF;
+  --muted: #0F2854;
   --muted-foreground: #8ea8c3;
-  --accent: #406e8e;
-  --accent-foreground: #ffffff;
+  --accent: #1C4D8D;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.55 0.15 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: #406e8e;
-  --input: #23395b;
-  --ring: #8ea8c3;
+  --border: #1C4D8D;
+  --input: #0F2854;
+  --ring: #4988C4;
   --sidebar: #161925;
   --sidebar-foreground: #cbf7ed;
   --sidebar-primary: #406e8e;
@@ -143,6 +154,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  h1, h2, h3, h4, h5, h6 {
+    color: #1C4D8D; /* User specified Heading Color */
+  }
 }
 
 @layer utilities {
@@ -151,15 +165,22 @@
   }
 }
 
-/* Soft cold-tone shadow utilities */
+/* Soft cold-tone shadow utilities using Level 1 tint (#0F2854) */
 .shadow-soft {
-  box-shadow: 0 2px 8px -2px rgba(100, 116, 139, 0.08),
-    0 4px 16px -4px rgba(100, 116, 139, 0.06);
+  box-shadow: 0 2px 8px -2px rgba(15, 40, 84, 0.1),
+    0 4px 16px -4px rgba(15, 40, 84, 0.05);
 }
 
 .shadow-soft-lg {
-  box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.1),
-    0 8px 24px -4px rgba(100, 116, 139, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(15, 40, 84, 0.12),
+    0 8px 24px -4px rgba(15, 40, 84, 0.08); /* Boosted visibility */
+}
+
+/* Card Specific override to ensure they pop */
+.card-pop {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(15, 40, 84, 0.1), 0 2px 4px -1px rgba(15, 40, 84, 0.06);
 }
 
 /* Custom animations */
