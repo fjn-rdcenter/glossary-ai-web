@@ -57,15 +57,15 @@ export function Header() {
         <Link href="/dashboard" className="shrink-0 transition-opacity hover:opacity-80">
           <Logo size="sm" />
         </Link>
-        
-        <div className="relative w-full">
+
+        {/* <div className="relative w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder={trml("searchPlaceholder")}
             className="pl-9 bg-muted/50 border-none focus-visible:ring-1"
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center gap-3">
