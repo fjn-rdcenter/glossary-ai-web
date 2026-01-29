@@ -1,7 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { Link, useRouter, usePathname } from "@/i18n/routing"
 import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe, PlayCircle, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AuthService } from "@/api/services"
