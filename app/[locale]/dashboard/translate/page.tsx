@@ -541,6 +541,7 @@ function TranslatePageContent() {
             targetLanguage={targetLanguage}
             glossaryOption={glossaryOption}
             selectedGlossaryList={selectedGlossaryList}
+            translateImages={translateImages}
             status={status}
             progress={progress}
             onBack={handleBack}

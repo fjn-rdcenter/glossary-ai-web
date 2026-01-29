@@ -171,6 +171,7 @@ export interface TranslationJobResponse {
   sourceLanguage: string;
   targetLanguage: string;
   glossaries?: string[];
+  isTranslateImage?: boolean;
   sourceDocument: string;
   sourceDocumentName?: string;
   targetDocument?: string;
