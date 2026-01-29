@@ -32,6 +32,7 @@ export function LanguageSwitcher({
 
   const handleLanguageChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
+    router.refresh();
   };
 
   return (
