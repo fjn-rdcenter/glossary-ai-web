@@ -56,6 +56,7 @@ interface DocumentSetupStepProps {
   setTranslateImages: (value: boolean) => void;
   onNext: () => void;
   onBack: () => void;
+  isUploading?: boolean;
 }
 
 export function DocumentSetupStep({
@@ -70,6 +71,7 @@ export function DocumentSetupStep({
   setTranslateImages,
   onNext,
   onBack,
+  isUploading = false,
 }: DocumentSetupStepProps) {
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
@@ -312,17 +314,19 @@ export function DocumentSetupStep({
 
           {/* ================= ACTIONS ================= */}
           <div className="flex justify-between pt-2">
-            <Button variant="ghost" onClick={onBack}>
+            <Button variant="ghost" onClick={onBack} disabled={isUploading}>
               <ArrowLeft className="mr-2 w-4 h-4" />
               {trmlCommon("back")}
             </Button>
 
             <Button
               onClick={onNext}
-              disabled={!uploadedFile || !targetLanguage}
+              disabled={!uploadedFile || !targetLanguage || isUploading}
               className="group"
             >
-              {trmlCommon("continue")}
+              {isUploading
+                ? trmlCommon("uploading") || "Uploading..."
+                : trmlCommon("continue")}
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>

@@ -2,9 +2,8 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe, PlayCircle } from "lucide-react"
+import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe, PlayCircle, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Logo } from "@/components/logo"
 import { AuthService } from "@/api/services"
 import {
   Sidebar as SidebarUI,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useTranslations, useLocale } from 'next-intl';
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,7 +30,7 @@ const navItems = [
 export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
+  const { setOpenMobile, setOpen, isMobile } = useSidebar()
   const trml = useTranslations("Sidebar");
   const locale = useLocale();
 
@@ -40,15 +40,21 @@ export function Sidebar() {
     router.push("/login");
   };
 
+  const handleCloseSidebar = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    } else {
+      setOpen(false);
+    }
+  };
+
   return (
     <SidebarUI 
       side="right" 
       className="bg-sidebar border-l border-sidebar-border text-sidebar-foreground"
     >
-      <SidebarHeader className="h-24 flex flex-row items-center justify-center p-0 border-b border-sidebar-border gap-0">
-        <Link href="/dashboard" className="flex items-center justify-center gap-2 w-full" onClick={() => setOpenMobile(false)}>
-          <Logo size="md" variant="full" className="shrink-0 text-sidebar-foreground" imageClassName="bg-[#e0f7fa] rounded-md p-2" />
-        </Link>
+      <SidebarHeader className="px-6 py-4">
+        <Button onClick={handleCloseSidebar} className="absolute top-4 right-4"> <X className="w-5 h-5" /></Button>
       </SidebarHeader>
 
       <SidebarContent className="py-6 px-3">

@@ -29,7 +29,7 @@ function Footer() {
               <p className="font-bold text-[16px]">
                 {trml("contact")}
               </p>
-              <Link className="w-max" href="https://g.page/FUJINET?share">
+              <Link className="w-max" href="https://g.page/FUJINET?share" target="_blank" rel="noopener noreferrer">
                 {trml("address")}
               </Link>
               <div className="flex flex-wrap">
@@ -43,15 +43,17 @@ function Footer() {
               <p className="font-bold text-[16px] w-max">
                 {trml("mainPages")}
               </p>
-              <Link className="w-max" href="https://www.fujinet.net/">
+              <Link className="w-max" href="https://www.fujinet.net/" target="_blank" rel="noopener noreferrer">
                 FUJINET SYSTEMS
               </Link>
-              <Link className="w-max" href="https://www.fujinet.net/rdcenter/">
+              <Link className="w-max" href="https://www.fujinet.net/rdcenter/" target="_blank" rel="noopener noreferrer">
                 FUJINET R&D CENTER
               </Link>
               <Link
                 className="w-max"
                 href="https://docs-aiservice.fujinet.net/"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 AI SERVICE SOLUTIONS
               </Link>

@@ -70,6 +70,7 @@ function TranslatePageContent() {
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [translateImages, setTranslateImages] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Translation Job State
   const [status, setStatus] = useState<TranslationStatus>("idle");
@@ -268,6 +269,9 @@ function TranslatePageContent() {
     if (currentStep === 0) {
       // Handle Document Upload if not already uploaded
       if (!documentId && fileToUpload) {
+        if (isUploading) return; // Prevent duplicate calls
+
+        setIsUploading(true);
         try {
           const response = await TranslationService.uploadDocument(
             fileToUpload,
@@ -294,7 +298,10 @@ function TranslatePageContent() {
             open: true,
             message: "Failed to upload document. Please try again.",
           });
+          setIsUploading(false);
           return; // Stop navigation
+        } finally {
+          setIsUploading(false);
         }
       } else if (!documentId && !uploadedFile) {
         // Case 1: No file selected at all
@@ -501,6 +508,7 @@ function TranslatePageContent() {
             setTranslateImages={setTranslateImages}
             onNext={handleNext}
             onBack={handleBack}
+            isUploading={isUploading}
           />
         )}
 

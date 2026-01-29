@@ -356,7 +356,7 @@ export default function GlossariesPage() {
             <AlertDialogTitle>
               {selectedGlossaries.size === 1
                 ? trmlGlossaries("deleteGlossaryConfirm")
-                : trmlGlossaries("deleteGlossariesTile")}
+                : trmlGlossaries("deleteGlossariesTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {selectedGlossaries.size === 1 ? (
