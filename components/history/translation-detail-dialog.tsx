@@ -102,9 +102,9 @@ export function TranslationDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-start justify-between gap-4">
             <div className="space-y-1 text-left">
-              <span className="text-lg font-semibold leading-none tracking-tight">Translation Details</span>
+              <span className="text-lg font-semibold leading-none tracking-tight">{trmlHistory("translationDetails")}</span>
               <p className="text-sm text-muted-foreground font-normal flex items-center gap-2">
-                ID: <span className="font-mono text-xs">{job.id.substring(0, 8)}...</span>
+                ID: <span className="font-mono text-xs">{job.id}</span>
               </p>
             </div>
             <Badge variant="outline" className={getStatusColor(job.status)}>
@@ -143,12 +143,27 @@ export function TranslationDetailDialog({
                         <Badge variant="secondary" className="text-xs uppercase">{job.targetLanguage}</Badge>
                     </div>
                 </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {trmlHistory("translateImages")}
+                  </h4>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 flex items-center">
+                    <span className="text-xs font-medium">
+                      {job.isTranslateImage ? trmlCommon("yes") : trmlCommon("no")}
+                    </span> 
+                  </div>
+                </div>
+            </div>
+
+            <Separator />
+
                  <div className="space-y-3">
                     <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center">
                         <BookOpen className="w-4 h-4 mr-2" />
                         {trmlHistory("usedGlossaries")}
                     </h4>
-                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 min-h-[58px]">
+                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
                         {jobGlossaries.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                                 {jobGlossaries.map((name, idx) => (
@@ -162,7 +177,6 @@ export function TranslationDetailDialog({
                         )}
                     </div>
                 </div>
-            </div>
 
             <Separator />
 
@@ -187,22 +201,20 @@ export function TranslationDetailDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <div className="flex gap-2 w-full sm:w-auto">
-             {job.status === 'completed' && onDownloadTranslated && (
-                 <Button className="flex-1 sm:flex-none" size="sm" onClick={() => onDownloadTranslated(job)}>
-                    <Download className="w-4 h-4 mr-2" />
-                    {trmlHistory("labelTranslated")}
-                 </Button>
-             )}
-              {onDownloadOriginal && (
-                 <Button variant="outline" className="flex-1 sm:flex-none" size="sm" onClick={() => onDownloadOriginal(job)}>
-                    <Download className="w-4 h-4 mr-2" />
-                    {trmlHistory("labelOriginal")}
-                 </Button>
-             )}
-          </div>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{trmlHistory("close")}</Button>
+        <DialogFooter className="flex gap-2">
+          {job.status === 'completed' && onDownloadTranslated && (
+            <Button size="sm" onClick={() => onDownloadTranslated(job)}>
+              <Download className="w-4 h-4 mr-2" />
+              {trmlHistory("labelTranslated")}
+            </Button>
+          )}
+          {onDownloadOriginal && (
+            <Button variant="outline" size="sm" onClick={() => onDownloadOriginal(job)}>
+              <Download className="w-4 h-4 mr-2" />
+              {trmlHistory("labelOriginal")}
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>{trmlHistory("close")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

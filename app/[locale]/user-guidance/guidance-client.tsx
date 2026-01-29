@@ -173,7 +173,7 @@ export function GuidanceClient() {
                   <iframe
                     className="absolute inset-0 w-full h-full"
                     src="https://www.youtube.com/embed/BRKE1GVBRHk"
-                    title="TranslateSphere Demo"
+                    title="GlossaryAI Demo"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
