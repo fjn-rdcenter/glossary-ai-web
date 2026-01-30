@@ -175,10 +175,11 @@ export function EditGlossaryDialog({
       );
 
       if (isDuplicate) {
-        toast({
-          variant: "destructive",
-          title: trmlGlossaries("termDuplicatedTitle"),
-          description: trmlGlossaries('termDuplicatedMessage', { term: trimmedSource }),
+        setErrorDialog({
+          open: true,
+          message: trmlGlossaries("termDuplicatedMessage", {
+            term: trimmedSource,
+          }),
         });
         return;
       }
@@ -304,7 +305,9 @@ export function EditGlossaryDialog({
           // All duplicates - show error
           event.target.value = "";
           setImportMessage({
-            text: `All ${newTerms.length} terms already exist in the glossary!`,
+            text: trmlGlossaries("allTermExistMessage", {
+              count: newTerms.length,
+            }),
             type: "error",
           });
           setTimeout(() => setImportMessage(null), 3000);
@@ -396,10 +399,10 @@ export function EditGlossaryDialog({
 
       // Fetch updated data
       const updated = await GlossaryService.getGlossaryById(glossaryId);
-      
+
       // [FIX] Update local calculation to fix stale backend count
       const activeCount = terms.filter((t) => !t.isDeleted).length;
-      
+
       // Also filter out the explicitly deleted items from the received list
       // to ensure the list view matches the count if backend is stale
       const deletedIds = new Set(deleted.map((t) => t.id));
@@ -408,11 +411,11 @@ export function EditGlossaryDialog({
       );
 
       const patchedUpdated = {
-         ...updated,
-         termCount: activeCount,
-         terms: {
-            ...updated.terms,
-            items: validItems,
+        ...updated,
+        termCount: activeCount,
+        terms: {
+          ...updated.terms,
+          items: validItems,
             size: validItems.length
          }
       };
@@ -633,7 +636,7 @@ export function EditGlossaryDialog({
                   <h3 className="text-sm font-semibold">{trmlGlossaries("previewTerms")}</h3>
                   <div className="flex gap-1">
                     <span className="bg-muted px-2 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground">
-                      {activeCount} 
+                      {activeCount}
                     </span>
                     {deletedCount > 0 && (
                       <span className="bg-red-100 px-2 py-0.5 rounded-full text-[10px] font-medium text-red-600">
@@ -659,20 +662,20 @@ export function EditGlossaryDialog({
               {/* Content Area */}
               {entryMode === "import" ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
-                     <FileDropzone
-                        className="w-full max-w-lg bg-white"
-                        onFileSelect={(file) => {
-                             // Synthesize event to match existing handler signature
-                             const syntheticEvent = {
+                  <FileDropzone
+                    className="w-full max-w-lg bg-white"
+                    onFileSelect={(file) => {
+                      // Synthesize event to match existing handler signature
+                      const syntheticEvent = {
                                  target: { files: [file], value: '' }
-                             } as unknown as React.ChangeEvent<HTMLInputElement>;
-                             handleFileUpload(syntheticEvent);
-                         }}
-                        accept={{
+                      } as unknown as React.ChangeEvent<HTMLInputElement>;
+                      handleFileUpload(syntheticEvent);
+                    }}
+                    accept={{
                              'text/plain': ['.txt'],
                              'text/csv': ['.csv']
-                         }}
-                     />
+                    }}
+                  />
 
                   {/* Import Message */}
                   {importMessage && (
@@ -850,7 +853,7 @@ export function EditGlossaryDialog({
           </div>
         </DialogFooter>
       </DialogContent>
-      
+
       {/* Error Dialog */}
       <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
         <AlertDialogContent>
@@ -860,12 +863,12 @@ export function EditGlossaryDialog({
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -107,7 +107,7 @@ export function CreateGlossaryDialog({
 
   // Status
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // [NEW] Error Dialog State
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -357,7 +357,16 @@ export function CreateGlossaryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Increased max-width and height */}
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[75vw] w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 bg-white shadow-2xl overflow-hidden sm:rounded-xl">
+      <DialogContent
+        data-tour="create-glossary-dialog"
+        onInteractOutside={(e) => {
+          const target = (e.detail.originalEvent as any).target as HTMLElement;
+          if (target.closest("#onboarding-help-button")) {
+            e.preventDefault();
+          }
+        }}
+        className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[75vw] w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 bg-white shadow-2xl overflow-hidden sm:rounded-xl"
+      >
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b bg-white shrink-0">
           <DialogTitle className="text-xl font-semibold tracking-tight">
@@ -373,7 +382,7 @@ export function CreateGlossaryDialog({
           {/* LEFT PANEL: Settings & Input */}
           <div className="w-full md:w-[500px] lg:w-[550px] flex flex-col border-b md:border-b-0 md:border-r bg-white shrink-0 overflow-y-auto">
             {/* 1. Glossary Details Section */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5" data-tour="glossary-settings">
               <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
                 <Settings2 className="w-4 h-4" />
                 {trmlGlossaries("settings")}
@@ -475,8 +484,11 @@ export function CreateGlossaryDialog({
                   </span>
                 </div>
               )}
-
-              <div className="space-y-4 p-4 border rounded-xl bg-white shadow-sm">
+              {/* data-tour="manual-entry" */}
+              <div
+                className="space-y-4 p-4 border rounded-xl bg-white shadow-sm"
+                data-tour="manual-entry"
+              >
                 <div className="grid grid-cols-2 gap-3 items-end">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">
@@ -540,9 +552,11 @@ export function CreateGlossaryDialog({
                   </kbd>
                 </Button>
               </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-xs text-muted-foreground mb-3">- {trmlCommon("or").toUpperCase()} -</p>
+              {/* data-tour="import-option" */}
+              <div className="mt-6 text-center" data-tour="import-option">
+                <p className="text-xs text-muted-foreground mb-3">
+                  - {trmlCommon("or").toUpperCase()} -
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -586,35 +600,46 @@ export function CreateGlossaryDialog({
 
             {/* List Content */}
             {entryMode === "import" ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
-                     <FileDropzone
-                        className="w-full max-w-lg bg-white"
-                        onFileSelect={(file) => {
-                            // Synthesize event to match existing handler signature
-                            const syntheticEvent = {
+              <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
+                <FileDropzone
+                  className="w-full max-w-lg bg-white"
+                  onFileSelect={(file) => {
+                    // Synthesize event to match existing handler signature
+                    const syntheticEvent = {
                                 target: { files: [file], value: '' }
-                            } as unknown as React.ChangeEvent<HTMLInputElement>;
-                            handleFileUpload(syntheticEvent);
-                        }}
-                        accept={{
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    handleFileUpload(syntheticEvent);
+                  }}
+                  accept={{
                              'text/plain': ['.txt'],
                              'text/csv': ['.csv']
-                         }}
-                     />
-                    {/* Import Message */}
-                    {importMessage && (
-                      <div
-                        className={`mt-4 p-3 rounded-md text-sm font-medium italic text-center animate-in fade-in slide-in-from-top-1 max-w-lg w-full ${
-                          importMessage.type === "error"
-                            ? "bg-red-50 text-red-700 border border-red-200"
-                            : "bg-green-50 text-green-700 border border-green-200"
-                        }`}
-                      >
-                        {importMessage.text}
-                      </div>
-                    )}
+                  }}
+                  instructionMessage={
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-muted-foreground">
+                        {trmlGlossaries("uploadFormatLabel")}
+                      </span>
+                      <code className="bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200 font-mono text-xs text-slate-600 block w-fit mx-auto mt-1">
+                        {trmlGlossaries("uploadFormatExample")}
+                      </code>
+                    </div>
+                  }
+                />
+
+                {/* Import Message */}
+                {importMessage && (
+                  <div
+                    className={`mt-4 p-3 rounded-md text-sm font-medium italic text-center animate-in fade-in slide-in-from-top-1 max-w-lg w-full ${
+                      importMessage.type === "error"
+                        ? "bg-red-50 text-red-700 border border-red-200"
+                        : "bg-green-50 text-green-700 border border-green-200"
+                    }`}
+                  >
+                    {importMessage.text}
                   </div>
-                ) : (
+                )}
+              </div>
+            ) : (
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="grid grid-cols-[1fr_24px_1fr_40px] gap-4 px-6 py-2 bg-muted/20 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   <div>{trmlCommon("source")}</div>
@@ -723,12 +748,12 @@ export function CreateGlossaryDialog({
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

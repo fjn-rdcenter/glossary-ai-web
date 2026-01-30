@@ -144,105 +144,107 @@ export function DocumentSetupStep({
 
         <CardContent className="space-y-8">
           {/* ================= FILE UPLOAD ================= */}
-          {uploadedFile ? (
-            <div className="flex items-stretch gap-2">
-              {/* File card */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <FileCard
-                  name={uploadedFile.name}
-                  size={uploadedFile.size}
-                  type={uploadedFile.type}
-                  status="success"
-                />
+          <div data-tour="file-upload">
+            {uploadedFile ? (
+              <div className="flex items-stretch gap-2">
+                {/* File card */}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <FileCard
+                    name={uploadedFile.name}
+                    size={uploadedFile.size}
+                    type={uploadedFile.type}
+                    status="success"
+                  />
+                </div>
+
+                {/* Remove action – full height */}
+                <button
+                  onClick={handleRemoveFile}
+                  className="
+                    group
+                    w-12
+                    flex items-center justify-center
+                    rounded-xl
+                    border border-border
+                    text-muted-foreground
+                    transition-all duration-200
+
+                    hover:bg-destructive
+                    hover:border-destructive
+                    hover:text-white
+
+                    active:bg-destructive/90
+                  "
+                  aria-label="Remove file"
+                >
+                  <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
+                </button>
               </div>
-
-              {/* Remove action – full height */}
-              <button
-                onClick={handleRemoveFile}
+            ) : (
+              <div
                 className="
-                  group
-                  w-12
-                  flex items-center justify-center
-                  rounded-xl
-                  border border-border
-                  text-muted-foreground
-                  transition-all duration-200
-
-                  hover:bg-destructive
-                  hover:border-destructive
-                  hover:text-white
-
-                  active:bg-destructive/90
+                  p-6 border-2 border-dashed border-border
+                  rounded-xl text-center
+                  transition-colors
                 "
-                aria-label="Remove file"
-              >
-                <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-              </button>
-            </div>
-          ) : (
-            <div
-              className="
-                p-6 border-2 border-dashed border-border
-                rounded-xl text-center
-                transition-colors
-              "
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.currentTarget.classList.add(
-                  "border-primary",
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.add(
+                    "border-primary",
                   "bg-secondary/50"
-                );
-              }}
-              onDragLeave={(e) => {
-                e.currentTarget.classList.remove(
-                  "border-primary",
+                  );
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.classList.remove(
+                    "border-primary",
                   "bg-secondary/50"
-                );
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.currentTarget.classList.remove(
-                  "border-primary",
+                  );
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove(
+                    "border-primary",
                   "bg-secondary/50"
-                );
-                const file = e.dataTransfer.files[0];
-                if (file) {
-                  handleFileSelect(file);
-                }
-              }}
-            >
-              <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">
-                {trmlDocumentSetup("dragAndDrop")}
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
-
-              <input
-                type="file"
-                id="file-upload"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.docm,.dotx,.dotm,.ppt,.pptx,.xlsx"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
+                  );
+                  const file = e.dataTransfer.files[0];
                   if (file) {
                     handleFileSelect(file);
                   }
                 }}
-              />
-
-              <Button
-                variant="outline"
-                className="bg-transparent"
-                onClick={() => document.getElementById("file-upload")?.click()}
               >
-                <Upload className="mr-2 w-4 h-4" />
-                {trmlDocumentSetup("uploadDocument")}
-              </Button>
-            </div>
-          )}
+                <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">
+                  {trmlDocumentSetup("dragAndDrop")}
+                </p>
+              <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
+
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.docm,.dotx,.dotm,.ppt,.pptx,.xlsx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleFileSelect(file);
+                    }
+                  }}
+                />
+
+                <Button
+                  variant="outline"
+                  className="bg-transparent"
+                onClick={() => document.getElementById("file-upload")?.click()}
+                >
+                  <Upload className="mr-2 w-4 h-4" />
+                  {trmlDocumentSetup("uploadDocument")}
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* ================= LANGUAGE PAIR ================= */}
-          <div className="space-y-2">
+          <div className="space-y-2" data-tour="language-selection">
             <Label>{trmlDocumentSetup("translationLanguages")}</Label>
 
             <div className="flex items-center gap-3">
@@ -293,7 +295,10 @@ export function DocumentSetupStep({
           </div>
 
           {/* ================= IMAGE TRANSLATION OPTION ================= */}
-          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/20">
+          <div
+            className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/20"
+            data-tour="translate-images"
+          >
             <div className="space-y-0.5">
               <Label
                 htmlFor="translate-images"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { useDropzone, DropzoneOptions } from "react-dropzone";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ interface FileDropzoneProps extends Omit<DropzoneOptions, "onDrop"> {
   className?: string;
   dropMessage?: string;
   acceptMessage?: string;
+  instructionMessage?: React.ReactNode;
 }
 
 export function FileDropzone({
@@ -18,10 +19,12 @@ export function FileDropzone({
   className,
   dropMessage,
   acceptMessage,
+  instructionMessage,
+  footer,
   ...props
-}: FileDropzoneProps) {
+}: FileDropzoneProps & { footer?: React.ReactNode }) {
   const trmlGlossaries = useTranslations("Glossaries");
-  
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
@@ -32,46 +35,59 @@ export function FileDropzone({
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
-    onDrop,
-    multiple: false,
-    ...props,
-  });
+      onDrop,
+      multiple: false,
+      ...props,
+    });
 
   return (
     <div
       {...getRootProps()}
       className={cn(
-        "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[200px]",
+        "border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[220px] bg-white hover:bg-slate-50",
         isDragActive
           ? "border-primary bg-primary/5 scale-[0.99]"
-          : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30",
+          : "border-muted-foreground/25 hover:border-primary/50",
         isDragReject && "border-destructive bg-destructive/5",
         className
       )}
     >
       <input {...getInputProps()} />
-      
-      <div className={cn("rounded-full p-4 mb-4 transition-colors", 
-          isDragActive ? "bg-primary/10" : "bg-muted" 
-      )}>
+
+      <div
+        className={cn(
+          "rounded-full p-3 mb-3 transition-colors bg-secondary/50",
+          isDragActive && "bg-primary/10",
+        )}
+      >
         {isDragReject ? (
-             <AlertCircle className="w-8 h-8 text-destructive" />
-        ) : isDragActive ? (
-             <Upload className="w-8 h-8 text-primary animate-bounce" />
+          <AlertCircle className="w-6 h-6 text-destructive" />
         ) : (
-             <FileText className="w-8 h-8 text-muted-foreground" />
+          <Upload
+            className={cn(
+              "w-6 h-6 text-muted-foreground",
+              isDragActive && "text-primary animate-bounce",
+            )}
+          />
         )}
       </div>
 
-      <div className="space-y-1">
-        <p className={cn("text-sm font-medium transition-colors", isDragActive ? "text-primary" : "text-foreground")}>
-          {isDragActive 
-            ? (dropMessage || trmlGlossaries("dropToUpload") || "Drop file to upload") 
-            : (dropMessage || trmlGlossaries("dragAndDropOrClick") || "Drag & drop or click to select")}
+      <div className="space-y-1 w-full max-w-sm">
+        <p
+          className={cn(
+            "text-base font-semibold transition-colors",
+            isDragActive ? "text-primary" : "text-foreground",
+          )}
+        >
+          {isDragActive
+            ? dropMessage || trmlGlossaries("dropToUpload")
+            : dropMessage || trmlGlossaries("clickToUpload")}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {acceptMessage || trmlGlossaries("supportedFormats") || "Supports .txt, .csv"}
-        </p>
+
+        {/* Instruction / Accept Message */}
+        <div className="text-xs text-muted-foreground space-y-3 pt-1">
+          {instructionMessage}
+        </div>
       </div>
     </div>
   );

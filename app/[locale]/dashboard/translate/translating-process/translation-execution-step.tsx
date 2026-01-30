@@ -68,7 +68,7 @@ export function TranslationExecutionStep({
         exit={{ opacity: 0, x: -20 }}
         transition={{ duration: 0.15 }}
       >
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-2xl mx-auto" data-tour="preview-summary">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">
               {trmlTranslationExecution("title")}
@@ -194,11 +194,16 @@ export function TranslationExecutionStep({
                 {trmlTranslationExecution("translateDescription")}
               </p>
               <div className="flex justify-center gap-4">
-                 <Button size="lg" variant="outline" onClick={onBack}>
+                <Button size="lg" variant="outline" onClick={onBack}>
                   <ArrowLeft className="mr-2 w-4 h-4" />
                   {trmlCommon("back")}
                 </Button>
-                <Button size="lg" onClick={onStartTranslation} className="group">
+                <Button
+                  size="lg"
+                  onClick={onStartTranslation}
+                  className="group"
+                  data-tour="start-translation"
+                >
                   {trmlTranslationExecution("startTranslating")}
                 </Button>
               </div>
