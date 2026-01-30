@@ -10,6 +10,7 @@ export interface UserCreate extends UserBase {}
 
 export interface UserResponse extends UserBase {
   id: string;
+  is_first_login?: boolean;
 }
 
 // --- Auth Schemas ---

@@ -2,13 +2,17 @@
 
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { StepIndicator } from "@/components/step-indicator";
 import { DocumentSetupStep } from "./translating-process/document-setup-step";
 import { GlossarySelectionStep } from "./translating-process/glossary-selection-step";
 import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
-import { TranslationService, GlossaryService } from "@/api/services";
+import {
+  TranslationService,
+  GlossaryService,
+  AuthService,
+} from "@/api/services";
 import { GlossaryResponse } from "@/lib/types";
 
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +26,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Lightbulb } from "lucide-react";
+import Joyride, {
+  ACTIONS,
+  CallBackProps,
+  EVENTS,
+  STATUS,
+  Step,
+} from "react-joyride";
+
 export const dynamic = "force-dynamic";
 
 const steps = [
@@ -46,6 +58,7 @@ function TranslatePageContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const trml = useTranslations("Translate");
   const trmlCommon = useTranslations("Common");
+  const trmlOnboarding = useTranslations("Onboarding");
 
   // [NEW] Error Dialog State
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
@@ -87,6 +100,83 @@ function TranslatePageContent() {
   // Search/Filter state for Glossary Step
   const [searchQuery, setSearchQuery] = useState("");
   const [termQuery, setTermQuery] = useState("");
+
+  // Onboarding Tour State
+  const [runTour, setRunTour] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [showSparkle, setShowSparkle] = useState(false);
+  // Glossary Creation Dialog State
+  const [isCreatingGlossaryOpen, setIsCreatingGlossaryOpen] = useState(false);
+  // Ensure component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Initialize tour state (check if new user for spark effect)
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const user = await AuthService.getCurrentUser();
+        if (user.is_first_login && isMounted) {
+          setShowSparkle(true);
+          // Auto start tour if first login
+          setRunTour(true);
+        }
+      } catch (error) {
+        console.error("Failed to check user status", error);
+      }
+    };
+
+    if (isMounted) {
+      checkUser();
+    }
+  }, [isMounted]);
+
+  // Sync Tour with App Steps (Background Sync for Manual Trigger)
+  useEffect(() => {
+    // We updates tour index in background so the Help button always works for the current step.
+    const timer = setTimeout(() => {
+      if (currentStep === 0) {
+        if (tourStepIndex >= 3) {
+          setTourStepIndex(0);
+        }
+      } else if (currentStep === 1) {
+        // Sync logic is now handled by the specific useEffect above for Creation mode priority
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [currentStep, isCreatingGlossaryOpen]);
+
+  // Handle tour callback
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, action, index, type } = data;
+    console.error(
+      `[Joyride CB] Type: ${type}, Status: ${status}, Action: ${action}, Index: ${index}`,
+    );
+
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      console.error("[Joyride] Finished/Skipped -> Saving to LocalStorage");
+      setRunTour(false);
+      localStorage.setItem("onboardingTourCompleted", "true");
+    } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      // Handle Next/Back navigation
+      if (action === ACTIONS.NEXT) {
+        // Check if this is the end of a "Section"
+        if ([2, 4].includes(index)) {
+          console.error("[Joyride] Pausing at Section End");
+          // Pause the tour to let user interact
+          setRunTour(false);
+          // We do NOT increment index here; the useEffect will set the next index when App Step changes
+        } else {
+          // Normal progression within a section
+          setTourStepIndex(index + 1);
+        }
+      } else if (action === ACTIONS.PREV) {
+        setTourStepIndex(index - 1);
+      }
+    }
+  };
 
   useEffect(() => {
     // Check for step query parameter first
@@ -264,6 +354,163 @@ function TranslatePageContent() {
       // Don't error out completely on one failed check
     }
   };
+
+  // Custom Tooltip Component
+  const CustomTooltip = ({
+    continuous,
+    index,
+    step,
+    backProps,
+    closeProps,
+    primaryProps,
+    skipProps,
+    tooltipProps,
+    size,
+  }: any) => {
+    return (
+      <div
+        {...tooltipProps}
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          padding: "24px",
+          maxWidth: "400px",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        {/* Step Counter Removed */}
+
+        {/* Content */}
+        <div>{step.content}</div>
+
+        {/* Buttons - Bottom Row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "20px",
+          }}
+        >
+          {/* Skip Button - Bottom Left */}
+          <button
+            {...skipProps}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#6b7280",
+              fontSize: "14px",
+              cursor: "pointer",
+              //  padding: "8px 12px",
+            }}
+          >
+            {trmlOnboarding("skipTour")}
+          </button>
+
+          {/* Navigation Buttons - Bottom Right */}
+          <div style={{ display: "flex", gap: "8px" }}>
+            {index > 0 && ![3].includes(index) && (
+              <button
+                {...backProps}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#6b7280",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  padding: "8px 16px",
+                }}
+              >
+                {trmlOnboarding("back")}
+              </button>
+            )}
+            <button
+              {...primaryProps}
+              style={{
+                backgroundColor: "#3b82f6",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+              }}
+            >
+              {[2, 4].includes(index)
+                ? trmlOnboarding("gotIt")
+                : index === size - 1
+                  ? trmlOnboarding("finish")
+                  : trmlOnboarding("next")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Tour Steps Configuration
+  const tourSteps: Step[] = [
+    {
+      target: '[data-tour="file-upload"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">{trmlOnboarding("step1Title")}</h3>
+          <p className="text-sm">{trmlOnboarding("step1Description")}</p>
+        </div>
+      ),
+      placement: "bottom",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="language-selection"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">{trmlOnboarding("step2Title")}</h3>
+          <p className="text-sm">{trmlOnboarding("step2Description")}</p>
+        </div>
+      ),
+      placement: "bottom",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="translate-images"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">{trmlOnboarding("step3Title")}</h3>
+          <p className="text-sm">{trmlOnboarding("step3Description")}</p>
+        </div>
+      ),
+      placement: "top",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="glossary-panel"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">{trmlOnboarding("step4Title")}</h3>
+          <p className="text-sm">{trmlOnboarding("step4Description")}</p>
+        </div>
+      ),
+      placement: "right",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="create-glossary-btn"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">
+            {trmlOnboarding("stepCreateGlossaryTitle")}
+          </h3>
+          <p className="text-sm">
+            {trmlOnboarding("stepCreateGlossaryDescription")}
+          </p>
+        </div>
+      ),
+      placement: "bottom",
+      disableBeacon: true,
+    },
+  ];
 
   const handleNext = async () => {
     if (currentStep === 0) {
@@ -470,67 +717,69 @@ function TranslatePageContent() {
   );
 
   return (
-    <PageTransition className="container mx-auto px-6">
-      {/* Step Indicator */}
-      <SlideUp>
-        <StepIndicator
-          steps={steps}
-          currentStep={currentStep}
-          className="mb-6"
-        />
-      </SlideUp>
-
-      {/* Step Content */}
-      <AnimatePresence mode="wait">
-        {/* Step 0: Document Setup */}
-        {currentStep === 0 && (
-          <DocumentSetupStep
-            uploadedFile={uploadedFile}
-            setUploadedFile={(file) => {
-              // If null (removed)
-              if (!file) {
-                setUploadedFile(null);
-                setDocumentId(null);
-                setFileToUpload(null);
-                sessionStorage.removeItem("uploadedFile");
-                sessionStorage.removeItem("documentId");
-                return;
-              }
-              // If it's metadata (from storage) -> update meta
-              setUploadedFile(file);
-            }}
-            setFileToUpload={setFileToUpload} // Pass this down
-            sourceLanguage={sourceLanguage}
-            setSourceLanguage={setSourceLanguage}
-            targetLanguage={targetLanguage}
-            setTargetLanguage={setTargetLanguage}
-            translateImages={translateImages}
-            setTranslateImages={setTranslateImages}
-            onNext={handleNext}
-            onBack={handleBack}
-            isUploading={isUploading}
+      <PageTransition className="container mx-auto px-6">
+        {/* Step Indicator */}
+        <SlideUp>
+          <StepIndicator
+            steps={steps}
+            currentStep={currentStep}
+            className="mb-6"
           />
-        )}
+        </SlideUp>
 
-        {/* Step 1: Glossary Selection */}
-        {currentStep === 1 && (
-          <GlossarySelectionStep
-            glossaryOption={glossaryOption}
-            setGlossaryOption={setGlossaryOption}
-            selectedGlossaries={selectedGlossaries}
-            setSelectedGlossaries={setSelectedGlossaries}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            termQuery={termQuery}
-            setTermQuery={setTermQuery}
-            glossaries={glossaries} // Pass real glossaries
-            onNext={handleNext}
-            onBack={handleBack}
-            onRefresh={fetchGlossaries}
-          />
-        )}
+        {/* Step Content */}
+        <AnimatePresence mode="wait">
+          {/* Step 0: Document Setup */}
+          {currentStep === 0 && (
+            <DocumentSetupStep
+              uploadedFile={uploadedFile}
+              setUploadedFile={(file) => {
+                // If null (removed)
+                if (!file) {
+                  setUploadedFile(null);
+                  setDocumentId(null);
+                  setFileToUpload(null);
+                  sessionStorage.removeItem("uploadedFile");
+                  sessionStorage.removeItem("documentId");
+                  return;
+                }
+                // If it's metadata (from storage) -> update meta
+                setUploadedFile(file);
+              }}
+              setFileToUpload={setFileToUpload} // Pass this down
+              sourceLanguage={sourceLanguage}
+              setSourceLanguage={setSourceLanguage}
+              targetLanguage={targetLanguage}
+              setTargetLanguage={setTargetLanguage}
+              translateImages={translateImages}
+              setTranslateImages={setTranslateImages}
+              onNext={handleNext}
+              onBack={handleBack}
+              isUploading={isUploading}
+            />
+          )}
+
+          {/* Step 1: Glossary Selection */}
+          {currentStep === 1 && (
+            <GlossarySelectionStep
+              glossaryOption={glossaryOption}
+              setGlossaryOption={setGlossaryOption}
+              selectedGlossaries={selectedGlossaries}
+              setSelectedGlossaries={setSelectedGlossaries}
+              sourceLanguage={sourceLanguage}
+              targetLanguage={targetLanguage}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              termQuery={termQuery}
+              setTermQuery={setTermQuery}
+              glossaries={glossaries} // Pass real glossaries
+              onNext={handleNext}
+              onBack={handleBack}
+              onRefresh={fetchGlossaries}
+              isCreatingOpen={isCreatingGlossaryOpen}
+              onCreatingOpenChange={setIsCreatingGlossaryOpen}
+            />
+          )}
 
         {/* Steps 2 & 3: Preview and Translation Execution */}
         {(currentStep === 2 || currentStep === 3) && (
@@ -565,16 +814,91 @@ function TranslatePageContent() {
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Onboarding Tour */}
+      {isMounted && (
+        <Joyride
+          steps={tourSteps}
+          run={runTour}
+          continuous
+          scrollToFirstStep={false}
+          disableScrolling={true}
+          spotlightClicks={false}
+          showProgress={false}
+          showSkipButton={false}
+          hideCloseButton
+          disableOverlayClose
+          tooltipComponent={CustomTooltip}
+          stepIndex={tourStepIndex}
+          callback={handleJoyrideCallback}
+          styles={{
+            options: {
+              overlayColor: "rgba(0, 0, 0, 0.5)",
+              zIndex: 10000,
+            },
+          }}
+          locale={{
+            skip: trmlOnboarding("skipTour"),
+            next: trmlOnboarding("next"),
+            back: trmlOnboarding("back"),
+            last: trmlOnboarding("finish"),
+          }}
+        />
+      )}
+
+      {/* Help Button - Bottom Left (Only for Doc Setup & Glossary) */}
+      {currentStep <= 1 && (
+        <motion.button
+          id="onboarding-help-button"
+          className="fixed bottom-6 left-6 z-[100] p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            // Reset to section start when manually triggering help
+            if (currentStep === 0) setTourStepIndex(0);
+            if (currentStep === 1) {
+              if (isCreatingGlossaryOpen) setTourStepIndex(4);
+              else setTourStepIndex(3);
+            }
+
+            setRunTour(true);
+            setShowSparkle(false); // Stop sparking once clicked
+          }}
+          initial={false}
+          animate={
+            showSparkle
+              ? {
+                  scale: [1, 1.1, 1],
+                  boxShadow: [
+                    "0 0 0 0 rgba(59, 130, 246, 0.7)", // primary color
+                    "0 0 0 20px rgba(59, 130, 246, 0)",
+                  ],
+                }
+              : {}
+          }
+          transition={
+            showSparkle
+              ? {
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                }
+              : {}
+          }
+        >
+          <Lightbulb className="w-6 h-6" />
+        </motion.button>
+      )}
     </PageTransition>
   );
 }
