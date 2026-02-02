@@ -151,12 +151,8 @@ function TranslatePageContent() {
   // Handle tour callback
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, action, index, type } = data;
-    console.error(
-      `[Joyride CB] Type: ${type}, Status: ${status}, Action: ${action}, Index: ${index}`,
-    );
 
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-      console.error("[Joyride] Finished/Skipped -> Saving to LocalStorage");
       setRunTour(false);
       localStorage.setItem("onboardingTourCompleted", "true");
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
@@ -164,7 +160,6 @@ function TranslatePageContent() {
       if (action === ACTIONS.NEXT) {
         // Check if this is the end of a "Section"
         if ([2, 4].includes(index)) {
-          console.error("[Joyride] Pausing at Section End");
           // Pause the tour to let user interact
           setRunTour(false);
           // We do NOT increment index here; the useEffect will set the next index when App Step changes
