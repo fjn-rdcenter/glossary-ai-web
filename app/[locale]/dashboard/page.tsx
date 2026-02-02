@@ -4,11 +4,9 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  TranslationService,
-  GlossaryService,
-  AuthService,
-} from "@/api/services";
+import { TranslationService, GlossaryService } from "@/api/services";
+import { useUser } from "@/components/contexts/user-context";
+
 import {
   Upload,
   FileText,
@@ -49,6 +47,8 @@ export default function DashboardPage() {
   const [runTour, setRunTour] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
+  const { user, loading: userLoading } = useUser();
+
   // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
@@ -58,10 +58,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [jobs, glossaries, user] = await Promise.all([
+        const [jobs, glossaries] = await Promise.all([
           TranslationService.getTranslationHistory(),
           GlossaryService.getGlossaries(),
-          AuthService.getCurrentUser(),
         ]);
 
         // Calculate unique documents
@@ -72,13 +71,6 @@ export default function DashboardPage() {
           activeGlossaries: glossaries.length,
           uniqueDocuments: uniqueDocs,
         });
-
-        // Trigger tour if first login
-        if (user.is_first_login) {
-          setTimeout(() => {
-            setRunTour(true);
-          }, 100);
-        }
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);
       } finally {
@@ -88,6 +80,15 @@ export default function DashboardPage() {
 
     fetchStats();
   }, []);
+
+  // Trigger tour if first login
+  useEffect(() => {
+    if (!userLoading && user?.is_first_login) {
+      setTimeout(() => {
+        setRunTour(true);
+      }, 100);
+    }
+  }, [user, userLoading]);
 
   // Clear all translation process states when dashboard loads
   useEffect(() => {

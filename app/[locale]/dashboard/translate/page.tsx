@@ -8,15 +8,13 @@ import { StepIndicator } from "@/components/step-indicator";
 import { DocumentSetupStep } from "./translating-process/document-setup-step";
 import { GlossarySelectionStep } from "./translating-process/glossary-selection-step";
 import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
-import {
-  TranslationService,
-  GlossaryService,
-  AuthService,
-} from "@/api/services";
+import { TranslationService, GlossaryService } from "@/api/services";
+import { useUser } from "@/components/contexts/user-context";
+
 import { GlossaryResponse } from "@/lib/types";
 
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -108,6 +106,8 @@ function TranslatePageContent() {
   const [showSparkle, setShowSparkle] = useState(false);
   // Glossary Creation Dialog State
   const [isCreatingGlossaryOpen, setIsCreatingGlossaryOpen] = useState(false);
+  const { user } = useUser();
+
   // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
@@ -115,23 +115,12 @@ function TranslatePageContent() {
 
   // Initialize tour state (check if new user for spark effect)
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const user = await AuthService.getCurrentUser();
-        if (user.is_first_login && isMounted) {
-          setShowSparkle(true);
-          // Auto start tour if first login
-          setRunTour(true);
-        }
-      } catch (error) {
-        console.error("Failed to check user status", error);
-      }
-    };
-
-    if (isMounted) {
-      checkUser();
+    if (user?.is_first_login && isMounted) {
+      setShowSparkle(true);
+      // Auto start tour if first login
+      setRunTour(true);
     }
-  }, [isMounted]);
+  }, [user, isMounted]);
 
   // Sync Tour with App Steps (Background Sync for Manual Trigger)
   useEffect(() => {
@@ -712,69 +701,69 @@ function TranslatePageContent() {
   );
 
   return (
-      <PageTransition className="container mx-auto px-6">
-        {/* Step Indicator */}
-        <SlideUp>
-          <StepIndicator
-            steps={steps}
-            currentStep={currentStep}
-            className="mb-6"
+    <PageTransition className="container mx-auto px-6">
+      {/* Step Indicator */}
+      <SlideUp>
+        <StepIndicator
+          steps={steps}
+          currentStep={currentStep}
+          className="mb-6"
+        />
+      </SlideUp>
+
+      {/* Step Content */}
+      <AnimatePresence mode="wait">
+        {/* Step 0: Document Setup */}
+        {currentStep === 0 && (
+          <DocumentSetupStep
+            uploadedFile={uploadedFile}
+            setUploadedFile={(file) => {
+              // If null (removed)
+              if (!file) {
+                setUploadedFile(null);
+                setDocumentId(null);
+                setFileToUpload(null);
+                sessionStorage.removeItem("uploadedFile");
+                sessionStorage.removeItem("documentId");
+                return;
+              }
+              // If it's metadata (from storage) -> update meta
+              setUploadedFile(file);
+            }}
+            setFileToUpload={setFileToUpload} // Pass this down
+            sourceLanguage={sourceLanguage}
+            setSourceLanguage={setSourceLanguage}
+            targetLanguage={targetLanguage}
+            setTargetLanguage={setTargetLanguage}
+            translateImages={translateImages}
+            setTranslateImages={setTranslateImages}
+            onNext={handleNext}
+            onBack={handleBack}
+            isUploading={isUploading}
           />
-        </SlideUp>
+        )}
 
-        {/* Step Content */}
-        <AnimatePresence mode="wait">
-          {/* Step 0: Document Setup */}
-          {currentStep === 0 && (
-            <DocumentSetupStep
-              uploadedFile={uploadedFile}
-              setUploadedFile={(file) => {
-                // If null (removed)
-                if (!file) {
-                  setUploadedFile(null);
-                  setDocumentId(null);
-                  setFileToUpload(null);
-                  sessionStorage.removeItem("uploadedFile");
-                  sessionStorage.removeItem("documentId");
-                  return;
-                }
-                // If it's metadata (from storage) -> update meta
-                setUploadedFile(file);
-              }}
-              setFileToUpload={setFileToUpload} // Pass this down
-              sourceLanguage={sourceLanguage}
-              setSourceLanguage={setSourceLanguage}
-              targetLanguage={targetLanguage}
-              setTargetLanguage={setTargetLanguage}
-              translateImages={translateImages}
-              setTranslateImages={setTranslateImages}
-              onNext={handleNext}
-              onBack={handleBack}
-              isUploading={isUploading}
-            />
-          )}
-
-          {/* Step 1: Glossary Selection */}
-          {currentStep === 1 && (
-            <GlossarySelectionStep
-              glossaryOption={glossaryOption}
-              setGlossaryOption={setGlossaryOption}
-              selectedGlossaries={selectedGlossaries}
-              setSelectedGlossaries={setSelectedGlossaries}
-              sourceLanguage={sourceLanguage}
-              targetLanguage={targetLanguage}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              termQuery={termQuery}
-              setTermQuery={setTermQuery}
-              glossaries={glossaries} // Pass real glossaries
-              onNext={handleNext}
-              onBack={handleBack}
-              onRefresh={fetchGlossaries}
-              isCreatingOpen={isCreatingGlossaryOpen}
-              onCreatingOpenChange={setIsCreatingGlossaryOpen}
-            />
-          )}
+        {/* Step 1: Glossary Selection */}
+        {currentStep === 1 && (
+          <GlossarySelectionStep
+            glossaryOption={glossaryOption}
+            setGlossaryOption={setGlossaryOption}
+            selectedGlossaries={selectedGlossaries}
+            setSelectedGlossaries={setSelectedGlossaries}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            termQuery={termQuery}
+            setTermQuery={setTermQuery}
+            glossaries={glossaries} // Pass real glossaries
+            onNext={handleNext}
+            onBack={handleBack}
+            onRefresh={fetchGlossaries}
+            isCreatingOpen={isCreatingGlossaryOpen}
+            onCreatingOpenChange={setIsCreatingGlossaryOpen}
+          />
+        )}
 
         {/* Steps 2 & 3: Preview and Translation Execution */}
         {(currentStep === 2 || currentStep === 3) && (
