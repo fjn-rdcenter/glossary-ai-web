@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
+import { useUser } from "@/components/contexts/user-context"
 import { AuthService } from "@/api/services"
 import {
   DropdownMenu,
@@ -16,36 +17,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useTranslations } from 'next-intl';
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Menu } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
 
 export function Header() {
   const router = useRouter();
-  const [user, setUser] = useState<{ username: string } | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await AuthService.getCurrentUser();
-        if (userData) {
-           setUser(userData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user", error);
-      }
-    };
-    fetchUser();
-  }, []);
+  const { user } = useUser();
 
   const displayUser = user || { username: "Guest" };
   // Remove @fujinet.net suffix if present
   const username = displayUser.username.replace("@fujinet.net", "");
 
   const handleLogout = async () => {
-      await AuthService.logout();
-      router.push("/login");
+    await AuthService.logout();
+    router.push("/login");
   };
 
   const trml = useTranslations("Header");
@@ -70,10 +57,12 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{trml("welcome")}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+            {trml("welcome")}
+          </p>
           <p className="text-sm font-medium leading-tight">{username}</p>
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">

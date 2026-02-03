@@ -16,7 +16,8 @@ export const API_CONFIG = {
       LOGIN: "/api/v2/auth/login",
       LOGOUT: "/api/v2/auth/logout",
       REFRESH: "/api/v2/auth/refresh-token",
-      ME: "/api/v2/auth/me",
+      ME: "/api/v2/me/",
+      UPDATE_ME: "/api/v2/me/",
     },
     
     // Glossaries

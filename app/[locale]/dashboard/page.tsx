@@ -4,7 +4,9 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { TranslationService, GlossaryService } from "@/api/services";
+import { TranslationService, GlossaryService, AuthService } from "@/api/services";
+import { useUser } from "@/components/contexts/user-context";
+
 import {
   Upload,
   FileText,
@@ -12,6 +14,7 @@ import {
   History,
   ArrowRight,
   Calendar,
+  Lightbulb,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -25,7 +28,8 @@ import {
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
+import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -38,6 +42,19 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const trml = useTranslations("Dashboard");
+  const trmlOnboarding = useTranslations("Onboarding");
+
+  // Onboarding Tour State
+  const [runTour, setRunTour] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showSparkle, setShowSparkle] = useState(false);
+
+  const { user, loading: userLoading } = useUser();
+
+  // Ensure component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Fetch stats on load
   useEffect(() => {
@@ -49,7 +66,7 @@ export default function DashboardPage() {
         ]);
 
         // Calculate unique documents
-        const uniqueDocs = new Set(jobs.map(j => j.sourceDocument)).size;
+        const uniqueDocs = new Set(jobs.map((j) => j.sourceDocument)).size;
 
         setStats({
           totalTranslations: jobs.length,
@@ -65,6 +82,21 @@ export default function DashboardPage() {
 
     fetchStats();
   }, []);
+
+  // Trigger tour if first login
+  useEffect(() => {
+    if (
+      !userLoading &&
+      user &&
+      !user.isCompletedDashboardTour &&
+      !localStorage.getItem("onboardingTourCompleted")
+    ) {
+      setShowSparkle(true);
+      setTimeout(() => {
+        setRunTour(true);
+      }, 100);
+    }
+  }, [user, userLoading]);
 
   // Clear all translation process states when dashboard loads
   useEffect(() => {
@@ -84,6 +116,157 @@ export default function DashboardPage() {
       delete (window as any).__pendingFile;
     }
   }, []);
+
+  // Custom Tooltip Component
+  const CustomTooltip = ({
+    continuous,
+    index,
+    step,
+    backProps,
+    closeProps,
+    primaryProps,
+    skipProps,
+    tooltipProps,
+    size,
+  }: any) => {
+    return (
+      <div
+        {...tooltipProps}
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          padding: "24px",
+          maxWidth: "400px",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        {/* Step Counter - Top Left */}
+        <div
+          style={{ color: "#6b7280", fontSize: "14px", marginBottom: "16px" }}
+        >
+          {index + 1}/{size}
+        </div>
+
+        {/* Content */}
+        <div>{step.content}</div>
+
+        {/* Buttons - Bottom Row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "20px",
+          }}
+        >
+          {/* Skip Button - Bottom Left */}
+          <button
+            {...skipProps}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#6b7280",
+              fontSize: "14px",
+              cursor: "pointer",
+              //  padding: "8px 12px",
+            }}
+          >
+            {trmlOnboarding("skipTour")}
+          </button>
+
+          {/* Navigation Buttons - Bottom Right */}
+          <div style={{ display: "flex", gap: "8px" }}>
+            {index > 0 && (
+              <button
+                {...backProps}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#6b7280",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  padding: "8px 16px",
+                }}
+              >
+                {trmlOnboarding("back")}
+              </button>
+            )}
+            <button
+              {...primaryProps}
+              style={{
+                backgroundColor: "#3b82f6",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+              }}
+            >
+              {index === size - 1
+                ? trmlOnboarding("finish")
+                : trmlOnboarding("next")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Tour Steps Configuration
+  const tourSteps: Step[] = [
+    {
+      target: '[data-tour="stats-grid"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">
+            {trmlOnboarding("dashboardCardsTitle")}
+          </h3>
+          <p className="text-sm">
+            {trmlOnboarding("dashboardCardsDescription")}
+          </p>
+        </div>
+      ),
+      placement: "bottom",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="quick-upload"]',
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">
+            {trmlOnboarding("quickUploadTitle")}
+          </h3>
+          <p className="text-sm">{trmlOnboarding("quickUploadDescription")}</p>
+        </div>
+      ),
+      placement: "top",
+      disableBeacon: true,
+      spotlightClicks: true,
+    },
+  ];
+
+  // Handle tour callback
+  const handleJoyrideCallback = async (data: CallBackProps) => {
+    const { status, action, index, type } = data;
+
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      setRunTour(false);
+      localStorage.setItem("onboardingTourCompleted", "true");
+
+      // Update server immediately
+      try {
+        await AuthService.updateUserProfile({
+          isCompletedDashboardTour: true,
+        });
+      } catch (error) {
+        console.error("Failed to update dashboard tour completion:", error);
+      }
+    }
+
+    // Don't update step index, let Joyride handle it automatically
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
@@ -131,9 +314,6 @@ export default function DashboardPage() {
     }
   };
 
-  const removeFile = () => {
-    setFiles([]);
-  };
 
   const currentStats = [
     {
@@ -191,7 +371,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3" data-tour="stats-grid">
         {currentStats.map((stat, i) => {
           // Determine the navigation path based on the stat label
           let href = "/dashboard/history";
@@ -220,7 +400,7 @@ export default function DashboardPage() {
                           stat.trend === "up"
                             ? "text-green-600"
                             : stat.trend === "down"
-                            ? "text-red-600"
+                              ? "text-red-600"
                             : "text-zinc-500"
                         )}
                       >
@@ -238,7 +418,10 @@ export default function DashboardPage() {
 
       <div className="space-y-6 max-w-full">
         {/* Quick Upload */}
-        <Card className="w-full border-2 border-dashed border-border bg-muted/50">
+        <Card
+          className="w-full border-2 border-dashed border-border bg-muted/50"
+          data-tour="quick-upload"
+        >
           <CardHeader>
             <CardTitle>{trml("quickUpload")}</CardTitle>
             {/* <CardDescription>
@@ -315,6 +498,72 @@ export default function DashboardPage() {
             </AnimatePresence>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Onboarding Tour */}
+      {isMounted && (
+        <Joyride
+          steps={tourSteps}
+          run={runTour}
+          continuous={true}
+          scrollToFirstStep={false}
+          disableScrolling={true}
+          spotlightClicks={false}
+          showProgress={false}
+          showSkipButton={false}
+          hideCloseButton
+          disableOverlayClose
+          tooltipComponent={CustomTooltip}
+          callback={handleJoyrideCallback}
+          styles={{
+            options: {
+              overlayColor: "rgba(0, 0, 0, 0.5)",
+              zIndex: 10000,
+            },
+          }}
+        />
+      )}
+
+      {/* Sparkle Effect on Upload Button */}
+      <div className="fixed bottom-6 left-6 z-[100] group">
+        <motion.button
+          id="onboarding-help-button"
+          className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow relative"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            setRunTour(true);
+            setShowSparkle(false);
+          }}
+          initial={false}
+          animate={
+            showSparkle
+              ? {
+                  scale: [1, 1.1, 1],
+                  boxShadow: [
+                    "0 0 0 0 rgba(59, 130, 246, 0.7)",
+                    "0 0 0 20px rgba(59, 130, 246, 0)",
+                  ],
+                }
+              : {}
+          }
+          transition={
+            showSparkle
+              ? {
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "loop",
+            } : {}
+          }
+        >
+          <Lightbulb className="w-6 h-6" />
+        </motion.button>
+
+        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-2"
+        >
+          {trmlOnboarding("onboardingHelp")}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
+        </div>
       </div>
     </PageTransition>
   );

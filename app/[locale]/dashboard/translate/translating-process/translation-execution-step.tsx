@@ -26,6 +26,7 @@ interface TranslationExecutionStepProps {
   targetLanguage: string;
   glossaryOption: "none" | "existing" | "new";
   selectedGlossaryList: any[];
+  translateImages: boolean;
   status: TranslationStatus;
   progress: number;
   onBack: () => void;
@@ -44,6 +45,7 @@ export function TranslationExecutionStep({
   targetLanguage,
   glossaryOption,
   selectedGlossaryList,
+  translateImages,
   status,
   progress,
   onBack,
@@ -66,7 +68,7 @@ export function TranslationExecutionStep({
         exit={{ opacity: 0, x: -20 }}
         transition={{ duration: 0.15 }}
       >
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-2xl mx-auto" data-tour="preview-summary">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">
               {trmlTranslationExecution("title")}
@@ -75,9 +77,9 @@ export function TranslationExecutionStep({
               {trmlTranslationExecution("description")}
             </p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5">
             {/* Document Info */}
-            <div className="p-4 rounded-xl bg-secondary/50">
+            <div className="p-3 rounded-xl bg-secondary/50">
               <p className="text-sm text-muted-foreground mb-2">{trmlTranslationExecution("document")}</p>
               {uploadedFile && (
                 <FileCard
@@ -89,8 +91,8 @@ export function TranslationExecutionStep({
             </div>
 
             {/* Translation Settings */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-secondary/50">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-secondary/50">
                 <p className="text-sm text-muted-foreground mb-1">
                   {trmlCommon("sourceLanguage")}
                 </p>
@@ -98,7 +100,7 @@ export function TranslationExecutionStep({
                   {trmlCommon(sourceLanguage)}
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-secondary/50">
+              <div className="p-3 rounded-xl bg-secondary/50">
                 <p className="text-sm text-muted-foreground mb-1">
                   {trmlCommon("targetLanguage")}
                 </p>
@@ -108,8 +110,18 @@ export function TranslationExecutionStep({
               </div>
             </div>
 
+            {/* Translate Images Setting */}
+            <div className="p-3 rounded-xl bg-secondary/50">
+              <p className="text-sm text-muted-foreground mb-1">
+                {trmlTranslationExecution("translateImages")}
+              </p>
+              <p className="font-medium">
+                {translateImages ? trmlCommon("yes") : trmlCommon("no")}
+              </p>
+            </div>
+
             {/* Glossary Info */}
-            <div className="p-4 rounded-xl bg-secondary/50">
+            <div className="p-3 rounded-xl bg-secondary/50">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">
                   {trmlTranslationExecution("glossariesCount", { count: selectedGlossaryList.length })}
@@ -118,11 +130,11 @@ export function TranslationExecutionStep({
               {selectedGlossaryList.length === 0 ? (
                 <p className="font-medium">{trmlTranslationExecution("noGlossarySelected")}</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {selectedGlossaryList.map((glossary) => (
                     <div
                       key={glossary.id}
-                      className="p-3 rounded-lg bg-white border border-border"
+                      className="p-2 rounded-lg bg-white border border-border"
                     >
                       <div className="flex justify-between items-center">
                         <div>
@@ -143,7 +155,7 @@ export function TranslationExecutionStep({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between pt-3">
               <Button variant="ghost" onClick={onBack}>
                 <ArrowLeft className="mr-2 w-4 h-4" />
                 {trmlCommon("back")}
@@ -176,17 +188,22 @@ export function TranslationExecutionStep({
                 <FileText className="w-10 h-10 text-foreground" />
               </div>
               <h2 className="text-2xl font-semibold mb-2">
-                {trmlTranslationExecution("translateTilte")}
+                {trmlTranslationExecution("translateTitle")}
               </h2>
               <p className="text-muted-foreground mb-8">
                 {trmlTranslationExecution("translateDescription")}
               </p>
               <div className="flex justify-center gap-4">
-                 <Button size="lg" variant="outline" onClick={onBack}>
+                <Button size="lg" variant="outline" onClick={onBack}>
                   <ArrowLeft className="mr-2 w-4 h-4" />
                   {trmlCommon("back")}
                 </Button>
-                <Button size="lg" onClick={onStartTranslation} className="group">
+                <Button
+                  size="lg"
+                  onClick={onStartTranslation}
+                  className="group"
+                  data-tour="start-translation"
+                >
                   {trmlTranslationExecution("startTranslating")}
                 </Button>
               </div>

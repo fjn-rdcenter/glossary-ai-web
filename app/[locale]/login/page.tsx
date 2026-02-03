@@ -42,7 +42,6 @@ export default function LoginPage() {
       try {
         // Check if user explicitly logged out
         if (localStorage.getItem("user_logged_out")) {
-           console.log("User explicitly logged out, skipping auto-check.");
            setIsChecking(false);
            return;
         }
@@ -51,7 +50,6 @@ export default function LoginPage() {
         router.push("/dashboard");
         return; 
       } catch (error) {
-        console.log("Session check failed:", error);
         // Clean up potential stale data if needed
         localStorage.removeItem("auth_token");
       } finally {

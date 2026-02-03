@@ -10,6 +10,15 @@ export interface UserCreate extends UserBase {}
 
 export interface UserResponse extends UserBase {
   id: string;
+  isCompletedDashboardTour?: boolean;
+  isCompletedDocumentTour?: boolean;
+  isCompletedGlossaryTour?: boolean;
+}
+
+export interface UserUpdateRequest {
+  isCompletedDashboardTour?: boolean;
+  isCompletedDocumentTour?: boolean;
+  isCompletedGlossaryTour?: boolean;
 }
 
 // --- Auth Schemas ---
@@ -171,6 +180,7 @@ export interface TranslationJobResponse {
   sourceLanguage: string;
   targetLanguage: string;
   glossaries?: string[];
+  isTranslateImage?: boolean;
   sourceDocument: string;
   sourceDocumentName?: string;
   targetDocument?: string;
