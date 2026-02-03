@@ -14,6 +14,7 @@ import {
   History,
   ArrowRight,
   Calendar,
+  Lightbulb,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export default function DashboardPage() {
   // Onboarding Tour State
   const [runTour, setRunTour] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [showSparkle, setShowSparkle] = useState(false);
 
   const { user, loading: userLoading } = useUser();
 
@@ -85,6 +87,7 @@ export default function DashboardPage() {
   // Trigger tour if first login
   useEffect(() => {
     if (!userLoading && user?.is_first_login && !localStorage.getItem("onboardingTourCompleted")) {
+      setShowSparkle(true);
       setTimeout(() => {
         setRunTour(true);
       }, 100);
@@ -509,6 +512,48 @@ export default function DashboardPage() {
           }}
         />
       )}
+
+      {/* Sparkle Effect on Upload Button */}
+      <div className="fixed bottom-6 left-6 z-[100] group">
+        <motion.button
+          id="onboarding-help-button"
+          className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow relative"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            setRunTour(true);
+            setShowSparkle(false);
+          }}
+          initial={false}
+          animate={
+            showSparkle 
+              ? { 
+                scale: [1, 1.1, 1], 
+                boxShadow: [
+                  "0 0 0 0 rgba(59, 130, 246, 0.7)",
+                  "0 0 0 20px rgba(59, 130, 246, 0)",
+                ],
+              }
+            : {}
+          }
+          transition={ 
+            showSparkle 
+              ? { 
+                duration: 2, 
+                repeat: Infinity,
+                repeatType: "loop",
+            } : {}
+          }
+        >
+          <Lightbulb className="w-6 h-6" />
+        </motion.button>
+
+        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-2"
+        >
+          {trmlOnboarding("onboardingHelp")}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
+        </div>
+      </div>
     </PageTransition>
   );
 }
