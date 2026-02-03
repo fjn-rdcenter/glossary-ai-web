@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { TranslationService, GlossaryService } from "@/api/services";
+import { TranslationService, GlossaryService, AuthService } from "@/api/services";
 import { useUser } from "@/components/contexts/user-context";
 
 import {
@@ -30,7 +30,6 @@ import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
-import { checkAndCompleteFirstLogin } from "@/lib/tour-utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -86,7 +85,12 @@ export default function DashboardPage() {
 
   // Trigger tour if first login
   useEffect(() => {
-    if (!userLoading && user?.is_first_login && !localStorage.getItem("onboardingTourCompleted")) {
+    if (
+      !userLoading &&
+      user &&
+      !user.isCompletedDashboardTour &&
+      !localStorage.getItem("onboardingTourCompleted")
+    ) {
       setShowSparkle(true);
       setTimeout(() => {
         setRunTour(true);
@@ -247,11 +251,18 @@ export default function DashboardPage() {
   const handleJoyrideCallback = async (data: CallBackProps) => {
     const { status, action, index, type } = data;
 
-    // Handle tour completion
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunTour(false);
       localStorage.setItem("onboardingTourCompleted", "true");
-      await checkAndCompleteFirstLogin();
+
+      // Update server immediately
+      try {
+        await AuthService.updateUserProfile({
+          isCompletedDashboardTour: true,
+        });
+      } catch (error) {
+        console.error("Failed to update dashboard tour completion:", error);
+      }
     }
 
     // Don't update step index, let Joyride handle it automatically
@@ -526,22 +537,22 @@ export default function DashboardPage() {
           }}
           initial={false}
           animate={
-            showSparkle 
-              ? { 
-                scale: [1, 1.1, 1], 
-                boxShadow: [
-                  "0 0 0 0 rgba(59, 130, 246, 0.7)",
-                  "0 0 0 20px rgba(59, 130, 246, 0)",
-                ],
-              }
-            : {}
+            showSparkle
+              ? {
+                  scale: [1, 1.1, 1],
+                  boxShadow: [
+                    "0 0 0 0 rgba(59, 130, 246, 0.7)",
+                    "0 0 0 20px rgba(59, 130, 246, 0)",
+                  ],
+                }
+              : {}
           }
-          transition={ 
-            showSparkle 
-              ? { 
-                duration: 2, 
-                repeat: Infinity,
-                repeatType: "loop",
+          transition={
+            showSparkle
+              ? {
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "loop",
             } : {}
           }
         >

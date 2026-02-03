@@ -8,7 +8,11 @@ export const checkAndCompleteFirstLogin = async (): Promise<void> => {
 
   if (dashboardTourCompleted && documentTourCompleted && glossaryTourCompleted && !firstLoginCompleted) {
     try {
-      await AuthService.completeFirstLogin();
+      await AuthService.updateUserProfile({
+        isCompletedDashboardTour: true,
+        isCompletedDocumentTour: true,
+        isCompletedGlossaryTour: true,
+      });
       localStorage.setItem("firstLoginCompleted", "true");
     } catch (error) {
       console.error("Error completing first login:", error);

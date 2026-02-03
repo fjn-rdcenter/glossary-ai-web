@@ -8,7 +8,7 @@ import { StepIndicator } from "@/components/step-indicator";
 import { DocumentSetupStep } from "./translating-process/document-setup-step";
 import { GlossarySelectionStep } from "./translating-process/glossary-selection-step";
 import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
-import { TranslationService, GlossaryService } from "@/api/services";
+import { TranslationService, GlossaryService, AuthService } from "@/api/services";
 import { useUser } from "@/components/contexts/user-context";
 
 import { GlossaryResponse } from "@/lib/types";
@@ -32,7 +32,6 @@ import Joyride, {
   STATUS,
   Step,
 } from "react-joyride";
-import { checkAndCompleteFirstLogin } from "@/lib/tour-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -118,12 +117,23 @@ function TranslatePageContent() {
 
   // Initialize tour state (check if new user for spark effect)
   useEffect(() => {
-    if (user?.is_first_login && isMounted) {
-      setShowSparkle(true);
-      // Auto start tour if first login
-      if (currentStep === 0 && !localStorage.getItem("documentTourCompleted")) { 
+    if (user && isMounted) {
+      // Check if user hasn't completed the tours yet
+      const shouldShowDocumentTour =
+        !user.isCompletedDocumentTour &&
+        !localStorage.getItem("documentTourCompleted");
+      const shouldShowGlossaryTour =
+        !user.isCompletedGlossaryTour &&
+        !localStorage.getItem("glossaryTourCompleted");
+
+      if (shouldShowDocumentTour || shouldShowGlossaryTour) {
+        setShowSparkle(true);
+      }
+
+      // Auto start tour if not completed
+      if (currentStep === 0 && shouldShowDocumentTour) {
         setRunDocumentTour(true);
-      } else if (currentStep === 1 && !localStorage.getItem("glossaryTourCompleted")) {
+      } else if (currentStep === 1 && shouldShowGlossaryTour) {
         setRunGlossaryTour(true);
       }
     }
@@ -137,7 +147,15 @@ function TranslatePageContent() {
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunDocumentTour(false);
       localStorage.setItem("documentTourCompleted", "true");
-      await checkAndCompleteFirstLogin();
+
+      // Update server immediately
+      try {
+        await AuthService.updateUserProfile({
+          isCompletedDocumentTour: true,
+        });
+      } catch (error) {
+        console.error("Failed to update document tour completion:", error);
+      }
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Handle Next/Back navigation
       if (action === ACTIONS.NEXT) {
@@ -153,13 +171,20 @@ function TranslatePageContent() {
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunGlossaryTour(false);
       localStorage.setItem("glossaryTourCompleted", "true");
-      await checkAndCompleteFirstLogin();
+
+      // Update server immediately
+      try {
+        await AuthService.updateUserProfile({
+          isCompletedGlossaryTour: true,
+        });
+      } catch (error) {
+        console.error("Failed to update glossary tour completion:", error);
+      }
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Handle Next/Back navigation
       if (action === ACTIONS.NEXT) {
         setGlossaryTourIndex(index + 1);
-      }
-      else if (action === ACTIONS.PREV) {
+      } else if (action === ACTIONS.PREV) {
         setGlossaryTourIndex(index - 1);
       }
     }
@@ -472,7 +497,7 @@ function TranslatePageContent() {
       disableBeacon: true,
     }
   ];
-  
+
   const glossarySelectionTourSteps: Step[] = [
     {
       target: '[data-tour="glossary-panel"]',

@@ -159,13 +159,14 @@ export class AuthService {
     }
   }
 
-  static async completeFirstLogin(): Promise<void> {
+  static async updateUserProfile(updates: { isCompletedDashboardTour?: boolean; isCompletedDocumentTour?: boolean; isCompletedGlossaryTour?: boolean }): Promise<UserResponse> {
     try {
-      await apiClient.post(
-        API_CONFIG.ENDPOINTS.AUTH.COMPLETE_FIRST_LOGIN, {}, { withCredentials: true }
+      const response = await apiClient.patch<UserResponse>(
+        API_CONFIG.ENDPOINTS.AUTH.UPDATE_ME, updates, { withCredentials: true }
       );
+      return response.data;
     } catch (error) {
-      ApiErrorHandler.logError(error, "AuthService.completeFirstLogin");
+      ApiErrorHandler.logError(error, "AuthService.updateUserProfile");
       throw new Error(ApiErrorHandler.parseError(error));
     }
   }
