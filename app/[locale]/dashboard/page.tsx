@@ -29,6 +29,7 @@ import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { checkAndCompleteFirstLogin } from "@/lib/tour-utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export default function DashboardPage() {
 
   // Trigger tour if first login
   useEffect(() => {
-    if (!userLoading && user?.is_first_login) {
+    if (!userLoading && user?.is_first_login && !localStorage.getItem("onboardingTourCompleted")) {
       setTimeout(() => {
         setRunTour(true);
       }, 100);
@@ -240,13 +241,14 @@ export default function DashboardPage() {
   ];
 
   // Handle tour callback
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = async (data: CallBackProps) => {
     const { status, action, index, type } = data;
 
     // Handle tour completion
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunTour(false);
       localStorage.setItem("onboardingTourCompleted", "true");
+      await checkAndCompleteFirstLogin();
     }
 
     // Don't update step index, let Joyride handle it automatically

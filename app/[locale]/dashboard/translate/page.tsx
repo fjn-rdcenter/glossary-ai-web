@@ -32,6 +32,7 @@ import Joyride, {
   STATUS,
   Step,
 } from "react-joyride";
+import { checkAndCompleteFirstLogin } from "@/lib/tour-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -100,9 +101,11 @@ function TranslatePageContent() {
   const [termQuery, setTermQuery] = useState("");
 
   // Onboarding Tour State
-  const [runTour, setRunTour] = useState(false);
+  const [runDocumentTour, setRunDocumentTour] = useState(false);
+  const [runGlossaryTour, setRunGlossaryTour] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [documentTourIndex, setDocumentTourIndex] = useState(0);
+  const [glossaryTourIndex, setGlossaryTourIndex] = useState(0);
   const [showSparkle, setShowSparkle] = useState(false);
   // Glossary Creation Dialog State
   const [isCreatingGlossaryOpen, setIsCreatingGlossaryOpen] = useState(false);
@@ -118,46 +121,46 @@ function TranslatePageContent() {
     if (user?.is_first_login && isMounted) {
       setShowSparkle(true);
       // Auto start tour if first login
-      setRunTour(true);
-    }
-  }, [user, isMounted]);
-
-  // Sync Tour with App Steps (Background Sync for Manual Trigger)
-  useEffect(() => {
-    // We updates tour index in background so the Help button always works for the current step.
-    const timer = setTimeout(() => {
-      if (currentStep === 0) {
-        if (tourStepIndex >= 3) {
-          setTourStepIndex(0);
-        }
-      } else if (currentStep === 1) {
-        // Sync logic is now handled by the specific useEffect above for Creation mode priority
+      if (currentStep === 0 && !localStorage.getItem("documentTourCompleted")) { 
+        setRunDocumentTour(true);
+      } else if (currentStep === 1 && !localStorage.getItem("glossaryTourCompleted")) {
+        setRunGlossaryTour(true);
       }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [currentStep, isCreatingGlossaryOpen]);
+    }
+  }, [user, isMounted, currentStep]);
+
 
   // Handle tour callback
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleDocumentTourCallback = async (data: CallBackProps) => {
     const { status, action, index, type } = data;
 
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-      setRunTour(false);
-      localStorage.setItem("onboardingTourCompleted", "true");
+      setRunDocumentTour(false);
+      localStorage.setItem("documentTourCompleted", "true");
+      await checkAndCompleteFirstLogin();
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Handle Next/Back navigation
       if (action === ACTIONS.NEXT) {
-        // Check if this is the end of a "Section"
-        if ([2, 4].includes(index)) {
-          // Pause the tour to let user interact
-          setRunTour(false);
-          // We do NOT increment index here; the useEffect will set the next index when App Step changes
-        } else {
-          // Normal progression within a section
-          setTourStepIndex(index + 1);
-        }
+        setDocumentTourIndex(index + 1);
       } else if (action === ACTIONS.PREV) {
-        setTourStepIndex(index - 1);
+        setDocumentTourIndex(index - 1);
+      }
+    }
+  };
+
+  const handleGlossaryTourCallback = async (data: CallBackProps) => {
+    const { status, action, index, type } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      setRunGlossaryTour(false);
+      localStorage.setItem("glossaryTourCompleted", "true");
+      await checkAndCompleteFirstLogin();
+    } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      // Handle Next/Back navigation
+      if (action === ACTIONS.NEXT) {
+        setGlossaryTourIndex(index + 1);
+      }
+      else if (action === ACTIONS.PREV) {
+        setGlossaryTourIndex(index - 1);
       }
     }
   };
@@ -434,7 +437,7 @@ function TranslatePageContent() {
   };
 
   // Tour Steps Configuration
-  const tourSteps: Step[] = [
+  const documentSetupTourSteps: Step[] = [
     {
       target: '[data-tour="file-upload"]',
       content: (
@@ -467,7 +470,10 @@ function TranslatePageContent() {
       ),
       placement: "top",
       disableBeacon: true,
-    },
+    }
+  ];
+  
+  const glossarySelectionTourSteps: Step[] = [
     {
       target: '[data-tour="glossary-panel"]',
       content: (
@@ -809,11 +815,11 @@ function TranslatePageContent() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Onboarding Tour */}
-      {isMounted && (
+      {/* Document Setup Tour */}
+      {isMounted && currentStep === 0 && (
         <Joyride
-          steps={tourSteps}
-          run={runTour}
+          steps={documentSetupTourSteps}
+          run={runDocumentTour}
           continuous
           scrollToFirstStep={false}
           disableScrolling={true}
@@ -823,8 +829,39 @@ function TranslatePageContent() {
           hideCloseButton
           disableOverlayClose
           tooltipComponent={CustomTooltip}
-          stepIndex={tourStepIndex}
-          callback={handleJoyrideCallback}
+          stepIndex={documentTourIndex}
+          callback={handleDocumentTourCallback}
+          styles={{
+            options: {
+              overlayColor: "rgba(0, 0, 0, 0.5)",
+              zIndex: 10000,
+            },
+          }}
+          locale={{
+            skip: trmlOnboarding("skipTour"),
+            next: trmlOnboarding("next"),
+            back: trmlOnboarding("back"),
+            last: trmlOnboarding("finish"),
+          }}
+        />
+      )}
+
+      {/* Glossary Selection Tour */}
+      {isMounted && currentStep === 1 && (
+        <Joyride
+          steps={glossarySelectionTourSteps}
+          run={runGlossaryTour}
+          continuous
+          scrollToFirstStep={false}
+          disableScrolling={true}
+          spotlightClicks={false}
+          showProgress={false}
+          showSkipButton={false}
+          hideCloseButton
+          disableOverlayClose
+          tooltipComponent={CustomTooltip}
+          stepIndex={glossaryTourIndex}
+          callback={handleGlossaryTourCallback}
           styles={{
             options: {
               overlayColor: "rgba(0, 0, 0, 0.5)",
@@ -849,13 +886,14 @@ function TranslatePageContent() {
           whileTap={{ scale: 0.9 }}
           onClick={() => {
             // Reset to section start when manually triggering help
-            if (currentStep === 0) setTourStepIndex(0);
-            if (currentStep === 1) {
-              if (isCreatingGlossaryOpen) setTourStepIndex(4);
-              else setTourStepIndex(3);
+            if (currentStep === 0) {
+              setDocumentTourIndex(0);
+              setRunDocumentTour(true);
             }
-
-            setRunTour(true);
+            else if (currentStep === 1) {
+              setGlossaryTourIndex(0);
+              setRunGlossaryTour(true);
+            }
             setShowSparkle(false); // Stop sparking once clicked
           }}
           initial={false}

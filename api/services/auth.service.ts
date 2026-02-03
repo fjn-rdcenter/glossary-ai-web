@@ -27,8 +27,6 @@ export class AuthService {
       formData.append("scope", credentials.scope || "");
       formData.append("client_id", credentials.client_id || "string");
       formData.append("client_secret", credentials.client_secret || "");
-
-      console.log("Attempting login to:", API_CONFIG.ENDPOINTS.AUTH.LOGIN);
       
       const response = await apiClient.post<ApiResponse<LoginResponse>>(
         API_CONFIG.ENDPOINTS.AUTH.LOGIN,
@@ -40,9 +38,7 @@ export class AuthService {
           withCredentials: true, // Important: allows cookies to be set
         }
       );
-      
-      console.log("Login response:", response.data);
-      
+            
       // Handle different response formats
       const loginData = response.data.data || response.data;
       // In new schema, properties are strictly access_token and refresh_token
@@ -52,7 +48,6 @@ export class AuthService {
       // Store access token in localStorage
       if (token) {
         localStorage.setItem("auth_token", token);
-        console.log("Access token stored in localStorage");
       }
       
       // Store refresh token in cookie (if not already set by backend)
@@ -66,7 +61,6 @@ export class AuthService {
         if (!cookieExists) {
           // Set cookie with secure flags
           document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
-          console.log("Refresh token stored in cookie");
           cookieExists = true;
         } else {
           console.log("Refresh token already set by backend");
@@ -99,13 +93,11 @@ export class AuthService {
     
     // Clear refresh token cookie (best effort, though HttpOnly cookies won't be cleared by JS)
     document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    console.log("Local tokens cleared, calling backend logout...");
 
     try {
       await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
         withCredentials: true, // Send cookies with request
       });
-      console.log("Backend logout successful");
     } catch (error) {
       // Log error but don't rethrow, so UI can proceed to redirect
       console.warn("Backend logout failed (network or auth error), but client is cleared:", error);
@@ -137,13 +129,11 @@ export class AuthService {
       // Update access token in localStorage
       if (newAccessToken) {
         localStorage.setItem("auth_token", newAccessToken);
-        console.log("Access token refreshed");
       }
       
       // Update refresh token in cookie if provided
       if (newRefreshToken) {
         document.cookie = `refresh_token=${newRefreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
-        console.log("Refresh token updated");
       }
       
       return tokenData;
@@ -165,6 +155,17 @@ export class AuthService {
       return response.data;
     } catch (error) {
       ApiErrorHandler.logError(error, "AuthService.getCurrentUser");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async completeFirstLogin(): Promise<void> {
+    try {
+      await apiClient.post(
+        API_CONFIG.ENDPOINTS.AUTH.COMPLETE_FIRST_LOGIN, {}, { withCredentials: true }
+      );
+    } catch (error) {
+      ApiErrorHandler.logError(error, "AuthService.completeFirstLogin");
       throw new Error(ApiErrorHandler.parseError(error));
     }
   }
