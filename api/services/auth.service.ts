@@ -91,6 +91,11 @@ export class AuthService {
     localStorage.removeItem("auth_token");
     localStorage.setItem("user_logged_out", "true");
     
+    localStorage.removeItem("onboardingTourCompleted");
+    localStorage.removeItem("documentTourCompleted");
+    localStorage.removeItem("glossaryTourCompleted");
+    localStorage.removeItem("firstLoginCompleted");
+    
     // Clear refresh token cookie (best effort, though HttpOnly cookies won't be cleared by JS)
     document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
