@@ -10,15 +10,19 @@ export interface UserCreate extends UserBase {}
 
 export interface UserResponse extends UserBase {
   id: string;
-  isCompletedDashboardTour?: boolean;
-  isCompletedDocumentTour?: boolean;
-  isCompletedGlossaryTour?: boolean;
+  walkthrough_status: {
+    dashboard_tour: boolean;
+    glossary_tour: boolean;
+    upload_tour: boolean;
+  };
 }
 
 export interface UserUpdateRequest {
-  isCompletedDashboardTour?: boolean;
-  isCompletedDocumentTour?: boolean;
-  isCompletedGlossaryTour?: boolean;
+  walkthrough_status?: {
+    dashboard_tour?: boolean;
+    glossary_tour?: boolean;
+    upload_tour?: boolean;
+  };
 }
 
 // --- Auth Schemas ---

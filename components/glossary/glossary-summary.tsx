@@ -40,7 +40,7 @@ export function GlossarySummary({
   const targetLangName = trmlCommon(targetLanguage) ?? targetLanguage
 
   return (
-    <Card className={cn("sticky top-24 border-none shadow-md bg-secondary/30", className)}>
+    <Card id="glossary-summary" className={cn("sticky top-24 border-none shadow-md bg-secondary/30", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
            <Book className="w-5 h-5 text-primary" />

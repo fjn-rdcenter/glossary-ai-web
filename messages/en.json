@@ -105,7 +105,8 @@
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag a file to upload",
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB",
-        "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}"
+        "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
+        "continue": "Continue"
     },
     "Translate": {
         "error": "Error",
@@ -357,6 +358,22 @@
         "editTerms": "Edit Terms",
         "deleteGlossary": "Delete Glossary"
     },
+    "DashboardTour": {
+        "welcomeTitle": "Welcome to GlossaryAI Dashboard!",
+        "welcomeDescription": "Your centralized workspace for managing all translation resources. Take about 30 seconds to explore the key metrics.",
+        "startTour": "Start Tour",
+        "historyTitle": "Total Translation",
+        "historyDescription": "This number shows the total documents you have translated.<br></br><br></br><b>Click here</b> to open the <b>History</b> page, where you can download original files and review previous translations.",
+        "glossaryTitle": "Active Glossaries",
+        "glossaryDescription": "This number shows the total terms currently in use.<br></br><br></br><b>Click here</b> to open the <b>Glossary</b> page, where you can create new entries, import from CSV/TXT, or edit your terminology list.",
+        "documentsTitle": "Uploaded Documents",
+        "documentsDescription": "This number shows the total original documents you have uploaded.<br></br><br></br><b>Click here</b> to open the <b>Documents</b> page, where you can view and manage your uploaded files.",
+        "uploadTitle": "Start Translating Now!",
+        "uploadDescription": "<b>Drag and drop files here</b> to start the translation process.<br></br><br></br><i>Tip:</i> You can configure your <b>Glossary</b> and image translation options in the next step after uploading.",
+        "next": "Next",
+        "done": "Got it",
+        "prev": "Back"
+    },
     "Onboarding": {
         "welcome": "Welcome to GlossaryAI!",
         "welcomeDescription": "Let's take a quick tour to help you get started and explore the main features of GlossaryAI.",
@@ -398,5 +415,33 @@
         "step6Title": "Start Translation",
         "step6Description": "Once you're ready, click this button to begin the translation process. You can track the progress in real-time.",
         "onboardingHelp": "Restart guided tour"
+    },
+    "GlossaryListTour": {
+        "welcomeTitle": "Manage Glossaries",
+        "welcomeDescription": "This is where you \"teach\" AI how to translate your company's specialized terms correctly.<br/>Using Glossaries makes translations more <b>consistent</b> and <b>accurate</b>.",
+        "createTitle": "Easy Creation",
+        "createDescription": "You can create an empty glossary and enter terms manually, or <b>Import</b> quickly from an existing Excel/CSV file.",
+        "searchTitle": "Search & Filter",
+        "searchDescription": "When you have many dictionaries, use this tool to quickly find them by name or description.",
+        "detailTitle": "Glossary Details",
+        "detailDescription": "Each card shows source/target languages and term count.<br/>Click on the card to view terms, or use the <b>(...)</b> menu to Edit/Delete."
+    },
+    "GlossaryCreateTour": {
+        "welcomeTitle": "Create New Glossary",
+        "welcomeDescription": "Let's learn how to create a specialized dictionary to help AI translate more correctly and consistently.",
+        "nameTitle": "Name Your Glossary",
+        "nameDescription": "Clear naming helps manage multiple dictionaries. Example: <b>\"Medical Terms\"</b>, <b>\"Tech Products\"</b>",
+        "langTitle": "Select Source & Target Languages",
+        "langDescription": "Define the language pair. Once saved, you <b>cannot change</b> these 2 fields.",
+        "descTitle": "Description (Optional)",
+        "descDescription": "Add notes about the purpose of this glossary to help the team understand.",
+        "tabsTitle": "2 Input Methods",
+        "tabsDescription": "<b>Manual Entry</b>: Type each term.<br/><b>Import File</b>: Upload CSV/TXT for bulk import.",
+        "tableTitle": "Terms Table",
+        "tableDescription": "Enter <b>Source</b> (original term) and <b>Target</b> (desired translation).<br/>The system auto-suggests Target = Source if left empty.",
+        "addTermTitle": "Add New Term",
+        "addTermDescription": "Click this button to add a new term entry row. You can add as many terms as you like.",
+        "saveTitle": "Summary & Save",
+        "saveDescription": "Review the summary information. When everything looks good, click <b>Save</b> to finish."
     }
 }

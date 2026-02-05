@@ -45,7 +45,8 @@ const nextConfig = {
   },
   // assetPrefix: "/v2/",
   reactStrictMode: true,
-  trailingSlash: true
+  trailingSlash: true,
+  devIndicators: false
 }
 
 export default withNextIntl(nextConfig)

@@ -11,6 +11,7 @@ import {
   LoginRequest,
   LoginResponse,
   UserResponse,
+  UserUpdateRequest,
   RefreshTokenResponse,
   ApiResponse,
 } from "@/lib/types";
@@ -94,6 +95,7 @@ export class AuthService {
     localStorage.removeItem("onboardingTourCompleted");
     localStorage.removeItem("documentTourCompleted");
     localStorage.removeItem("glossaryTourCompleted");
+    localStorage.removeItem("createGlossaryTourCompleted");
     localStorage.removeItem("firstLoginCompleted");
     
     // Clear refresh token cookie (best effort, though HttpOnly cookies won't be cleared by JS)
@@ -164,7 +166,10 @@ export class AuthService {
     }
   }
 
-  static async updateUserProfile(updates: { isCompletedDashboardTour?: boolean; isCompletedDocumentTour?: boolean; isCompletedGlossaryTour?: boolean }): Promise<UserResponse> {
+  /**
+   * Update user profile with walkthrough status
+   */
+  static async updateUserProfile(updates: UserUpdateRequest): Promise<UserResponse> {
     try {
       const response = await apiClient.patch<UserResponse>(
         API_CONFIG.ENDPOINTS.AUTH.UPDATE_ME, updates, { withCredentials: true }

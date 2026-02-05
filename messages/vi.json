@@ -105,7 +105,8 @@
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 50MB",
-        "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}"
+        "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
+        "continue": "Tiếp tục"
     },
     "Translate": {
         "error": "Lỗi",
@@ -361,6 +362,22 @@
         "editTerms": "Chỉnh sửa thuật ngữ",
         "deleteGlossary": "Xóa bộ thuật ngữ"
     },
+    "DashboardTour": {
+        "welcomeTitle": "Chào mừng đến với GlossaryAI Dashboard!",
+        "welcomeDescription": "Nơi quản lý tập trung mọi tài nguyên dịch thuật của bạn. Hãy dành 30 giây để tìm hiểu các chỉ số quan trọng nhé.",
+        "startTour": "Bắt đầu Tour",
+        "historyTitle": "Tổng số bản dịch",
+        "historyDescription": "Con số này cho biết tổng số lượt dịch tài liệu bạn đã dịch.<br></br><br></br><b>Bấm vào đây</b> sẽ mở ra trang <b>Lịch sử</b>, nơi bạn có thể tải lại file gốc, xem bản dịch cũ.",
+        "glossaryTitle": "Bộ thuật ngữ",
+        "glossaryDescription": "Con số này cho biết tổng số thuật ngữ bạn đang sử dụng.<br></br><br></br><b>Bấm vào đây</b> sẽ mở ra trang <b>Bộ thuật ngữ</b>, nơi bạn có thể tạo mới, import từ CSV/TXT hoặc chỉnh sửa danh sách thuật ngữ của riêng bạn.",
+        "documentsTitle": "Tài liệu đã tải lên",
+        "documentsDescription": "Con số này cho biết tổng số tài liệu gốc bạn đã tải lên.<br></br><br></br><b>Bấm vào đây</b> sẽ mở ra trang <b>Tài liệu</b>, nơi bạn có thể xem lại và quản lý các file đã upload.",
+        "uploadTitle": "Bắt đầu dịch ngay!",
+        "uploadDescription": "<b>Kéo thả file vào đây</b> để bắt đầu quy trình dịch.<br></br><br></br><i>Mẹo:</i> Bạn có thể thiết lập <b>Bộ thuật ngữ</b> và tùy chọn dịch ảnh ở bước tiếp theo ngay sau khi upload.",
+        "next": "Tiếp theo",
+        "done": "Đã hiểu",
+        "prev": "Quay lại"
+    },
     "Onboarding": {
         "welcome": "Chào mừng đến với GlossaryAI!",
         "welcomeDescription": "Hãy tham quan nhanh để giúp bạn bắt đầu và khám phá các tính năng chính của GlossaryAI.",
@@ -402,5 +419,33 @@
         "step6Title": "Bắt đầu dịch",
         "step6Description": "Khi bạn đã sẵn sàng, hãy nhấp vào nút này để bắt đầu quá trình dịch. Bạn có thể theo dõi tiến trình trong thời gian thực.",
         "onboardingHelp": "Chạy lại hướng dẫn sử dụng"
+    },
+    "GlossaryListTour": {
+        "welcomeTitle": "📚 Quản lý Bộ Thuật Ngữ (Glossary)",
+        "welcomeDescription": "Đây là nơi bạn \"dạy\" cho AI cách dịch đúng các từ chuyên ngành của doanh nghiệp bạn.<br />Sử dụng Glossary giúp bản dịch <b>nhất quán</b> và <b>chính xác</b> hơn.",
+        "createTitle": "Tạo mới dễ dàng",
+        "createDescription": "Bạn có thể tạo bộ thuật ngữ rỗng và nhập tay từng từ, hoặc <b>Import</b> nhanh từ file Excel/CSV có sẵn.",
+        "searchTitle": "Tìm kiếm & Lọc",
+        "searchDescription": "Khi số lượng bộ từ điển nhiều lên, hãy dùng công cụ này để tìm nhanh theo tên hoặc mô tả.",
+        "detailTitle": "Chi tiết bộ từ điển",
+        "detailDescription": "Mỗi thẻ hiển thị ngôn ngữ nguồn/đích và số lượng từ.<br/>Bấm vào thẻ để xem danh sách từ, hoặc dùng menu <b>(...)</b> để Chỉnh sửa/Xóa."
+    },
+    "GlossaryCreateTour": {
+        "welcomeTitle": "✨ Tạo Bộ Thuật Ngữ Mới",
+        "welcomeDescription": "Hãy cùng tìm hiểu cách tạo một bộ từ điển chuyên ngành để AI dịch đúng và nhất quán hơn.",
+        "nameTitle": "Đặt tên cho bộ thuật ngữ",
+        "nameDescription": "Đặt tên rõ ràng giúp bạn dễ quản lý khi có nhiều bộ từ điển. Ví dụ: <b>\"Thuật ngữ Y tế\"</b>, <b>\"Sản phẩm Công nghệ\"</b>",
+        "langTitle": "Chọn ngôn ngữ nguồn & đích",
+        "langDescription": "Xác định cặp ngôn ngữ bạn muốn dịch. Sau khi lưu, bạn <b>không thể thay đổi</b> 2 trường này.",
+        "descTitle": "Mô tả (tùy chọn)",
+        "descDescription": "Thêm ghi chú về mục đích sử dụng bộ từ này, giúp team dễ hiểu hơn.",
+        "tabsTitle": "2 cách nhập từ",
+        "tabsDescription": "<b>Manual Entry</b>: Nhập tay từng từ.<br/><b>Import File</b>: Tải lên file CSV/TXT để import hàng loạt.",
+        "tableTitle": "Bảng thuật ngữ",
+        "tableDescription": "Nhập <b>Source</b> (từ gốc) và <b>Target</b> (cách dịch mong muốn). <br/>Hệ thống tự gợi ý Target = Source nếu bạn chưa nhập.",
+        "addTermTitle": "Thêm từ mới",
+        "addTermDescription": "Bấm nút này để thêm dòng nhập từ mới. Bạn có thể thêm bao nhiêu từ tùy thích.",
+        "saveTitle": "Tóm tắt & Lưu",
+        "saveDescription": "Kiểm tra lại thông tin tổng quan. Khi mọi thứ đã đủ, bấm <b>Save</b> để hoàn tất."
     }
 }
