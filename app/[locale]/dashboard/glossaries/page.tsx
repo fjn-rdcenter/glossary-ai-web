@@ -48,6 +48,8 @@ import { getErrorMessage } from "@/lib/error-utils";
 
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import { motion } from "framer-motion";
+import { Rocket } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export default function GlossariesPage() {
   const router = useRouter();
@@ -175,9 +177,9 @@ export default function GlossariesPage() {
       target: 'body',
       placement: 'center',
       content: (
-        <div className="text-center py-2">
+        <div className="text-center py-2 px-1">
            <h3 className="text-lg font-bold mb-2">{trml("welcomeTitle")}</h3>
-           <p className="text-muted-foreground">
+           <p className="text-muted-foreground leading-relaxed text-left">
              {trml.rich("welcomeDescription", {
                b: (chunks: any) => <b>{chunks}</b>,
                br: () => <br />
@@ -188,7 +190,7 @@ export default function GlossariesPage() {
       disableBeacon: true,
     },
     {
-      target: '#create-glossary-btn', // ID đã được thêm bên dưới
+      target: '#create-glossary-btn',
       content: (
         <div>
            <h3 className="font-bold text-base mb-1">{trml("createTitle")}</h3>
@@ -203,7 +205,7 @@ export default function GlossariesPage() {
       disableBeacon: true,
     },
     {
-      target: '#search-glossaries', // ID đã được thêm bên dưới
+      target: '#search-glossaries',
       content: (
         <div>
            <h3 className="font-bold text-base mb-1">{trml("searchTitle")}</h3>
@@ -215,14 +217,14 @@ export default function GlossariesPage() {
       placement: 'bottom',
     },
     ...(filteredGlossaries.length > 0 ? [{
-      target: '#first-glossary-card', // ID của card đầu tiên
+      target: '#first-glossary-card',
       content: (
         <div>
            <h3 className="font-bold text-base mb-1">{trml("detailTitle")}</h3>
            <p className="text-muted-foreground leading-relaxed">
              {trml.rich("detailDescription", {
                b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br/>
+               br: () => <br />
              })}
            </p>
         </div>

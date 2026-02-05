@@ -34,6 +34,7 @@ import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
+import { Logo } from "@/components/logo";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -52,19 +53,19 @@ export default function DashboardPage() {
 
   const tourImages = {
     history: {
-      en: "/v2/gifs/history-preview/history-preview-en.gif",
-      vi: "/v2/gifs/history-preview/history-preview-vi.gif",
-      ja: "/v2/gifs/history-preview/history-preview-ja.gif",
+      en: "/v2/walkthrough/history-preview/history-preview-en.mp4",
+      vi: "/v2/walkthrough/history-preview/history-preview-vi.mp4",
+      ja: "/v2/walkthrough/history-preview/history-preview-ja.mp4",
     },
     glossary: {
-      en: "/v2/gifs/glossary-preview/glossary-preview-en.gif",
-      vi: "/v2/gifs/glossary-preview/glossary-preview-vi.gif",
-      ja: "/v2/gifs/glossary-preview/glossary-preview-ja.gif",
+      en: "/v2/walkthrough/glossary-preview/glossary-preview-en.mp4",
+      vi: "/v2/walkthrough/glossary-preview/glossary-preview-vi.mp4",
+      ja: "/v2/walkthrough/glossary-preview/glossary-preview-ja.mp4",
     },
     documents: {
-      en: "/v2/gifs/document-preview/document-preview-en.gif",
-      vi: "/v2/gifs/document-preview/document-preview-vi.gif",
-      ja: "/v2/gifs/document-preview/document-preview-ja.gif",
+      en: "/v2/walkthrough/document-preview/document-preview-en.mp4",
+      vi: "/v2/walkthrough/document-preview/document-preview-vi.mp4",
+      ja: "/v2/walkthrough/document-preview/document-preview-ja.mp4",
     }
   };
 
@@ -206,9 +207,15 @@ export default function DashboardPage() {
       placement: 'center',
       content: (
         <div className="text-center py-2 px-1">
+           <div className="flex justify-center mb-4">
+             <Logo size="md" variant="icon" />
+           </div>
            <h3 className="text-lg font-bold mb-2">{trmlTour("welcomeTitle")}</h3>
            <p className="text-muted-foreground leading-relaxed text-left">
-             {trmlTour("welcomeDescription")}
+             {trmlTour.rich("welcomeDescription", {
+               b: (chunks: any) => <b>{chunks}</b>,
+               br: () => <br />
+             })}
            </p>
         </div>
       ),
@@ -219,10 +226,14 @@ export default function DashboardPage() {
       content: (
         <div>
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <img 
+              <video 
+                preload="auto"
                 src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.en}
-                alt="History Preview" 
                 className="w-full h-auto object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
               />
            </div>
            <h3 className="font-bold text-base mb-1">{trmlTour("historyTitle")}</h3>
@@ -242,10 +253,14 @@ export default function DashboardPage() {
       content: (
         <div>
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <img 
+              <video 
+                preload="auto"
                 src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.en}
-                alt="Glossary Preview" 
                 className="w-full h-auto object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
               />
            </div>
            <h3 className="font-bold text-base mb-1">{trmlTour("glossaryTitle")}</h3>
@@ -264,10 +279,14 @@ export default function DashboardPage() {
       content: (
         <div>
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <img 
+              <video 
+                preload="auto"
                 src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.en}
-                alt="Documents Preview" 
                 className="w-full h-auto object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
               />
            </div>
            <h3 className="font-bold text-base mb-1">{trmlTour("documentsTitle")}</h3>

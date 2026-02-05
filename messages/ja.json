@@ -105,7 +105,8 @@
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 50MB",
-        "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}"
+        "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
+        "continue": "次へ"
     },
     "Translate": {
         "error": "エラー",
@@ -362,7 +363,7 @@
         "deleteGlossary": "用語集を削除"
     },
     "DashboardTour": {
-        "welcomeTitle": "GlossaryAI ダッシュボードへようこそ！",
+        "welcomeTitle": "GlossaryAI へようこそ！",
         "welcomeDescription": "翻訳に関するすべてのリソースを一元管理できます。30秒ほどで主要な指標を確認してみましょう。",
         "startTour": "ツアーを開始",
         "historyTitle": "翻訳総数",
