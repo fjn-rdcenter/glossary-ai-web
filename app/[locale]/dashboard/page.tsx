@@ -53,19 +53,19 @@ export default function DashboardPage() {
 
   const tourImages = {
     history: {
-      en: "/v2/walkthrough/history-preview/history-preview-en.mp4",
-      vi: "/v2/walkthrough/history-preview/history-preview-vi.mp4",
-      ja: "/v2/walkthrough/history-preview/history-preview-ja.mp4",
+      en: "/v2/walkthrough/history-preview/history-preview-en-resized.mp4",
+      vi: "/v2/walkthrough/history-preview/history-preview-vi-resized.mp4",
+      ja: "/v2/walkthrough/history-preview/history-preview-ja-resized.mp4",
     },
     glossary: {
-      en: "/v2/walkthrough/glossary-preview/glossary-preview-en.mp4",
-      vi: "/v2/walkthrough/glossary-preview/glossary-preview-vi.mp4",
-      ja: "/v2/walkthrough/glossary-preview/glossary-preview-ja.mp4",
+      en: "/v2/walkthrough/glossary-preview/glossary-preview-en-resized.mp4",
+      vi: "/v2/walkthrough/glossary-preview/glossary-preview-vi-resized.mp4",
+      ja: "/v2/walkthrough/glossary-preview/glossary-preview-ja-resized.mp4",
     },
     documents: {
-      en: "/v2/walkthrough/document-preview/document-preview-en.mp4",
-      vi: "/v2/walkthrough/document-preview/document-preview-vi.mp4",
-      ja: "/v2/walkthrough/document-preview/document-preview-ja.mp4",
+      en: "/v2/walkthrough/document-preview/document-preview-en-resized.mp4",
+      vi: "/v2/walkthrough/document-preview/document-preview-vi-resized.mp4",
+      ja: "/v2/walkthrough/document-preview/document-preview-ja-resized.mp4",
     }
   };
 
@@ -78,7 +78,31 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+
+    // Preload tour videos for current locale
+    const preloadVideos = () => {
+      const videos = [
+        tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.en,
+        tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.en,
+        tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.en,
+      ];
+
+      videos.forEach(src => {
+        // Check if link already exists
+        if (!document.querySelector(`link[rel="preload"][href="${src}"]`)) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'video';
+          link.href = src;
+          // type video/mp4 is safer
+          link.type = "video/mp4";
+          document.head.appendChild(link);
+        }
+      });
+    };
+
+    preloadVideos();
+  }, [locale]);
 
   useEffect(() => {
     const fetchStats = async () => {
