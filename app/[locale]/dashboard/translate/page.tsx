@@ -24,6 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AlertTriangle, Lightbulb } from "lucide-react";
 import Joyride, {
   ACTIONS,
@@ -31,6 +37,7 @@ import Joyride, {
   EVENTS,
   STATUS,
   Step,
+  TooltipRenderProps,
 } from "react-joyride";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +115,7 @@ function TranslatePageContent() {
   const [showSparkle, setShowSparkle] = useState(false);
   // Glossary Creation Dialog State
   const [isCreatingGlossaryOpen, setIsCreatingGlossaryOpen] = useState(false);
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -118,23 +125,23 @@ function TranslatePageContent() {
   // Initialize tour state (check if new user for spark effect)
   useEffect(() => {
     if (user && isMounted) {
-      // Check if user hasn't completed the tours yet
-      const shouldShowDocumentTour =
-        !user.isCompletedDocumentTour &&
-        !localStorage.getItem("documentTourCompleted");
-      const shouldShowGlossaryTour =
-        !user.isCompletedGlossaryTour &&
+      // Both document and glossary tours in translate page use upload_tour key
+      const shouldShowUploadTour =
+        !user.walkthrough_status?.upload_tour &&
+        !localStorage.getItem("documentTourCompleted") &&
         !localStorage.getItem("glossaryTourCompleted");
 
-      if (shouldShowDocumentTour || shouldShowGlossaryTour) {
+      if (shouldShowUploadTour) {
         setShowSparkle(true);
       }
 
-      // Auto start tour if not completed
-      if (currentStep === 0 && shouldShowDocumentTour) {
-        setRunDocumentTour(true);
-      } else if (currentStep === 1 && shouldShowGlossaryTour) {
-        setRunGlossaryTour(true);
+      // Auto start tour based on current step if upload_tour not completed
+      if (!user.walkthrough_status?.upload_tour) {
+        if (currentStep === 0 && !localStorage.getItem("documentTourCompleted")) {
+          setRunDocumentTour(true);
+        } else if (currentStep === 1 && !localStorage.getItem("glossaryTourCompleted")) {
+          setRunGlossaryTour(true);
+        }
       }
     }
   }, [user, isMounted, currentStep]);
@@ -146,16 +153,9 @@ function TranslatePageContent() {
 
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunDocumentTour(false);
+      // Only set localStorage for document tour, don't update backend yet
+      // Backend will be updated when glossary tour completes (last step)
       localStorage.setItem("documentTourCompleted", "true");
-
-      // Update server immediately
-      try {
-        await AuthService.updateUserProfile({
-          isCompletedDocumentTour: true,
-        });
-      } catch (error) {
-        console.error("Failed to update document tour completion:", error);
-      }
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Handle Next/Back navigation
       if (action === ACTIONS.NEXT) {
@@ -170,15 +170,31 @@ function TranslatePageContent() {
     const { status, action, index, type } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunGlossaryTour(false);
+      // Remove focus from any element (e.g. restart tour button) to prevent accidental restarts via Enter
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      // Set localStorage for glossary tour
       localStorage.setItem("glossaryTourCompleted", "true");
 
-      // Update server immediately
-      try {
-        await AuthService.updateUserProfile({
-          isCompletedGlossaryTour: true,
-        });
-      } catch (error) {
-        console.error("Failed to update glossary tour completion:", error);
+      // Check if both tours are completed (document + glossary)
+      const bothToursCompleted = localStorage.getItem("documentTourCompleted") === "true";
+      
+      if (bothToursCompleted) {
+        // Only update backend when BOTH tours are complete
+        try {
+          await AuthService.updateUserProfile({
+            walkthrough_status: { upload_tour: true },
+          });
+          // Refresh user context to get updated walkthrough_status
+          await refreshUser();
+          // Remove both localStorage items after successful backend sync
+          localStorage.removeItem("documentTourCompleted");
+          localStorage.removeItem("glossaryTourCompleted");
+        } catch (error) {
+          // Keep localStorage if API fails
+          console.warn("Failed to sync upload tour completion to backend:", error);
+        }
       }
     } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
       // Handle Next/Back navigation
@@ -369,91 +385,68 @@ function TranslatePageContent() {
 
   // Custom Tooltip Component
   const CustomTooltip = ({
-    continuous,
     index,
     step,
     backProps,
-    closeProps,
     primaryProps,
     skipProps,
     tooltipProps,
     size,
-  }: any) => {
+    isLastStep
+  }: TooltipRenderProps) => {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            primaryProps.onClick(e as any);
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [primaryProps]);
+
     return (
       <div
         {...tooltipProps}
-        style={{
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          maxWidth: "400px",
-          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
-        }}
+        className="bg-background text-foreground rounded-xl shadow-2xl p-0 max-w-[400px] border border-border overflow-hidden flex flex-col"
       >
-        {/* Step Counter Removed */}
+        {/* Content Area */}
+        <div className="p-5 flex flex-col gap-3">
+          {/* Step Counter */}
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
+            <span>Bước {index + 1} / {size}</span>
+          </div>
 
-        {/* Content */}
-        <div>{step.content}</div>
+          {/* Content Body */}
+          <div className="text-sm">
+            {step.content}
+          </div>
+        </div>
 
-        {/* Buttons - Bottom Row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: "20px",
-          }}
-        >
-          {/* Skip Button - Bottom Left */}
+        {/* Footer Buttons */}
+        <div className="p-4 bg-muted/30 border-t border-border flex justify-between items-center">
           <button
             {...skipProps}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#6b7280",
-              fontSize: "14px",
-              cursor: "pointer",
-              //  padding: "8px 12px",
-            }}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
           >
             {trmlOnboarding("skipTour")}
           </button>
 
-          {/* Navigation Buttons - Bottom Right */}
-          <div style={{ display: "flex", gap: "8px" }}>
-            {index > 0 && ![3].includes(index) && (
+          <div className="flex gap-2">
+            {index > 0 && (
               <button
                 {...backProps}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#6b7280",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  padding: "8px 16px",
-                }}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md border border-border hover:bg-muted"
               >
                 {trmlOnboarding("back")}
               </button>
             )}
             <button
               {...primaryProps}
-              style={{
-                backgroundColor: "#3b82f6",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
+              className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
             >
-              {[2, 4].includes(index)
-                ? trmlOnboarding("gotIt")
-                : index === size - 1
-                  ? trmlOnboarding("finish")
-                  : trmlOnboarding("next")}
+              {isLastStep ? trmlOnboarding("finish") : trmlOnboarding("next")}
             </button>
           </div>
         </div>
@@ -846,21 +839,42 @@ function TranslatePageContent() {
           steps={documentSetupTourSteps}
           run={runDocumentTour}
           continuous
-          scrollToFirstStep={false}
-          disableScrolling={true}
+          scrollToFirstStep={true}
+          disableScrolling={false}
           spotlightClicks={false}
-          showProgress={false}
-          showSkipButton={false}
+          showProgress={true}
+          showSkipButton={true}
           hideCloseButton
           disableOverlayClose
           tooltipComponent={CustomTooltip}
           stepIndex={documentTourIndex}
           callback={handleDocumentTourCallback}
+          floaterProps={{
+            disableAnimation: true,
+            hideArrow: false,
+          }}
           styles={{
             options: {
-              overlayColor: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: '#ffffff',
+              textColor: '#334155',
+              overlayColor: "rgba(0, 0, 0, 0.65)",
               zIndex: 10000,
+              primaryColor: "#3b82f6",
+              width: 400,
             },
+            spotlight: {
+              borderRadius: '12px',
+            },
+            tooltip: {
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              padding: 0,
+            },
+            buttonNext: {
+              borderRadius: '8px',
+              fontWeight: 600,
+              outline: 'none',
+            }
           }}
           locale={{
             skip: trmlOnboarding("skipTour"),
@@ -880,18 +894,39 @@ function TranslatePageContent() {
           scrollToFirstStep={false}
           disableScrolling={true}
           spotlightClicks={false}
-          showProgress={false}
-          showSkipButton={false}
+          showProgress={true}
+          showSkipButton={true}
           hideCloseButton
           disableOverlayClose
           tooltipComponent={CustomTooltip}
           stepIndex={glossaryTourIndex}
           callback={handleGlossaryTourCallback}
+          floaterProps={{
+            disableAnimation: true,
+            hideArrow: false,
+          }}
           styles={{
             options: {
-              overlayColor: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: '#ffffff',
+              textColor: '#334155',
+              overlayColor: "rgba(0, 0, 0, 0.65)",
               zIndex: 10000,
+              primaryColor: "#3b82f6",
+              width: 400,
             },
+            spotlight: {
+              borderRadius: '12px',
+            },
+            tooltip: {
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              padding: 0,
+            },
+            buttonNext: {
+              borderRadius: '8px',
+              fontWeight: 600,
+              outline: 'none',
+            }
           }}
           locale={{
             skip: trmlOnboarding("skipTour"),
@@ -904,55 +939,35 @@ function TranslatePageContent() {
 
       {/* Help Button - Bottom Left (Only for Doc Setup & Glossary) */}
       {currentStep <= 1 && (
-        <div className="fixed bottom-6 left-6 z-[100] group">
-          <motion.button
-            id="onboarding-help-button"
-            className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow relative"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              // Reset to section start when manually triggering help
-              if (currentStep === 0) {
-                setDocumentTourIndex(0);
-                setRunDocumentTour(true);
-              }
-              else if (currentStep === 1) {
-                setGlossaryTourIndex(0);
-                setRunGlossaryTour(true);
-              }
-              setShowSparkle(false); // Stop sparking once clicked
-            }}
-            initial={false}
-            animate={
-              showSparkle
-                ? {
-                    scale: [1, 1.1, 1],
-                    boxShadow: [
-                      "0 0 0 0 rgba(59, 130, 246, 0.7)", // primary color
-                      "0 0 0 20px rgba(59, 130, 246, 0)",
-                    ],
-                  }
-                : {}
-            }
-            transition={
-              showSparkle
-                ? {
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: "loop",
-                  }
-                : {}
-            }
-          >
-            <Lightbulb className="w-6 h-6" />
-          </motion.button>
-
-          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-2"
-          >
-            {trmlOnboarding("onboardingHelp")}
-            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
-          </div>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="fixed bottom-6 left-6 z-[100]">
+                <motion.button
+                  onClick={() => {
+                    // Reset to section start when manually triggering help
+                    if (currentStep === 0) {
+                      setDocumentTourIndex(0);
+                      setRunDocumentTour(true);
+                    }
+                    else if (currentStep === 1) {
+                      setGlossaryTourIndex(0);
+                      setRunGlossaryTour(true);
+                    }
+                  }}
+                  className="p-3 rounded-full bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-all border border-border"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Lightbulb className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Xem lại hướng dẫn</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </PageTransition>
   );

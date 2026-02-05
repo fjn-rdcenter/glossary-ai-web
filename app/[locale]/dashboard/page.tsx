@@ -13,7 +13,6 @@ import {
   BookOpen,
   History,
   ArrowRight,
-  Calendar,
   Lightbulb,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -23,13 +22,18 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { useTranslations, useLocale } from "next-intl";
+import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,21 +46,39 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const trml = useTranslations("Dashboard");
+  const trmlTour = useTranslations("DashboardTour");
   const trmlOnboarding = useTranslations("Onboarding");
+  const locale = useLocale();
+
+  const tourImages = {
+    history: {
+      en: "/v2/gifs/history-preview/history-preview-en.gif",
+      vi: "/v2/gifs/history-preview/history-preview-vi.gif",
+      ja: "/v2/gifs/history-preview/history-preview-ja.gif",
+    },
+    glossary: {
+      en: "/v2/gifs/glossary-preview/glossary-preview-en.gif",
+      vi: "/v2/gifs/glossary-preview/glossary-preview-vi.gif",
+      ja: "/v2/gifs/glossary-preview/glossary-preview-ja.gif",
+    },
+    documents: {
+      en: "/v2/gifs/document-preview/document-preview-en.gif",
+      vi: "/v2/gifs/document-preview/document-preview-vi.gif",
+      ja: "/v2/gifs/document-preview/document-preview-ja.gif",
+    }
+  };
 
   // Onboarding Tour State
   const [runTour, setRunTour] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [showSparkle, setShowSparkle] = useState(false);
 
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, refreshUser } = useUser();
 
-  // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Fetch stats on load
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -64,10 +86,7 @@ export default function DashboardPage() {
           TranslationService.getTranslationHistory(),
           GlossaryService.getGlossaries(),
         ]);
-
-        // Calculate unique documents
         const uniqueDocs = new Set(jobs.map((j) => j.sourceDocument)).size;
-
         setStats({
           totalTranslations: jobs.length,
           activeGlossaries: glossaries.length,
@@ -79,337 +98,307 @@ export default function DashboardPage() {
         setLoading(false);
       }
     };
-
     fetchStats();
   }, []);
 
-  // Trigger tour if first login
+  // Trigger tour Logic... (Giữ nguyên)
   useEffect(() => {
     if (
       !userLoading &&
       user &&
-      !user.isCompletedDashboardTour &&
+      !user.walkthrough_status?.dashboard_tour &&
       !localStorage.getItem("onboardingTourCompleted")
     ) {
       setShowSparkle(true);
+      // Delay nhỏ để đảm bảo DOM đã render hết ID
       setTimeout(() => {
         setRunTour(true);
-      }, 100);
+      }, 1200);
     }
   }, [user, userLoading]);
 
-  // Clear all translation process states when dashboard loads
+  // Clean session storage... (Giữ nguyên)
   useEffect(() => {
-    // Clear all translation-related sessionStorage
-    sessionStorage.removeItem("uploadedFile");
-    sessionStorage.removeItem("pendingUploadFile");
-    sessionStorage.removeItem("documentId");
-    sessionStorage.removeItem("jobId");
-    sessionStorage.removeItem("currentStep");
-    sessionStorage.removeItem("sourceLanguage");
-    sessionStorage.removeItem("targetLanguage");
-    sessionStorage.removeItem("glossaryOption");
-    sessionStorage.removeItem("selectedGlossaries");
-
-    // Clear any pending file in global scope
+    sessionStorage.clear(); // Xóa sạch cho gọn
     if (typeof window !== "undefined") {
       delete (window as any).__pendingFile;
     }
   }, []);
 
-  // Custom Tooltip Component
+  // --- CẤU HÌNH TOUR MỚI ---
+
   const CustomTooltip = ({
-    continuous,
     index,
     step,
     backProps,
-    closeProps,
     primaryProps,
     skipProps,
     tooltipProps,
     size,
-  }: any) => {
+    isLastStep
+  }: TooltipRenderProps) => {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            primaryProps.onClick(e as any);
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [primaryProps]);
+
     return (
       <div
         {...tooltipProps}
-        style={{
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          maxWidth: "400px",
-          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
-        }}
+        className="bg-background text-foreground rounded-xl shadow-2xl p-0 max-w-[400px] border border-border overflow-hidden flex flex-col"
       >
-        {/* Step Counter - Top Left */}
-        <div
-          style={{ color: "#6b7280", fontSize: "14px", marginBottom: "16px" }}
-        >
-          {index + 1}/{size}
+        {/* Header / Image Area */}
+        <div className="p-5 flex flex-col gap-3">
+            {/* Step Counter */}
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
+                <span>Step {index + 1} of {size}</span>
+            </div>
+
+            {/* Content Body */}
+            <div className="text-sm">
+                {step.content}
+            </div>
         </div>
 
-        {/* Content */}
-        <div>{step.content}</div>
-
-        {/* Buttons - Bottom Row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: "20px",
-          }}
-        >
-          {/* Skip Button - Bottom Left */}
+        {/* Footer Buttons */}
+        <div className="p-4 bg-muted/30 border-t border-border flex justify-between items-center">
           <button
             {...skipProps}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#6b7280",
-              fontSize: "14px",
-              cursor: "pointer",
-              //  padding: "8px 12px",
-            }}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
           >
             {trmlOnboarding("skipTour")}
           </button>
 
-          {/* Navigation Buttons - Bottom Right */}
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {index > 0 && (
-              <button
+              <Button
                 {...backProps}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "#6b7280",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  padding: "8px 16px",
-                }}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
               >
                 {trmlOnboarding("back")}
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               {...primaryProps}
-              style={{
-                backgroundColor: "#3b82f6",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: "500",
-                cursor: "pointer",
-              }}
+              size="sm"
+              className="h-8 text-xs bg-primary text-primary-foreground"
             >
-              {index === size - 1
-                ? trmlOnboarding("finish")
-                : trmlOnboarding("next")}
-            </button>
+              {isLastStep ? trmlOnboarding("finish") : trmlOnboarding("next")}
+            </Button>
           </div>
         </div>
       </div>
     );
   };
 
-  // Tour Steps Configuration
   const tourSteps: Step[] = [
     {
-      target: '[data-tour="stats-grid"]',
+      target: 'body',
+      placement: 'center',
       content: (
-        <div>
-          <h3 className="font-semibold mb-1">
-            {trmlOnboarding("dashboardCardsTitle")}
-          </h3>
-          <p className="text-sm">
-            {trmlOnboarding("dashboardCardsDescription")}
-          </p>
+        <div className="text-center py-2 px-1">
+           <h3 className="text-lg font-bold mb-2">{trmlTour("welcomeTitle")}</h3>
+           <p className="text-muted-foreground leading-relaxed text-left">
+             {trmlTour("welcomeDescription")}
+           </p>
         </div>
       ),
-      placement: "bottom",
       disableBeacon: true,
     },
     {
-      target: '[data-tour="quick-upload"]',
+      target: '#metric-history',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">
-            {trmlOnboarding("quickUploadTitle")}
-          </h3>
-          <p className="text-sm">{trmlOnboarding("quickUploadDescription")}</p>
+           <div className="mb-3 rounded-lg overflow-hidden border border-border">
+              <img 
+                src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.en}
+                alt="History Preview" 
+                className="w-full h-auto object-cover"
+              />
+           </div>
+           <h3 className="font-bold text-base mb-1">{trmlTour("historyTitle")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlTour.rich("historyDescription", {
+               b: (chunks: any) => <b>{chunks}</b>,
+               br: () => <br />
+             })}
+           </p>
         </div>
       ),
-      placement: "top",
+      placement: 'bottom',
       disableBeacon: true,
-      spotlightClicks: true,
+    },
+    {
+      target: '#metric-glossary',
+      content: (
+        <div>
+           <div className="mb-3 rounded-lg overflow-hidden border border-border">
+              <img 
+                src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.en}
+                alt="Glossary Preview" 
+                className="w-full h-auto object-cover"
+              />
+           </div>
+           <h3 className="font-bold text-base mb-1">{trmlTour("glossaryTitle")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlTour.rich("glossaryDescription", {
+               b: (chunks: any) => <b>{chunks}</b>,
+               br: () => <br />
+             })}
+           </p>
+        </div>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '#metric-documents',
+      content: (
+        <div>
+           <div className="mb-3 rounded-lg overflow-hidden border border-border">
+              <img 
+                src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.en}
+                alt="Documents Preview" 
+                className="w-full h-auto object-cover"
+              />
+           </div>
+           <h3 className="font-bold text-base mb-1">{trmlTour("documentsTitle")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlTour.rich("documentsDescription", {
+               b: (chunks: any) => <b>{chunks}</b>,
+               br: () => <br />
+             })}
+           </p>
+        </div>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '#upload-zone',
+      content: (
+        <div>
+           <h3 className="font-bold text-base mb-1">{trmlTour("uploadTitle")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlTour.rich("uploadDescription", {
+               b: (chunks: any) => <b>{chunks}</b>,
+               i: (chunks: any) => <i>{chunks}</i>,
+               br: () => <br />
+             })}
+           </p>
+        </div>
+      ),
+      placement: 'top',
+      spotlightClicks: false,     
+      floaterProps: {
+        disableAnimation: false,
+        disableFlip: true,
+      },
     },
   ];
 
-  // Handle tour callback
   const handleJoyrideCallback = async (data: CallBackProps) => {
-    const { status, action, index, type } = data;
-
+    const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunTour(false);
-      localStorage.setItem("onboardingTourCompleted", "true");
+      
+      // Remove focus from any element to prevent accidental restarts via Enter
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
 
-      // Update server immediately
+      // Try to sync with backend
       try {
-        await AuthService.updateUserProfile({
-          isCompletedDashboardTour: true,
+        await AuthService.updateUserProfile({ 
+          walkthrough_status: { dashboard_tour: true } 
         });
+        // Refresh user context to get updated walkthrough_status
+        await refreshUser();
+        // Remove localStorage after successful backend sync
+        localStorage.removeItem("onboardingTourCompleted");
       } catch (error) {
-        console.error("Failed to update dashboard tour completion:", error);
+        // Fallback to localStorage if API fails
+        console.warn("Failed to sync dashboard tour completion to backend:", error);
+        localStorage.setItem("onboardingTourCompleted", "true");
       }
     }
-
-    // Don't update step index, let Joyride handle it automatically
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
   }, []);
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    onDragEnter: () => setIsDragActive(true),
-    onDragLeave: () => setIsDragActive(false),
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
-      "application/vnd.ms-word.document.macroEnabled.12": [".docm"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.template":
-        [".dotx"],
-      "application/vnd.ms-word.template.macroEnabled.12": [".dotm"],
-      "application/vnd.ms-powerpoint": [".ppt"],
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        [".pptx"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        [".xlsx"],
-    },
-    multiple: false,
-  });
-
+  const { getRootProps, getInputProps } = useDropzone({ onDrop, accept: {'application/pdf': ['.pdf'], 'application/msword': ['.doc'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']}, multiple: false });
+  
   const handleContinue = () => {
     if (files.length > 0) {
-      // Store file metadata and set a flag that we're coming from dashboard with a file
-      sessionStorage.setItem(
-        "pendingUploadFile",
-        JSON.stringify({
-          name: files[0].name,
-          size: files[0].size,
-          type: files[0].type,
-        })
-      );
-      // Store the actual file temporarily in a way the next page can access
-      // We'll use a global variable as a workaround since File objects can't be serialized
-      if (typeof window !== "undefined") {
-        (window as any).__pendingFile = files[0];
-      }
+      sessionStorage.setItem("pendingUploadFile", JSON.stringify({ name: files[0].name, size: files[0].size, type: files[0].type }));
+      if (typeof window !== "undefined") (window as any).__pendingFile = files[0];
       router.push("/dashboard/translate");
     }
   };
 
+  const metricIds: Record<string, string> = {
+    totalTranslation: "metric-history",
+    activeGlossaries: "metric-glossary",
+    documentsUploaded: "metric-documents",
+  };
 
   const currentStats = [
-    {
-      label: "totalTranslation",
-      value: loading ? "..." : stats.totalTranslations.toLocaleString(),
-      change: "totalTranslationUnit",
-      icon: FileText,
-      trend: "neutral",
-    },
-    {
-      label: "activeGlossaries",
-      value: loading ? "..." : stats.activeGlossaries.toString(),
-      change: "activeGlossariesUnit",
-      icon: BookOpen,
-      trend: "neutral",
-    },
-    {
-      label: "documentsUploaded",
-      value: loading ? "..." : stats.uniqueDocuments.toString(),
-      change: "documentsUploadedUnit",
-      icon: FileText,
-      trend: "neutral",
-    },
+    { label: "totalTranslation", value: loading ? "..." : stats.totalTranslations.toLocaleString(), change: "totalTranslationUnit", icon: FileText, trend: "neutral" },
+    { label: "activeGlossaries", value: loading ? "..." : stats.activeGlossaries.toString(), change: "activeGlossariesUnit", icon: BookOpen, trend: "neutral" },
+    { label: "documentsUploaded", value: loading ? "..." : stats.uniqueDocuments.toString(), change: "documentsUploadedUnit", icon: FileText, trend: "neutral" },
   ];
 
   return (
     <PageTransition className="space-y-8">
-      {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {trml("dashboard")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {trml("dashboardDescription")}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{trml("dashboard")}</h1>
+          <p className="text-muted-foreground mt-1">{trml("dashboardDescription")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2" asChild>
-            <Link href="/dashboard/history">
-              <History className="w-4 h-4" />
-              {trml("fullHistory")}
-            </Link>
-          </Button>
-          <Button
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            asChild
-          >
-            <Link href="/dashboard/translate">
-              <Upload className="w-4 h-4" />
-              {trml("newTranslation")}
-            </Link>
-          </Button>
+            <Button variant="outline" asChild><Link href="/dashboard/history"><History className="w-4 h-4 mr-2" />{trml("fullHistory")}</Link></Button>
+            <Button asChild><Link href="/dashboard/translate"><Upload className="w-4 h-4 mr-2" />{trml("newTranslation")}</Link></Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3" data-tour="stats-grid">
+      <div className="grid gap-4 md:grid-cols-3">
         {currentStats.map((stat, i) => {
-          // Determine the navigation path based on the stat label
           let href = "/dashboard/history";
-          if (stat.label === "activeGlossaries") {
-            href = "/dashboard/glossaries";
-          } else if (stat.label === "documentsUploaded") {
-            href = "/dashboard/documents";
-          }
+          if (stat.label === "activeGlossaries") href = "/dashboard/glossaries";
+          else if (stat.label === "documentsUploaded") href = "/dashboard/documents";
 
+          const elementId = metricIds[stat.label];
           return (
             <SlideUp key={stat.label} delay={i * 0.1}>
-              <Link href={href}>
-                <Card className="bg-secondary cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {trml(stat.label) ?? stat.label}
-                    </CardTitle>
-                    <stat.icon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stat.value}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      <span
-                        className={cn(
-                          "font-medium",
-                          stat.trend === "up"
-                            ? "text-green-600"
-                            : stat.trend === "down"
-                              ? "text-red-600"
-                            : "text-zinc-500"
-                        )}
-                      >
-                        {trml(stat.change) ?? stat.change}
-                      </span>{" "}
-                      {/* from last month - Removed specific comparison */}
-                    </p>
-                  </CardContent>
-                </Card>
+              <Link href={href} className="block h-full group">
+                <div id={elementId} className="h-full"> 
+                  <Card 
+                    className="bg-secondary cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 h-full relative"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {trml(stat.label) ?? stat.label}
+                      </CardTitle>
+                      <stat.icon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <span className="font-medium text-zinc-500">
+                          {trml(stat.change) ?? stat.change}
+                        </span>
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               </Link>
             </SlideUp>
           );
@@ -417,82 +406,29 @@ export default function DashboardPage() {
       </div>
 
       <div className="space-y-6 max-w-full">
-        {/* Quick Upload */}
         <Card
+          id="upload-zone" 
           className="w-full border-2 border-dashed border-border bg-muted/50"
-          data-tour="quick-upload"
         >
           <CardHeader>
             <CardTitle>{trml("quickUpload")}</CardTitle>
-            {/* <CardDescription>
-              {trml("quickUploadDescription")}
-            </CardDescription> */}
           </CardHeader>
           <CardContent>
-            <AnimatePresence mode="wait">
+             <AnimatePresence mode="wait">
               {files.length === 0 ? (
-                <motion.div
-                  key="dropzone"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div
-                    {...getRootProps()}
-                    className={cn(
-                      "w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px]",
-                      "bg-card border border-border shadow-sm",
-                      "hover:border-primary/50 hover:shadow-md",
-                      isDragActive && "border-primary ring-2 ring-primary/20"
-                    )}
-                  >
+                <div {...getRootProps()} className={cn("w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px] bg-card border border-border shadow-sm hover:border-primary/50", isDragActive && "border-primary")}>
                     <input {...getInputProps()} />
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                      <Upload className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="space-y-1 max-w-md mx-auto">
-                      <p className="text-lg font-medium">
-                        {isDragActive
-                          ? trml("dropFile")
-                          : trml("clickOrDrag")}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {trml("supportedFiles")}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
+                    <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
+                </div>
               ) : (
-                <motion.div
-                  key="files"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-4 max-w-2xl mx-auto"
-                >
-                  {files.map((file, index) => (
-                    <FileCard
-                      key={index}
-                      name={file.name}
-                      size={file.size}
-                      type={file.type}
-                      status="success"
-                      onRemove={() =>
-                        setFiles((prev) => prev.filter((_, i) => i !== index))
-                      }
-                    />
-                  ))}
-
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      onClick={handleContinue}
-                      size="lg"
-                      className="min-w-[220px] gap-2"
-                    >
-                      {trml('translateFiles_count', { count: files.length })}
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">
+                    {files.map((file, index) => (
+                        <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
+                    ))}
+                    <div className="flex justify-center pt-4">
+                        <Button onClick={handleContinue} size="lg" className="min-w-[220px] gap-2">{trml('continue')} <ArrowRight className="w-4 h-4" /></Button>
+                    </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -500,71 +436,69 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Onboarding Tour */}
       {isMounted && (
         <Joyride
+          key={runTour ? 'tour-active' : 'tour-idle'}
           steps={tourSteps}
           run={runTour}
           continuous={true}
-          scrollToFirstStep={false}
-          disableScrolling={true}
-          spotlightClicks={false}
-          showProgress={false}
-          showSkipButton={false}
+          scrollToFirstStep={true}
+          disableScrolling={false}
+          showProgress={true}
+          showSkipButton={true}
           hideCloseButton
           disableOverlayClose
           tooltipComponent={CustomTooltip}
           callback={handleJoyrideCallback}
+          floaterProps={{
+            disableAnimation: true,
+            hideArrow: false,
+          }}
           styles={{
             options: {
-              overlayColor: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: '#ffffff',
+              textColor: '#334155',
+              overlayColor: "rgba(0, 0, 0, 0.65)",
               zIndex: 10000,
+              primaryColor: "#3b82f6",
+              width: 400,
             },
+            spotlight: {
+                borderRadius: '12px',
+            },
+            tooltip: {
+              borderRadius: '16px', 
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              padding: 0,
+            },
+            buttonNext: {
+              borderRadius: '8px',
+              fontWeight: 600,
+              outline: 'none',
+            }
           }}
         />
       )}
 
-      {/* Sparkle Effect on Upload Button */}
-      <div className="fixed bottom-6 left-6 z-[100] group">
-        <motion.button
-          id="onboarding-help-button"
-          className="p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow relative"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => {
-            setRunTour(true);
-            setShowSparkle(false);
-          }}
-          initial={false}
-          animate={
-            showSparkle
-              ? {
-                  scale: [1, 1.1, 1],
-                  boxShadow: [
-                    "0 0 0 0 rgba(59, 130, 246, 0.7)",
-                    "0 0 0 20px rgba(59, 130, 246, 0)",
-                  ],
-                }
-              : {}
-          }
-          transition={
-            showSparkle
-              ? {
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "loop",
-            } : {}
-          }
-        >
-          <Lightbulb className="w-6 h-6" />
-        </motion.button>
-
-        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-lg shadow-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-2"
-        >
-          {trmlOnboarding("onboardingHelp")}
-          <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
-        </div>
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="fixed bottom-6 left-6 z-[100]">
+              <motion.button
+                onClick={() => setRunTour(true)}
+                className="p-3 rounded-full bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-all border border-border"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Lightbulb className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Xem lại hướng dẫn</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </PageTransition>
   );
 }

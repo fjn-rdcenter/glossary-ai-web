@@ -387,7 +387,7 @@ export function GlossaryForm({
               <div className="space-y-2">
                 <Label htmlFor="name">{trmlGlossaries("glossaryName")}</Label>
                 <Input
-                  id="name"
+                  id="glossary-name-field"
                   placeholder={trmlGlossaries("glossaryNamePlaceholder")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -395,7 +395,7 @@ export function GlossaryForm({
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-6">
+              <div id="glossary-languages" className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>{trmlCommon("sourceLanguage")}</Label>
                   <Select
@@ -441,7 +441,7 @@ export function GlossaryForm({
                <div className="space-y-2">
                 <Label htmlFor="description">{trmlGlossaries("descriptionForm")}</Label>
                 <Textarea
-                  id="description"
+                  id="glossary-description-field"
                   placeholder={trmlGlossaries("descriptionFormPlaceholder")}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -457,7 +457,7 @@ export function GlossaryForm({
               <CardTitle>{trmlGlossaries("terms")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs id="glossary-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="manual">{trmlGlossaries("manualEntry")}</TabsTrigger>
                   <TabsTrigger value="import">{trmlGlossaries("importFile")}</TabsTrigger>
@@ -491,6 +491,7 @@ export function GlossaryForm({
                   )}
 
                   <div 
+                    id="glossary-term-table"
                     ref={tableContainerRef}
                     className="border border-border rounded-lg max-h-[400px] overflow-auto relative"
                   >
@@ -590,7 +591,7 @@ export function GlossaryForm({
                     </div>
                   )}
 
-                  <Button variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
+                  <Button id="add-term-btn" variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
                     <Plus className="mr-2 w-4 h-4" />
                     {trmlGlossaries("addTerm")}
                   </Button>
@@ -632,6 +633,70 @@ export function GlossaryForm({
                                  'text/plain': ['.txt'],
                                  'text/csv': ['.csv']
                              }}
+                             instructionMessage={
+                              <div className="space-y-4">
+                                {/* Header nhỏ gọn */}
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">Định dạng hỗ trợ:</span>
+                                  <span className="font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+                                    .CSV, .TXT
+                                  </span>
+                                </div>
+
+                                {/* Khu vực hướng dẫn chính */}
+                                <div className="rounded-lg border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/40 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/20">
+                                  <div className="p-3 border-b border-blue-100 dark:border-blue-900/50 flex items-center gap-2">
+                                    <span className="text-blue-600 dark:text-blue-400">💡</span>
+                                    <p className="font-semibold text-sm text-foreground">
+                                      Cấu trúc nội dung file
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="p-3 space-y-3">
+                                    {/* Case 1: Đầy đủ */}
+                                    <div className="relative pl-3 border-l-2 border-blue-400 dark:border-blue-600">
+                                      <p className="text-xs font-medium text-foreground mb-1.5">
+                                        1. Cặp thuật ngữ (Khuyên dùng):
+                                      </p>
+                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                          từ_gốc,từ_dịch
+                                        </code>
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <span className="text-muted-foreground">Ví dụ:</span>
+                                          <code className="px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-mono border border-green-200 dark:border-green-800">
+                                            AI,Trí tuệ nhân tạo
+                                          </code>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Case 2: Rút gọn */}
+                                    <div className="relative pl-3 border-l-2 border-amber-400 dark:border-amber-600">
+                                      <p className="text-xs font-medium text-foreground mb-1.5">
+                                        2. Chỉ có từ gốc (Tự động điền):
+                                      </p>
+                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                          từ_gốc
+                                        </code>
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <span className="text-muted-foreground">Ví dụ:</span>
+                                          <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-mono border border-amber-200 dark:border-amber-800">
+                                            Samsung
+                                          </code>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Note nhỏ (Optional) */}
+                                  <div className="p-2 bg-blue-100/30 dark:bg-blue-900/10 text-[11px] text-center text-muted-foreground italic rounded-b-lg">
+                                    *Lưu ý: Không cần dòng tiêu đề (header)
+                                  </div>
+                                </div>
+                              </div>
+                            }
                            />
                         )}
                     </div>

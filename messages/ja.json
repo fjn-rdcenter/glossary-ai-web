@@ -361,6 +361,22 @@
         "editTerms": "用語を編集",
         "deleteGlossary": "用語集を削除"
     },
+    "DashboardTour": {
+        "welcomeTitle": "GlossaryAI ダッシュボードへようこそ！",
+        "welcomeDescription": "翻訳に関するすべてのリソースを一元管理できます。30秒ほどで主要な指標を確認してみましょう。",
+        "startTour": "ツアーを開始",
+        "historyTitle": "翻訳総数",
+        "historyDescription": "これまでに翻訳したドキュメントの総数を表示します。<br></br><br></br><b>ここをクリック</b>すると<b>履歴</b>ページが開き、元ファイルの再ダウンロードや過去の翻訳結果を確認できます。",
+        "glossaryTitle": "有効な用語集",
+        "glossaryDescription": "現在使用している用語の総数を表示します。<br></br><br></br><b>ここをクリック</b>すると<b>用語集</b>ページが開き、新規作成、CSV/TXTからのインポート、用語リストの編集が行えます。",
+        "documentsTitle": "アップロード済みドキュメント",
+        "documentsDescription": "アップロードした元ドキュメントの総数を表示します。<br></br><br></br><b>ここをクリック</b>すると<b>ドキュメント</b>ページが開き、アップロード済みファイルの確認や管理ができます。",
+        "uploadTitle": "今すぐ翻訳を開始！",
+        "uploadDescription": "<b>ここにファイルをドラッグ＆ドロップ</b>して翻訳を開始します。<br></br><br></br><i>ヒント：</i>アップロード後の次のステップで、<b>用語集</b>や画像翻訳オプションを設定できます。",
+        "next": "次へ",
+        "done": "完了",
+        "prev": "戻る"
+    },
     "Onboarding": {
         "welcome": "GlossaryAI へようこそ！",
         "welcomeDescription": "GlossaryAIの主な機能を理解するために、クイックツアーを始めましょう。",
@@ -402,5 +418,33 @@
         "step6Title": "翻訳開始",
         "step6Description": "準備ができたら、このボタンをクリックして翻訳プロセスを開始します。進行状況をリアルタイムで追跡できます。",
         "onboardingHelp": "ガイド付きツアーを再開する"
+    },
+    "GlossaryListTour": {
+        "welcomeTitle": "用語集の管理",
+        "welcomeDescription": "ここでは、企業の専門用語を正しく翻訳する方法を AI に「教える」ことができます。<br/>用語集を使用すると、翻訳の<b>一貫性</b>と<b>正確性</b>が向上します。",
+        "createTitle": "簡単に作成",
+        "createDescription": "空の用語集を作成して用語を手動で入力するか、既存の Excel/CSV ファイルからすばやく<b>インポート</b>できます。",
+        "searchTitle": "検索とフィルタ",
+        "searchDescription": "辞書が増えてきたら、このツールを使って名前や説明からすばやく検索できます。",
+        "detailTitle": "用語集の詳細",
+        "detailDescription": "各カードには、翻訳元/翻訳先の言語と用語数が表示されます。<br/>カードをクリックして用語を表示するか、<b>(...)</b> メニューを使用して編集/削除します。"
+    },
+    "GlossaryCreateTour": {
+        "welcomeTitle": "✨ 新しい用語集の作成",
+        "welcomeDescription": "AIがより正確かつ一貫性のある翻訳を行えるように、専門辞書の作成方法を学びましょう。",
+        "nameTitle": "用語集の名前",
+        "nameDescription": "明確な名前を付けると、複数の辞書を管理しやすくなります。例：<b>「医療用語」</b>、<b>「技術製品」</b>",
+        "langTitle": "翻訳元・翻訳先言語の選択",
+        "langDescription": "言語ペアを定義します。保存後は、これら2つのフィールドは<b>変更できません</b>。",
+        "descTitle": "説明（任意）",
+        "descDescription": "この用語集の使用目的についてのメモを追加すると、チームが理解しやすくなります。",
+        "tabsTitle": "2つの入力方法",
+        "tabsDescription": "<b>手動入力</b>: 用語を1つずつ入力します。<br/><b>ファイルインポート</b>: CSV/TXTをアップロードして一括インポートします。",
+        "tableTitle": "用語テーブル",
+        "tableDescription": "<b>原文</b>（元の用語）と<b>訳文</b>（希望する翻訳）を入力します。<br/>空欄の場合、システムは自動的に訳文＝原文として提案します。",
+        "addTermTitle": "新しい用語を追加",
+        "addTermDescription": "このボタンをクリックして、新しい用語の入力行を追加します。用語はいくつでも追加できます。",
+        "saveTitle": "概要と保存",
+        "saveDescription": "概要情報を確認します。すべて問題なければ、<b>保存</b>をクリックして完了します。"
     }
 }
