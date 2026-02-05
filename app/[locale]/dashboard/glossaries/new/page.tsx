@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryForm } from "@/components/glossary/glossary-form";
 import { GlossaryResponse } from "@/lib/types";
@@ -90,9 +91,9 @@ export default function NewGlossaryPage() {
       target: 'body',
       placement: 'center',
       content: (
-        <div className="text-center py-2">
+        <div className="text-center py-2 px-1">
            <h3 className="text-lg font-bold mb-2">{trml("welcomeTitle")}</h3>
-           <p className="text-muted-foreground">
+           <p className="text-muted-foreground leading-relaxed text-left">
              {trml("welcomeDescription")}
            </p>
         </div>

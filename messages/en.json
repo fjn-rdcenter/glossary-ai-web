@@ -359,7 +359,7 @@
         "deleteGlossary": "Delete Glossary"
     },
     "DashboardTour": {
-        "welcomeTitle": "Welcome to GlossaryAI Dashboard!",
+        "welcomeTitle": "Welcome to GlossaryAI!",
         "welcomeDescription": "Your centralized workspace for managing all translation resources. Take about 30 seconds to explore the key metrics.",
         "startTour": "Start Tour",
         "historyTitle": "Total Translation",

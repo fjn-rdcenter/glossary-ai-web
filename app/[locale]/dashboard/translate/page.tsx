@@ -460,8 +460,10 @@ function TranslatePageContent() {
       target: '[data-tour="file-upload"]',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">{trmlOnboarding("step1Title")}</h3>
-          <p className="text-sm">{trmlOnboarding("step1Description")}</p>
+           <h3 className="font-bold text-base mb-1">{trmlOnboarding("step1Title")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlOnboarding("step1Description")}
+           </p>
         </div>
       ),
       placement: "bottom",
@@ -471,8 +473,10 @@ function TranslatePageContent() {
       target: '[data-tour="language-selection"]',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">{trmlOnboarding("step2Title")}</h3>
-          <p className="text-sm">{trmlOnboarding("step2Description")}</p>
+           <h3 className="font-bold text-base mb-1">{trmlOnboarding("step2Title")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlOnboarding("step2Description")}
+           </p>
         </div>
       ),
       placement: "bottom",
@@ -482,8 +486,10 @@ function TranslatePageContent() {
       target: '[data-tour="translate-images"]',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">{trmlOnboarding("step3Title")}</h3>
-          <p className="text-sm">{trmlOnboarding("step3Description")}</p>
+           <h3 className="font-bold text-base mb-1">{trmlOnboarding("step3Title")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlOnboarding("step3Description")}
+           </p>
         </div>
       ),
       placement: "top",
@@ -496,8 +502,10 @@ function TranslatePageContent() {
       target: '[data-tour="glossary-panel"]',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">{trmlOnboarding("step4Title")}</h3>
-          <p className="text-sm">{trmlOnboarding("step4Description")}</p>
+           <h3 className="font-bold text-base mb-1">{trmlOnboarding("step4Title")}</h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlOnboarding("step4Description")}
+           </p>
         </div>
       ),
       placement: "right",
@@ -507,12 +515,12 @@ function TranslatePageContent() {
       target: '[data-tour="create-glossary-btn"]',
       content: (
         <div>
-          <h3 className="font-semibold mb-1">
-            {trmlOnboarding("stepCreateGlossaryTitle")}
-          </h3>
-          <p className="text-sm">
-            {trmlOnboarding("stepCreateGlossaryDescription")}
-          </p>
+           <h3 className="font-bold text-base mb-1">
+             {trmlOnboarding("stepCreateGlossaryTitle")}
+           </h3>
+           <p className="text-muted-foreground leading-relaxed">
+             {trmlOnboarding("stepCreateGlossaryDescription")}
+           </p>
         </div>
       ),
       placement: "bottom",
