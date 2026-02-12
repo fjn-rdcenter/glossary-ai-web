@@ -34,9 +34,9 @@ export function GuidanceClient() {
   
 
   const demoVideos = {
-      en: "https://youtu.be/3Sw-1yezq4I",
-      vi: "https://youtu.be/Su5He2LwIrE",
-      ja: "https://youtu.be/qIP7c8VFlKg",
+      en: "https://www.youtube.com/embed/3Sw-1yezq4I",
+      vi: "https://www.youtube.com/embed/Su5He2LwIrE",
+      ja: "https://www.youtube.com/embed/qIP7c8VFlKg",
   };
 
   return (
