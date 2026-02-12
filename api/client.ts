@@ -5,6 +5,7 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { API_CONFIG, BASE_PATH } from "./config";
+import { AppError } from "@/lib/error-utils";
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -64,7 +65,14 @@ apiClient.interceptors.response.use(
       // Avoid infinite loops
       if (originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN) || 
           originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH)) {
-          return Promise.reject(error);
+          // Backend returned an error response
+          const data = error.response.data as any;
+          const message = data?.detail?.message || data?.message || data?.detail || "Authentication failed";
+          const statusCode = error.response.status;
+          const code = data?.error?.code || data?.code;
+          const details = data?.detail;
+
+          return Promise.reject(new AppError(message, statusCode, code, details, error));
       }
 
       if (isRefreshing) {
@@ -129,12 +137,12 @@ apiClient.interceptors.response.use(
             localStorage.removeItem("auth_token");
             // Clear cookie loosely if possible specific to client logic
             document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            const loginPath = `${BASE_PATH}/login`;
+            const currentPath = window.location.pathname;
+            const isLoginPage = /\/login\/?$/.test(currentPath);
 
-            if (!window.location.pathname.startsWith(loginPath)) {
-              window.location.replace(loginPath);
+            if (!isLoginPage) {
+                window.location.replace(`${BASE_PATH}/`);
             }
-             
         }
         return Promise.reject(refreshError);
       } finally {
@@ -143,7 +151,24 @@ apiClient.interceptors.response.use(
     }
     
     // Handle other errors
-    return Promise.reject(error);
+    if (error.response) {
+      // Backend returned an error response
+      const data = error.response.data as any;
+      // Prioritize detail if it's a string (common in FastAPI/Pydantic)
+      // data.detail.message usually for complex objects
+      // data.message is often just the status text (e.g. "Conflict")
+      const message = data?.detail?.message || (typeof data?.detail === 'string' ? data.detail : null) || data?.message || "An unexpected error occurred";
+      const statusCode = error.response.status;
+      const code = data?.error?.code || data?.code; // Adjust based on actual backend error format
+      const details = data?.detail;
+
+      return Promise.reject(new AppError(message, statusCode, code, details, error));
+    } else if (error.request) {
+      // Request was made but no response received (Network error)
+      return Promise.reject(new AppError("Network error. Please check your connection.", 0, "NETWORK_ERROR", null, error));
+    }
+    
+    return Promise.reject(new AppError(error.message, 0, "UNKNOWN_ERROR", null, error));
   }
 );
 

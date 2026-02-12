@@ -13,7 +13,17 @@ import {
   Settings2,
   List,
   Book,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -35,10 +45,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { GlossaryService } from "@/api/services";
-import { GlossaryDetailResponse } from "@/api/types";
+import { GlossaryDetailResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { getErrorMessage } from "@/lib/error-utils";
+import { useTranslations } from 'next-intl';
+import { FileDropzone } from "@/components/ui/file-dropzone";
+
 
 interface CreateGlossaryDialogProps {
   open: boolean;
@@ -65,6 +79,8 @@ export function CreateGlossaryDialog({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
 
   // Form State
   const [name, setName] = useState("");
@@ -91,6 +107,12 @@ export function CreateGlossaryDialog({
 
   // Status
   const [isSaving, setIsSaving] = useState(false);
+
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // Reset when opening
   useEffect(() => {
@@ -123,10 +145,9 @@ export function CreateGlossaryDialog({
       const isDuplicate = terms.some((t) => t.source === trimmedSource);
 
       if (isDuplicate) {
-        toast({
-          variant: "destructive",
-          title: "Duplicate Term",
-          description: `The term "${trimmedSource}" already exists in this glossary!`,
+        setErrorDialog({
+          open: true,
+          message: trmlGlossaries('termDuplicatedMessage', { term: trimmedSource }),
         });
         return;
       }
@@ -178,9 +199,28 @@ export function CreateGlossaryDialog({
     if (!file) return;
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      event.target.value = "";
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
+
     reader.onload = (e) => {
       const content = e.target?.result as string;
       if (!content) return;
+
+      if (content.includes("\ufffd")) {
+        event.target.value = "";
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("encodingError"),
+          description: trmlGlossaries("encodingErrorMessage"),
+        });
+        return;
+      }
 
       const newTerms = content
         .split(/\r?\n/)
@@ -238,14 +278,14 @@ export function CreateGlossaryDialog({
           // All duplicates - show error
           event.target.value = "";
           setImportMessage({
-            text: `All ${newTerms.length} terms already exist in the glossary.`,
+            text: trmlGlossaries('allTermExistMessage', { count: newTerms.length }),
             type: "error",
           });
           setTimeout(() => setImportMessage(null), 3000);
         }
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(file, "UTF-8");
   };
 
   const handleSave = async () => {
@@ -285,10 +325,9 @@ export function CreateGlossaryDialog({
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: err.message || "Failed to create glossary",
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(err),
       });
     } finally {
       setIsSaving(false);
@@ -318,14 +357,23 @@ export function CreateGlossaryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Increased max-width and height */}
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[75vw] w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 bg-white shadow-2xl overflow-hidden sm:rounded-xl">
+      <DialogContent
+        data-tour="create-glossary-dialog"
+        onInteractOutside={(e) => {
+          const target = (e.detail.originalEvent as any).target as HTMLElement;
+          if (target.closest("#onboarding-help-button")) {
+            e.preventDefault();
+          }
+        }}
+        className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[75vw] w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 bg-white shadow-2xl overflow-hidden sm:rounded-xl"
+      >
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b bg-white shrink-0">
           <DialogTitle className="text-xl font-semibold tracking-tight">
-            Create New Glossary
+            {trmlGlossaries("createTitle")}
           </DialogTitle>
           <DialogDescription>
-            Configure your glossary settings and add initial terms.
+            {trmlGlossaries("createDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -334,10 +382,10 @@ export function CreateGlossaryDialog({
           {/* LEFT PANEL: Settings & Input */}
           <div className="w-full md:w-[500px] lg:w-[550px] flex flex-col border-b md:border-b-0 md:border-r bg-white shrink-0 overflow-y-auto">
             {/* 1. Glossary Details Section */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5" data-tour="glossary-settings">
               <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
                 <Settings2 className="w-4 h-4" />
-                Glossary Settings
+                {trmlGlossaries("settings")}
               </div>
 
               <div className="space-y-1.5">
@@ -345,13 +393,13 @@ export function CreateGlossaryDialog({
                   htmlFor="glossary-name"
                   className="text-xs uppercase font-bold text-muted-foreground"
                 >
-                  Name <span className="text-red-500">*</span>
+                  {trmlGlossaries("name")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="glossary-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Finance Terminology"
+                  placeholder={trmlGlossaries("namePlaceholder")}
                   className="bg-muted/30"
                 />
               </div>
@@ -359,7 +407,7 @@ export function CreateGlossaryDialog({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs uppercase font-bold text-muted-foreground">
-                    Source
+                    {trmlCommon("sourceLanguage")}
                   </Label>
                   <Select
                     value={sourceLanguage}
@@ -371,7 +419,7 @@ export function CreateGlossaryDialog({
                     <SelectContent>
                       {SUPPORTED_LANGUAGES.map((l) => (
                         <SelectItem key={l.code} value={l.code}>
-                          {l.name}
+                          {trmlCommon(l.code) ?? l.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -379,7 +427,7 @@ export function CreateGlossaryDialog({
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs uppercase font-bold text-muted-foreground">
-                    Target
+                    {trmlCommon("targetLanguage")}
                   </Label>
                   <Select
                     value={targetLanguage}
@@ -393,7 +441,7 @@ export function CreateGlossaryDialog({
                         (l) => l.code !== sourceLanguage
                       ).map((l) => (
                         <SelectItem key={l.code} value={l.code}>
-                          {l.name}
+                          {trmlCommon(l.code) ?? l.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -406,13 +454,13 @@ export function CreateGlossaryDialog({
                   htmlFor="description"
                   className="text-xs uppercase font-bold text-muted-foreground"
                 >
-                  Description
+                  {trmlGlossaries("description")}
                 </Label>
                 <Textarea
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Optional context..."
+                  placeholder={trmlGlossaries("descriptionPlaceholder")}
                   className="bg-muted/30 min-h-[80px] resize-none"
                 />
               </div>
@@ -424,7 +472,7 @@ export function CreateGlossaryDialog({
             <div className="p-6 flex-1 flex flex-col bg-slate-50/50">
               <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-4">
                 <Plus className="w-4 h-4" />
-                Add Terms
+                {trmlGlossaries("addTerms")}
               </div>
 
               {/* Duplicate Warning */}
@@ -432,17 +480,19 @@ export function CreateGlossaryDialog({
                 <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mb-4 animate-in fade-in slide-in-from-top-1">
                   <Settings2 className="w-4 h-4 ml-1 rotate-180" />
                   <span className="font-medium">
-                    Duplicate source terms detected. Please resolve them to
-                    create.
+                    {trmlGlossaries("duplicateTerms")}
                   </span>
                 </div>
               )}
-
-              <div className="space-y-4 p-4 border rounded-xl bg-white shadow-sm">
+              {/* data-tour="manual-entry" */}
+              <div
+                className="space-y-4 p-4 border rounded-xl bg-white shadow-sm"
+                data-tour="manual-entry"
+              >
                 <div className="grid grid-cols-2 gap-3 items-end">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">
-                      Source
+                      {trmlCommon("source")}
                     </Label>
                     <Input
                       ref={sourceInputRef}
@@ -455,7 +505,7 @@ export function CreateGlossaryDialog({
                           setNewTermTarget(val);
                         }
                       }}
-                      placeholder="Source text..."
+                      placeholder={trmlGlossaries("sourceText")}
                       onKeyDown={(e) => {
                         if (e.nativeEvent.isComposing) return;
                         if (e.key === "Enter" && newTermSource.trim()) {
@@ -469,7 +519,7 @@ export function CreateGlossaryDialog({
 
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">
-                      Target
+                      {trmlCommon("target")}
                     </Label>
                     <Input
                       ref={targetInputRef}
@@ -478,7 +528,7 @@ export function CreateGlossaryDialog({
                         setNewTermTarget(e.target.value);
                         setIsTargetEdited(true);
                       }}
-                      placeholder="Translation..."
+                      placeholder={trmlGlossaries("targetText")}
                       onKeyDown={(e) => {
                         if (e.nativeEvent.isComposing) return;
                         if (e.key === "Enter") {
@@ -496,15 +546,17 @@ export function CreateGlossaryDialog({
                   onClick={handleAddNewTerm}
                   disabled={!newTermSource.trim()}
                 >
-                  Add to List
+                  {trmlGlossaries("addTo")}
                   <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                     ENTER
                   </kbd>
                 </Button>
               </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-xs text-muted-foreground mb-3">- OR -</p>
+              {/* data-tour="import-option" */}
+              <div className="mt-6 text-center" data-tour="import-option">
+                <p className="text-xs text-muted-foreground mb-3">
+                  - {trmlCommon("or").toUpperCase()} -
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -514,8 +566,8 @@ export function CreateGlossaryDialog({
                   }
                 >
                   {entryMode === "manual"
-                    ? "Import from File"
-                    : "Back to Manual Entry"}
+                    ? trmlGlossaries("importFromFile")
+                    : trmlGlossaries("backToManualEntry")}
                 </Button>
               </div>
             </div>
@@ -527,7 +579,7 @@ export function CreateGlossaryDialog({
             <div className="flex items-center justify-between px-6 py-3 border-b bg-white sticky top-0 z-10">
               <div className="flex items-center gap-2">
                 <List className="w-4 h-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">Preview Terms</h3>
+                <h3 className="text-sm font-semibold">{trmlGlossaries("previewTerms")}</h3>
                 <span className="bg-muted px-2 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground">
                   {terms.length}
                 </span>
@@ -540,7 +592,7 @@ export function CreateGlossaryDialog({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="h-8 pl-8 text-xs bg-muted/30"
-                    placeholder="Search added terms..."
+                    placeholder={trmlGlossaries("searchTermsPlaceholder")}
                   />
                 </div>
               )}
@@ -549,48 +601,30 @@ export function CreateGlossaryDialog({
             {/* List Content */}
             {entryMode === "import" ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
-                <div
-                  className="w-full max-w-lg bg-white rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() =>
-                    document.getElementById("file-upload")?.click()
+                <FileDropzone
+                  className="w-full max-w-lg bg-white"
+                  onFileSelect={(file) => {
+                    // Synthesize event to match existing handler signature
+                    const syntheticEvent = {
+                                target: { files: [file], value: '' }
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    handleFileUpload(syntheticEvent);
+                  }}
+                  accept={{
+                             'text/plain': ['.txt'],
+                             'text/csv': ['.csv']
+                  }}
+                  instructionMessage={
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-muted-foreground">
+                        {trmlGlossaries("uploadFormatLabel")}
+                      </span>
+                      <code className="bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200 font-mono text-xs text-slate-600 block w-fit mx-auto mt-1">
+                        {trmlGlossaries("uploadFormatExample")}
+                      </code>
+                    </div>
                   }
-                >
-                  <input
-                    type="file"
-                    id="file-upload"
-                    className="hidden"
-                    accept=".txt, .csv"
-                    onChange={handleFileUpload}
-                  />
-                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mb-6">
-                    <Upload className="w-10 h-10 text-gray-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Click to upload .txt or .csv file
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-2">
-                    Files must follow the format:
-                  </p>
-                  <p className="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1 rounded mb-4">
-                    source term, target term
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <span>Max file size: 5MB</span>
-                  </div>
-                </div>
+                />
 
                 {/* Import Message */}
                 {importMessage && (
@@ -608,9 +642,9 @@ export function CreateGlossaryDialog({
             ) : (
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="grid grid-cols-[1fr_24px_1fr_40px] gap-4 px-6 py-2 bg-muted/20 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <div>Source ({sourceLanguage})</div>
+                  <div>{trmlCommon("source")}</div>
                   <div></div>
-                  <div>Target ({targetLanguage})</div>
+                  <div>{trmlCommon("target")}</div>
                   <div></div>
                 </div>
 
@@ -621,7 +655,7 @@ export function CreateGlossaryDialog({
                   {filteredTerms.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                       <Book className="w-12 h-12 mb-2 stroke-1" />
-                      <p className="text-sm">No terms added yet</p>
+                      <p className="text-sm">{trmlGlossaries("noTermsAdded")}</p>
                     </div>
                   ) : (
                     filteredTerms.map((term) => {
@@ -688,7 +722,7 @@ export function CreateGlossaryDialog({
         {/* Footer */}
         <DialogFooter className="p-4 bg-white border-t shrink-0 z-20">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {trmlCommon("cancel")}
           </Button>
           <Button
             onClick={handleSave}
@@ -700,10 +734,30 @@ export function CreateGlossaryDialog({
             ) : (
               <Check className="w-4 h-4 mr-2" />
             )}
-            Create Glossary
+            {trmlGlossaries("createGlossary")}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+              {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+              {trmlCommon("close") || "Close"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

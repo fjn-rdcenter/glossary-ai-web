@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -46,8 +46,13 @@ import {
 import { cn } from "@/lib/utils";
 import { GlossaryService } from "@/api/services";
 import { SUPPORTED_LANGUAGES } from "@/lib/constants";
-import { GlossaryDetailResponse } from "@/api/types";
+import { GlossaryDetailResponse } from "@/lib/types";
 import { GlossarySummary } from "@/components/glossary/glossary-summary";
+import { useTranslations } from 'next-intl';
+import { useToast } from "@/components/ui/use-toast"; // [NEW] Link to toast
+import { getErrorMessage } from "@/lib/error-utils"; // [NEW] Link to error util
+import { FileDropzone } from "@/components/ui/file-dropzone"; // [NEW] Import Dropzone
+
 
 // Internal type for UI management
 type UITerm = {
@@ -79,7 +84,7 @@ export function GlossaryForm({
   const [targetLanguage, setTargetLanguage] = useState("vn");
   const [activeTab, setActiveTab] = useState("manual");
   const [terms, setTerms] = useState<UITerm[]>([
-    { id: "1", source: "", target: "" },
+    { id: "new-initial", source: "", target: "" },
   ]);
   const [importedFile, setImportedFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -91,6 +96,16 @@ export function GlossaryForm({
   );
   // Track deleted terms in edit mode
   const [deletedTermIds, setDeletedTermIds] = useState<Set<string>>(new Set());
+  
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
+  const { toast } = useToast(); // [NEW] Hook usage
 
   // Initialize data
   useEffect(() => {
@@ -112,8 +127,19 @@ export function GlossaryForm({
     }
   }, [initialData]);
 
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
   const addTerm = () => {
     setTerms([...terms, { id: `new-${Date.now()}`, source: "", target: "" }]);
+    // Scroll to bottom to show new term
+    setTimeout(() => {
+      if (tableContainerRef.current) {
+        tableContainerRef.current.scrollTo({
+          top: tableContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   const removeTerm = (id: string) => {
@@ -214,9 +240,28 @@ export function GlossaryForm({
     if (!importedFile) return;
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      setImportedFile(null);
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
+    
     reader.onload = (event) => {
         const text = event.target?.result as string;
         if (!text) return;
+
+        if (text.includes("\ufffd")) {
+          setImportedFile(null);
+          toast({
+            variant: "destructive",
+            title: trmlGlossaries("encodingError"),
+            description: trmlGlossaries("encodingErrorMessage"),
+          });
+          return;
+        }
 
         const lines = text.split(/\r?\n/);
         const importedTerms: UITerm[] = lines
@@ -248,7 +293,7 @@ export function GlossaryForm({
             setImportedFile(null);
         }
     };
-    reader.readAsText(importedFile);
+    reader.readAsText(importedFile, "UTF-8");
   };
 
   const handleSave = async () => {
@@ -282,10 +327,12 @@ export function GlossaryForm({
         }
 
         const validTermsToSave = terms.filter(t => t.source.trim() && t.target.trim());
-        
+        const isNewTerm = (id: string) => {
+          return id.startsWith("new-") || id.startsWith("imported-") || /^\d+$/.test(id);
+        }
         // 1. Separate terms into new/imported vs existing/edited
-        const newTermsToUpsert = validTermsToSave.filter(t => t.id.startsWith("new-") || t.id.startsWith("imported-"));
-        const existingTermsToUpdate = validTermsToSave.filter(t => !t.id.startsWith("new-") && !t.id.startsWith("imported-"));
+        const newTermsToUpsert = validTermsToSave.filter(t => isNewTerm(t.id));
+        const existingTermsToUpdate = validTermsToSave.filter(t => !isNewTerm(t.id));
 
         // 2. Batch Upsert New Terms
         if (newTermsToUpsert.length > 0) {
@@ -308,7 +355,11 @@ export function GlossaryForm({
         onSuccess(resultGlossary);
 
     } catch (error) {
-        console.error("Save failed", error);
+        // Show Dialog instead of Toast
+        setErrorDialog({
+            open: true,
+            message: getErrorMessage(error),
+        });
     } finally {
         setIsSaving(false);
     }
@@ -330,23 +381,23 @@ export function GlossaryForm({
          {/* Basic Info */}
          <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>{trmlGlossaries("basicInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="name">Glossary Name</Label>
+                <Label htmlFor="name">{trmlGlossaries("glossaryName")}</Label>
                 <Input
-                  id="name"
-                  placeholder="e.g., Legal Terms"
+                  id="glossary-name-field"
+                  placeholder={trmlGlossaries("glossaryNamePlaceholder")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="h-10 px-3 py-2 text-sm leading-5 box-border overflow-hidden"
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-6">
+              <div id="glossary-languages" className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Source Language</Label>
+                  <Label>{trmlCommon("sourceLanguage")}</Label>
                   <Select
                     value={sourceLanguage}
                     onValueChange={setSourceLanguage}
@@ -358,14 +409,14 @@ export function GlossaryForm({
                     <SelectContent>
                       {SUPPORTED_LANGUAGES.map((lang) => (
                         <SelectItem key={lang.code} value={lang.code}>
-                          {lang.name}
+                          {trmlCommon(lang.code)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Target Language</Label>
+                  <Label>{trmlCommon("targetLanguage")}</Label>
                   <Select
                     value={targetLanguage}
                     onValueChange={setTargetLanguage}
@@ -379,7 +430,7 @@ export function GlossaryForm({
                         .filter((l) => l.code !== sourceLanguage)
                         .map((lang) => (
                           <SelectItem key={lang.code} value={lang.code}>
-                            {lang.name}
+                            {trmlCommon(lang.code)}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -388,10 +439,10 @@ export function GlossaryForm({
               </div>
 
                <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="description">{trmlGlossaries("descriptionForm")}</Label>
                 <Textarea
-                  id="description"
-                  placeholder="Describe the purpose..."
+                  id="glossary-description-field"
+                  placeholder={trmlGlossaries("descriptionFormPlaceholder")}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="resize-none min-h-[80px]"
@@ -403,13 +454,13 @@ export function GlossaryForm({
           {/* Terms */}
           <Card>
             <CardHeader>
-              <CardTitle>Terms</CardTitle>
+              <CardTitle>{trmlGlossaries("terms")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs id="glossary-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-                  <TabsTrigger value="import">Import File</TabsTrigger>
+                  <TabsTrigger value="manual">{trmlGlossaries("manualEntry")}</TabsTrigger>
+                  <TabsTrigger value="import">{trmlGlossaries("importFile")}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="manual" className="space-y-4">
@@ -417,7 +468,7 @@ export function GlossaryForm({
                   {selectedTerms.size > 0 && (
                     <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg border border-border">
                       <span className="text-sm font-medium">
-                        {selectedTerms.size} term{selectedTerms.size > 1 ? "s" : ""} selected
+                        {trmlGlossaries("termCount", {count: selectedTerms.size})}
                       </span>
                       <div className="flex gap-2">
                          <Button
@@ -425,7 +476,7 @@ export function GlossaryForm({
                           size="sm"
                           onClick={() => setSelectedTerms(new Set())}
                         >
-                          Clear
+                          {trmlGlossaries("clear")}
                         </Button>
                         <Button
                           variant="destructive"
@@ -433,14 +484,18 @@ export function GlossaryForm({
                           onClick={deleteSelectedTerms}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
+                          {trmlGlossaries("delete")}
                         </Button>
                       </div>
                     </div>
                   )}
 
-                  <div className="border border-border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                    <Table>
+                  <div 
+                    id="glossary-term-table"
+                    ref={tableContainerRef}
+                    className="border border-border rounded-lg max-h-[400px] overflow-auto relative"
+                  >
+                    <table className="w-full caption-bottom text-sm">
                       <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
                           <TableHead className="w-12">
@@ -449,8 +504,8 @@ export function GlossaryForm({
                               onCheckedChange={toggleSelectAll}
                             />
                           </TableHead>
-                          <TableHead className="font-medium">Source Term</TableHead>
-                          <TableHead className="font-medium">Translation</TableHead>
+                          <TableHead className="font-medium">{trmlCommon("source")}</TableHead>
+                          <TableHead className="font-medium">{trmlCommon("target")}</TableHead>
                           <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -490,12 +545,12 @@ export function GlossaryForm({
                                       ? "text-destructive font-medium ring-1 ring-destructive/50 rounded-md bg-destructive/5" 
                                       : ""
                                   )}
-                                  placeholder="Enter source..."
+                                  placeholder={trmlGlossaries("sourcePlaceholder")}
                                 />
                                 {/* Tooltip for duplicate */}
                                 {terms.filter(t => t.id !== term.id && t.source.trim() === term.source.trim() && term.source.trim()).length > 0 && (
                                   <div className="absolute left-2 -top-2 bg-destructive text-destructive-foreground text-[10px] px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    Duplicate source term
+                                    {trmlGlossaries("duplicateTerm")}
                                   </div>
                                 )}
                               </TableCell>
@@ -526,19 +581,19 @@ export function GlossaryForm({
                           ))}
                         </AnimatePresence>
                       </TableBody>
-                    </Table>
+                    </table>
                   </div>
                   
                   {hasDuplicates && (
                     <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mt-2">
                         <AlertTriangle className="w-4 h-4 ml-1" />
-                        <span className="font-medium">Duplicate source terms detected. Please remove or fix them to continue.</span>
+                        <span className="font-medium">{trmlGlossaries("duplicateError")}</span>
                     </div>
                   )}
 
-                  <Button variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
+                  <Button id="add-term-btn" variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
                     <Plus className="mr-2 w-4 h-4" />
-                    Add Another Term
+                    {trmlGlossaries("addTerm")}
                   </Button>
                 </TabsContent>
 
@@ -552,7 +607,7 @@ export function GlossaryForm({
                                    </div>
                                    <div className="flex-1 text-left min-w-0">
                                        <p className="font-medium text-sm truncate">{importedFile.name}</p>
-                                       <p className="text-xs text-muted-foreground">Ready to import</p>
+                                       <p className="text-xs text-muted-foreground">{trmlGlossaries("readyToImport")}</p>
                                    </div>
                                    <Button variant="ghost" size="icon" onClick={() => setImportedFile(null)} className="shrink-0">
                                        <X className="w-4 h-4" />
@@ -561,25 +616,88 @@ export function GlossaryForm({
                                
                                <div className="flex gap-2 w-full max-w-sm">
                                    <Button variant="outline" className="flex-1" onClick={() => setImportedFile(null)}>
-                                       Cancel
+                                       {trmlCommon("cancel")}
                                    </Button>
                                    <Button className="flex-1" onClick={handleProcessImport}>
-                                       Import Terms
+                                       {trmlGlossaries("importAction")}
                                    </Button>
                                </div>
                            </div>
                         ) : (
-                           <div className="py-4">
-                               <Upload className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                               <p className="text-sm font-medium mb-1">Upload Terms File</p>
-                               <p className="text-xs text-muted-foreground mb-4 max-w-xs mx-auto">
-                                   Supports .txt or .csv files with "source, target" format
-                               </p>
-                               <input type="file" accept=".txt, .csv" onChange={handleFileImport} className="hidden" id="file-import-modal" />
-                               <Button asChild variant="default" size="sm">
-                                   <label htmlFor="file-import-modal" className="cursor-pointer">Select File</label>
-                               </Button>
-                           </div>
+
+                           <FileDropzone
+                             onFileSelect={(file) => {
+                                 setImportedFile(file);
+                             }}
+                             accept={{
+                                 'text/plain': ['.txt'],
+                                 'text/csv': ['.csv']
+                             }}
+                             instructionMessage={
+                              <div className="space-y-4">
+                                {/* Header nhỏ gọn */}
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">Định dạng hỗ trợ:</span>
+                                  <span className="font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+                                    .CSV, .TXT
+                                  </span>
+                                </div>
+
+                                {/* Khu vực hướng dẫn chính */}
+                                <div className="rounded-lg border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/40 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/20">
+                                  <div className="p-3 border-b border-blue-100 dark:border-blue-900/50 flex items-center gap-2">
+                                    <span className="text-blue-600 dark:text-blue-400">💡</span>
+                                    <p className="font-semibold text-sm text-foreground">
+                                      Cấu trúc nội dung file
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="p-3 space-y-3">
+                                    {/* Case 1: Đầy đủ */}
+                                    <div className="relative pl-3 border-l-2 border-blue-400 dark:border-blue-600">
+                                      <p className="text-xs font-medium text-foreground mb-1.5">
+                                        1. Cặp thuật ngữ (Khuyên dùng):
+                                      </p>
+                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                          từ_gốc,từ_dịch
+                                        </code>
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <span className="text-muted-foreground">Ví dụ:</span>
+                                          <code className="px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-mono border border-green-200 dark:border-green-800">
+                                            AI,Trí tuệ nhân tạo
+                                          </code>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Case 2: Rút gọn */}
+                                    <div className="relative pl-3 border-l-2 border-amber-400 dark:border-amber-600">
+                                      <p className="text-xs font-medium text-foreground mb-1.5">
+                                        2. Chỉ có từ gốc (Tự động điền):
+                                      </p>
+                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                          từ_gốc
+                                        </code>
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <span className="text-muted-foreground">Ví dụ:</span>
+                                          <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-mono border border-amber-200 dark:border-amber-800">
+                                            Samsung
+                                          </code>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Note nhỏ (Optional) */}
+                                  <div className="p-2 bg-blue-100/30 dark:bg-blue-900/10 text-[11px] text-center text-muted-foreground italic rounded-b-lg">
+                                    *Lưu ý: Không cần dòng tiêu đề (header)
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                           />
                         )}
                     </div>
                 </TabsContent>
@@ -609,16 +727,36 @@ export function GlossaryForm({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive" />
-              Delete All Terms?
+              {trmlGlossaries("confirmDeleteAll")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-               Removing all terms might invalidate the glossary.
+               {trmlGlossaries("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{trmlCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteAllTerms} className="bg-destructive text-destructive-foreground">
-               Proceed
+               {trmlGlossaries("proceed")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+               {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+               {trmlCommon("close") || "Close"} 
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

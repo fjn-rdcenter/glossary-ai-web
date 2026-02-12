@@ -3,10 +3,10 @@
  * Central configuration for API endpoints and settings
  */
 
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH;
 
 export const API_CONFIG = {
-  BASE_URL: process.env.API_BASE_URL || "http://172.16.6.10:18000",
+  BASE_URL: BASE_PATH,
   TIMEOUT: 30000, // 30 seconds
   
   // API Endpoints - Update these to match your backend routes
@@ -16,7 +16,8 @@ export const API_CONFIG = {
       LOGIN: "/api/v2/auth/login",
       LOGOUT: "/api/v2/auth/logout",
       REFRESH: "/api/v2/auth/refresh-token",
-      ME: "/api/v2/auth/me",
+      ME: "/api/v2/me/",
+      UPDATE_ME: "/api/v2/me/",
     },
     
     // Glossaries
@@ -30,7 +31,9 @@ export const API_CONFIG = {
     
     // Documents
     DOCUMENTS: {
+      SOURCE: "/api/v2/documents/source",
       DOWNLOAD: (id: string) => `/api/v2/documents/download/${id}`,
+      DELETE: (id: string) => `/api/v2/documents/${id}`,
     },
 
     // Translations

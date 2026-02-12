@@ -16,7 +16,7 @@ import {
   TranslationHistoryResponse,
   PaginatedResponse,
   ApiResponse,
-} from "../types";
+} from "@/lib/types";
 import { ApiErrorHandler } from "../utils/error-handler";
 
 export class TranslationService {
@@ -87,7 +87,7 @@ export class TranslationService {
 
   static async cancelTranslation(jobId: string): Promise<void> {
     try {
-      await apiClient.post(API_CONFIG.ENDPOINTS.TRANSLATIONS.CANCEL(jobId));
+      await apiClient.get(API_CONFIG.ENDPOINTS.TRANSLATIONS.CANCEL(jobId));
     } catch (error) {
       ApiErrorHandler.logError(error, "TranslationService.cancelTranslation");
       throw new Error(ApiErrorHandler.parseError(error));

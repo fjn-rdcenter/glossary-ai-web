@@ -16,7 +16,17 @@ import {
   AlertCircle,
   FileText,
   Upload,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +41,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { GlossaryService } from "@/api/services";
-import { GlossaryDetailResponse } from "@/api/types";
+import { GlossaryDetailResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { getLanguageName } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
+import { getErrorMessage } from "@/lib/error-utils";
+import { FileDropzone } from "@/components/ui/file-dropzone";
+
+
+
 
 interface EditGlossaryDialogProps {
   open: boolean;
@@ -63,10 +78,18 @@ export function EditGlossaryDialog({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
+  const trmlCommon = useTranslations("Common");
+  const trmlGlossaries = useTranslations("Glossaries");
 
   // State
   const [loading, setLoading] = useState(false);
   const [glossary, setGlossary] = useState<GlossaryDetailResponse | null>(null);
+
+  // [NEW] Error Dialog State
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
 
   // Form State
   const [name, setName] = useState("");
@@ -96,9 +119,9 @@ export function EditGlossaryDialog({
   useEffect(() => {
     if (open && glossaryId) {
       setLoading(true);
-      GlossaryService.getGlossaryById(glossaryId)
+      GlossaryService.getGlossaryById(glossaryId, { size: 100 })
         .then((data) => {
-          setGlossary(data);
+          setGlossary(data as GlossaryDetailResponse);
           setName(data.name);
           setDescription(data.description || "");
           if (data.terms?.items) {
@@ -117,8 +140,8 @@ export function EditGlossaryDialog({
           console.error(err);
           toast({
             variant: "destructive",
-            title: "Error",
-            description: "Failed to load glossary",
+            title: trmlGlossaries("error"),
+            description: trmlGlossaries("failedToLoadGlossary"),
           });
         })
         .finally(() => setLoading(false));
@@ -152,10 +175,11 @@ export function EditGlossaryDialog({
       );
 
       if (isDuplicate) {
-        toast({
-          variant: "destructive",
-          title: "Duplicate Term",
-          description: `The term "${trimmedSource}" already exists.`,
+        setErrorDialog({
+          open: true,
+          message: trmlGlossaries("termDuplicatedMessage", {
+            term: trimmedSource,
+          }),
         });
         return;
       }
@@ -198,9 +222,27 @@ export function EditGlossaryDialog({
     if (!file) return;
 
     const reader = new FileReader();
+    reader.onerror = () => {
+      event.target.value = "";
+      toast({
+        variant: "destructive",
+        title: trmlGlossaries("fileReadError"),
+        description: trmlGlossaries("fileReadErrorMessage"),
+      });
+    };
     reader.onload = (e) => {
       const content = e.target?.result as string;
       if (!content) return;
+
+      if (content.includes("\ufffd")) {
+        event.target.value = "";
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("encodingError"),
+          description: trmlGlossaries("encodingErrorMessage"),
+        });
+        return;
+      }
 
       const newTerms = content
         .split(/\r?\n/)
@@ -263,14 +305,16 @@ export function EditGlossaryDialog({
           // All duplicates - show error
           event.target.value = "";
           setImportMessage({
-            text: `All ${newTerms.length} terms already exist in the glossary!`,
+            text: trmlGlossaries("allTermExistMessage", {
+              count: newTerms.length,
+            }),
             type: "error",
           });
           setTimeout(() => setImportMessage(null), 3000);
         }
       }
     };
-    reader.readAsText(file);
+    reader.readAsText(file, "UTF-8");
   };
 
   const handleTermEdit = (
@@ -286,15 +330,23 @@ export function EditGlossaryDialog({
   };
 
   const markAsDeleted = (termId: string) => {
-    setTerms((prev) =>
-      prev.map((t) => (t.id === termId ? { ...t, isDeleted: true } : t))
-    );
+    setTerms((prev) => {
+      const term = prev.find((t) => t.id === termId);
+      if (term?.isNew) {
+        return prev.filter((t) => t.id !== termId);
+      }
+      return prev.map((t) => (t.id === termId ? { ...t, isDeleted: true } : t));
+    });
   };
 
   const undoDelete = (termId: string) => {
-    setTerms((prev) =>
-      prev.map((t) => (t.id === termId ? { ...t, isDeleted: false } : t))
-    );
+    setTerms((prev) => {
+      const term = prev.find((t) => t.id === termId);
+      if (term?.isNew) {
+        return prev.filter((t) => t.id !== termId);
+      }
+      return prev.map((t) => (t.id === termId ? { ...t, isDeleted: false } : t));
+    });
   };
 
   const handleSave = async () => {
@@ -308,7 +360,7 @@ export function EditGlossaryDialog({
       if (name !== glossary.name || description !== glossary.description) {
         await GlossaryService.updateGlossary(glossaryId, {
           name,
-          description: description, // Pass as is, allowing empty string to clear it
+          description: description,
         });
       }
 
@@ -345,15 +397,36 @@ export function EditGlossaryDialog({
         );
       }
 
+      // Fetch updated data
       const updated = await GlossaryService.getGlossaryById(glossaryId);
-      onSuccess(updated);
+
+      // [FIX] Update local calculation to fix stale backend count
+      const activeCount = terms.filter((t) => !t.isDeleted).length;
+
+      // Also filter out the explicitly deleted items from the received list
+      // to ensure the list view matches the count if backend is stale
+      const deletedIds = new Set(deleted.map((t) => t.id));
+      const validItems = (updated.terms?.items || []).filter(
+        (t) => !deletedIds.has(t.id)
+      );
+
+      const patchedUpdated = {
+        ...updated,
+        termCount: activeCount,
+        terms: {
+          ...updated.terms,
+          items: validItems,
+            size: validItems.length
+         }
+      };
+
+      onSuccess(patchedUpdated as GlossaryDetailResponse);
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: err.message || "Failed to save changes",
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(err),
       });
     } finally {
       setIsSaving(false);
@@ -385,15 +458,15 @@ export function EditGlossaryDialog({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <DialogTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
-                Edit Glossary
+                {trmlGlossaries("editTitle")}
                 {hasChanges && (
                   <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                    Unsaved Changes
+                    {trmlGlossaries("unsavedChanges")}
                   </Badge>
                 )}
               </DialogTitle>
               <DialogDescription>
-                Modify glossary details and manage terms.
+                {trmlGlossaries("editDescription")}
               </DialogDescription>
             </div>
             {/* Quick Stats or Actions could go here */}
@@ -403,7 +476,7 @@ export function EditGlossaryDialog({
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin mb-2" />
-            Loading Glossary Data...
+            {trmlCommon("loading")}
           </div>
         ) : (
           /* Main Split Layout */
@@ -413,7 +486,7 @@ export function EditGlossaryDialog({
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
                   <Settings2 className="w-4 h-4" />
-                  Glossary Settings
+                  {trmlGlossaries("settings")}
                 </div>
 
                 <div className="space-y-1.5">
@@ -421,7 +494,7 @@ export function EditGlossaryDialog({
                     htmlFor="glossary-name"
                     className="text-xs uppercase font-bold text-muted-foreground"
                   >
-                    Name <span className="text-red-500">*</span>
+                    {trmlGlossaries("name")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="glossary-name"
@@ -436,18 +509,18 @@ export function EditGlossaryDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">
-                        Source Lang
+                        {trmlCommon("sourceLanguage")}
                       </Label>
                       <div className="h-10 px-3 py-2 text-sm bg-muted/50 rounded-md border text-muted-foreground flex items-center">
-                        {getLanguageName(glossary.sourceLanguage)}
+                        {trmlCommon(glossary.sourceLanguage)}
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">
-                        Target Lang
+                        {trmlCommon("targetLanguage")}
                       </Label>
                       <div className="h-10 px-3 py-2 text-sm bg-muted/50 rounded-md border text-muted-foreground flex items-center">
-                        {getLanguageName(glossary.targetLanguage)}
+                        {trmlCommon(glossary.targetLanguage)}
                       </div>
                     </div>
                   </div>
@@ -458,13 +531,13 @@ export function EditGlossaryDialog({
                     htmlFor="description"
                     className="text-xs uppercase font-bold text-muted-foreground"
                   >
-                    Description
+                    {trmlGlossaries("description")}
                   </Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Optional context..."
+                    placeholder={trmlGlossaries("descriptionPlaceholder")}
                     className="bg-muted/30 min-h-[80px] resize-none"
                   />
                 </div>
@@ -476,14 +549,14 @@ export function EditGlossaryDialog({
               <div className="p-6 flex-1 flex flex-col bg-slate-50/50">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary mb-4">
                   <Plus className="w-4 h-4" />
-                  Add New Terms
+                  {trmlGlossaries("addTerms")}
                 </div>
 
                 <div className="space-y-4 p-4 border rounded-xl bg-white shadow-sm">
                   <div className="grid grid-cols-2 gap-3 items-end">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">
-                        Source
+                        {trmlCommon("source")}
                       </Label>
                       <Input
                         ref={sourceInputRef}
@@ -495,7 +568,7 @@ export function EditGlossaryDialog({
                             setNewTermTarget(val);
                           }
                         }}
-                        placeholder="Source text..."
+                        placeholder={trmlGlossaries("sourceText")}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && newTermSource.trim()) {
                             targetInputRef.current?.focus();
@@ -506,7 +579,7 @@ export function EditGlossaryDialog({
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">
-                        Target
+                        {trmlCommon("target")}
                       </Label>
                       <Input
                         ref={targetInputRef}
@@ -515,7 +588,7 @@ export function EditGlossaryDialog({
                           setNewTermTarget(e.target.value);
                           setIsTargetEdited(true);
                         }}
-                        placeholder="Translation..."
+                        placeholder={trmlGlossaries("targetText")}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleAddNewTerm();
                         }}
@@ -529,7 +602,7 @@ export function EditGlossaryDialog({
                     onClick={handleAddNewTerm}
                     disabled={!newTermSource.trim()}
                   >
-                    Add to List
+                    {trmlGlossaries("addTo")}
                     <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                       ENTER
                     </kbd>
@@ -537,7 +610,7 @@ export function EditGlossaryDialog({
                 </div>
 
                 <div className="mt-6 text-center">
-                  <p className="text-xs text-muted-foreground mb-3">- OR -</p>
+                  <p className="text-xs text-muted-foreground mb-3">- {trmlCommon("or").toUpperCase()} -</p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -547,8 +620,8 @@ export function EditGlossaryDialog({
                     }
                   >
                     {entryMode === "manual"
-                      ? "Import from File"
-                      : "Back to Manual Entry"}
+                      ? trmlGlossaries("importFromFile")
+                      : trmlGlossaries("backToManualEntry")}
                   </Button>
                 </div>
               </div>
@@ -560,14 +633,14 @@ export function EditGlossaryDialog({
               <div className="flex items-center justify-between px-6 py-3 border-b bg-white sticky top-0 z-10">
                 <div className="flex items-center gap-2">
                   <List className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-sm font-semibold">Terms</h3>
+                  <h3 className="text-sm font-semibold">{trmlGlossaries("previewTerms")}</h3>
                   <div className="flex gap-1">
                     <span className="bg-muted px-2 py-0.5 rounded-full text-[10px] font-medium text-muted-foreground">
-                      {activeCount} Active
+                      {activeCount}
                     </span>
                     {deletedCount > 0 && (
                       <span className="bg-red-100 px-2 py-0.5 rounded-full text-[10px] font-medium text-red-600">
-                        {deletedCount} Deleted
+                        {deletedCount} {trmlGlossaries("deleted")}
                       </span>
                     )}
                   </div>
@@ -580,7 +653,7 @@ export function EditGlossaryDialog({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="h-8 pl-8 text-xs bg-muted/30"
-                      placeholder="Search terms..."
+                      placeholder={trmlGlossaries("searchTermsPlaceholder")}
                     />
                   </div>
                 )}
@@ -589,48 +662,20 @@ export function EditGlossaryDialog({
               {/* Content Area */}
               {entryMode === "import" ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-100">
-                  <div
-                    className="w-full max-w-lg bg-white rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() =>
-                      document.getElementById("edit-file-upload")?.click()
-                    }
-                  >
-                    <input
-                      type="file"
-                      id="edit-file-upload"
-                      className="hidden"
-                      accept=".txt, .csv"
-                      onChange={handleFileUpload}
-                    />
-                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mb-6">
-                      <Upload className="w-10 h-10 text-gray-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      Click to upload .txt or .csv file
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Files must follow the format:
-                    </p>
-                    <p className="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1 rounded mb-4">
-                      source term, target term
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <span>Max file size: 5MB</span>
-                    </div>
-                  </div>
+                  <FileDropzone
+                    className="w-full max-w-lg bg-white"
+                    onFileSelect={(file) => {
+                      // Synthesize event to match existing handler signature
+                      const syntheticEvent = {
+                                 target: { files: [file], value: '' }
+                      } as unknown as React.ChangeEvent<HTMLInputElement>;
+                      handleFileUpload(syntheticEvent);
+                    }}
+                    accept={{
+                             'text/plain': ['.txt'],
+                             'text/csv': ['.csv']
+                    }}
+                  />
 
                   {/* Import Message */}
                   {importMessage && (
@@ -648,9 +693,9 @@ export function EditGlossaryDialog({
               ) : (
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="grid grid-cols-[1fr_24px_1fr_40px] gap-4 px-6 py-2 bg-muted/20 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <div>Source</div>
+                    <div>{trmlCommon("source")}</div>
                     <div></div>
-                    <div>Target</div>
+                    <div>{trmlCommon("target")}</div>
                     <div></div>
                   </div>
 
@@ -661,7 +706,7 @@ export function EditGlossaryDialog({
                     {filteredTerms.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                         <Book className="w-12 h-12 mb-2 stroke-1" />
-                        <p className="text-sm">No terms found</p>
+                        <p className="text-sm">{trmlGlossaries("noTermsDisplay")}</p>
                       </div>
                     ) : (
                       filteredTerms.map((term) => {
@@ -783,14 +828,14 @@ export function EditGlossaryDialog({
                 <>
                   <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-amber-600 font-medium">
-                    Unsaved changes pending
+                    {trmlGlossaries("unsavedChangesPending")}
                   </span>
                 </>
               )}
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
+                {trmlCommon("cancel")}
               </Button>
               <Button
                 onClick={handleSave}
@@ -802,12 +847,32 @@ export function EditGlossaryDialog({
                 ) : (
                   <Save className="w-4 h-4 mr-2" />
                 )}
-                Save Changes
+                {trmlGlossaries("save")}
               </Button>
             </div>
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              {trmlCommon("error")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground font-medium mt-2">
+              {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
+              {trmlCommon("close") || "Close"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

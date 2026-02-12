@@ -4,6 +4,7 @@
  */
 
 import { AxiosError } from "axios";
+import { getErrorMessage } from "@/lib/error-utils";
 import { ApiError } from "../types";
 
 export class ApiErrorHandler {
@@ -11,21 +12,7 @@ export class ApiErrorHandler {
    * Parse API error and return user-friendly message
    */
   static parseError(error: unknown): string {
-    if (error instanceof AxiosError) {
-      // Server responded with error
-      if (error.response) {
-        const apiError = error.response.data as ApiError;
-        return apiError?.error?.message || "Unable to connect to server. Please try again.";
-      }
-      
-      // Request was made but no response
-      if (error.request) {
-        return "No response from server. Please check your connection.";
-      }
-    }
-    
-    // Generic error
-    return "An unexpected error occurred. Please try again.";
+    return getErrorMessage(error);
   }
 
   /**
