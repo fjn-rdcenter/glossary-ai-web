@@ -82,9 +82,9 @@ export default function DashboardPage() {
     // Preload tour videos for current locale
     const preloadVideos = () => {
       const videos = [
-        tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.en,
-        tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.en,
-        tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.en,
+        tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.vi,
+        tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.vi,
+        tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.vi,
       ];
 
       videos.forEach(src => {
@@ -92,10 +92,9 @@ export default function DashboardPage() {
         if (!document.querySelector(`link[rel="preload"][href="${src}"]`)) {
           const link = document.createElement('link');
           link.rel = 'preload';
-          link.as = 'video';
+          link.as = 'fetch';
           link.href = src;
-          // type video/mp4 is safer
-          link.type = "video/mp4";
+          link.crossOrigin = "anonymous";
           document.head.appendChild(link);
         }
       });
@@ -252,7 +251,7 @@ export default function DashboardPage() {
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
               <video 
                 preload="auto"
-                src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.en}
+                src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.vi}
                 className="w-full h-auto object-cover"
                 autoPlay
                 loop
@@ -279,7 +278,7 @@ export default function DashboardPage() {
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
               <video 
                 preload="auto"
-                src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.en}
+                src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.vi}
                 className="w-full h-auto object-cover"
                 autoPlay
                 loop
@@ -305,7 +304,7 @@ export default function DashboardPage() {
            <div className="mb-3 rounded-lg overflow-hidden border border-border">
               <video 
                 preload="auto"
-                src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.en}
+                src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.vi}
                 className="w-full h-auto object-cover"
                 autoPlay
                 loop
@@ -547,7 +546,7 @@ export default function DashboardPage() {
             </div>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>Xem lại hướng dẫn</p>
+            <p>{trmlOnboarding("onboardingHelp")}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

@@ -414,7 +414,7 @@
         "step5Description": "Before starting the translation, review all your settings to make sure everything is correct.",
         "step6Title": "Start Translation",
         "step6Description": "Once you're ready, click this button to begin the translation process. You can track the progress in real-time.",
-        "onboardingHelp": "Restart guided tour"
+        "onboardingHelp": "View user guide again"
     },
     "GlossaryListTour": {
         "welcomeTitle": "Manage Glossaries",

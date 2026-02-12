@@ -418,7 +418,7 @@
         "step5Description": "翻訳を開始する前に、すべての設定が正しいことを確認してください。",
         "step6Title": "翻訳開始",
         "step6Description": "準備ができたら、このボタンをクリックして翻訳プロセスを開始します。進行状況をリアルタイムで追跡できます。",
-        "onboardingHelp": "ガイド付きツアーを再開する"
+        "onboardingHelp": "ガイドをもう一度見る"
     },
     "GlossaryListTour": {
         "welcomeTitle": "用語集の管理",

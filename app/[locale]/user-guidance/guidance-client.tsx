@@ -23,13 +23,21 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 type Feature = "translation" | "history" | "glossary" | "demo-video";
 
 export function GuidanceClient() {
   const [activeFeature, setActiveFeature] = useState<Feature>("translation");
   const trml = useTranslations("UserGuidance");
+  const locale = useLocale();
+  
+
+  const demoVideos = {
+      en: "https://youtu.be/3Sw-1yezq4I",
+      vi: "https://youtu.be/Su5He2LwIrE",
+      ja: "https://youtu.be/qIP7c8VFlKg",
+  };
 
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
@@ -172,7 +180,7 @@ export function GuidanceClient() {
                 <div className="aspect-video w-full rounded-xl bg-gray-100 dark:bg-gray-900 overflow-hidden relative shadow-lg">
                   <iframe
                     className="absolute inset-0 w-full h-full"
-                    src="https://www.youtube.com/embed/BRKE1GVBRHk"
+                    src={demoVideos[locale as keyof typeof demoVideos] || demoVideos.vi}
                     title="GlossaryAI Demo"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

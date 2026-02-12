@@ -307,7 +307,7 @@ export default function NewGlossaryPage() {
           className="p-3 rounded-full bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-all border border-border"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          title="Xem lại hướng dẫn"
+          title={trmlOnboarding("onboardingHelp")}
         >
           <Lightbulb className="w-5 h-5" />
         </motion.button>

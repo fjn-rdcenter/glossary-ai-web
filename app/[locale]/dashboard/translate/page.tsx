@@ -972,7 +972,7 @@ function TranslatePageContent() {
               </div>
             </TooltipTrigger>
             <TooltipContent side="right">
-              <p>Xem lại hướng dẫn</p>
+              <p>{trmlOnboarding("onboardingHelp")}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
