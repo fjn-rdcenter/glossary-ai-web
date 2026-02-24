@@ -6,7 +6,7 @@
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH;
 
 export const API_CONFIG = {
-  BASE_URL: "http://localhost:18000/",
+  BASE_URL: BASE_PATH,
   TIMEOUT: 30000, // 30 seconds
   
   // API Endpoints - Update these to match your backend routes
