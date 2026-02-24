@@ -29,17 +29,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import { Logo } from "@/components/logo";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [stats, setStats] = useState({
     totalTranslations: 0,
     activeGlossaries: 0,
@@ -373,11 +384,21 @@ export default function DashboardPage() {
     }
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], fileRejections: any[]) => {
+    if (fileRejections.length > 0) {
+      const sizeError = fileRejections.find(f => f.errors.find((e: any) => e.code === "file-too-large"));
+      if (sizeError) {
+        setShowSizeWarning(true);
+      } else {
+        toast.error("Invalid file format or too many files.");
+      }
+      return;
+    }
     setFiles(acceptedFiles);
   }, []);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
+    maxSize: 50 * 1024 * 1024,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
@@ -550,6 +571,22 @@ export default function DashboardPage() {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      <AlertDialog open={showSizeWarning} onOpenChange={setShowSizeWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{trml("fileTooLargeTitle") || "File Too Large"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {trml("fileTooLargeDescription") || "The file you are trying to upload exceeds the 50MB maximum size limit. Please choose a smaller file."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowSizeWarning(false)}>
+              {trmlOnboarding("gotIt") || "Got it"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }

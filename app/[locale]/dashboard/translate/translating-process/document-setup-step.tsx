@@ -94,12 +94,7 @@ export function DocumentSetupStep({
     // Validate file type
     const allowedExtensions = [
       ".pdf",
-      ".doc",
       ".docx",
-      ".docm",
-      ".dotx",
-      ".dotm",
-      ".ppt",
       ".pptx",
       ".xlsx",
     ];
@@ -110,6 +105,15 @@ export function DocumentSetupStep({
       setErrorDialog({
         open: true,
         message: "Please upload only PowerPoint, Word, Excel, or PDF files.",
+      });
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      // 50MB limit
+      setErrorDialog({
+        open: true,
+        message: trmlDocumentSetup("fileTooLarge") || "File is too large. Maximum size is 50MB.",
       });
       return;
     }
