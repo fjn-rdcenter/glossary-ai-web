@@ -27,7 +27,9 @@
         "pickDate": "Chọn ngày",
         "refresh": "Làm mới",
         "yes": "Có",
-        "no": "Không"
+        "no": "Không",
+        "swapLanguages": "Hoán đổi ngôn ngữ",
+        "clear": "Xóa bộ lọc"
     },
     "Documents": {
         "title": "Tài liệu đã tải lên",

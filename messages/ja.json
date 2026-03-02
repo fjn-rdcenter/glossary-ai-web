@@ -27,7 +27,9 @@
         "pickDate": "日付を選択",
         "refresh": "更新",
         "yes": "はい",
-        "no": "いいえ"
+        "no": "いいえ",
+        "swapLanguages": "言語を切り替える",
+        "clear": "フィルターをクリア"
     },
     "Documents": {
         "title": "アップロード済みのドキュメント",

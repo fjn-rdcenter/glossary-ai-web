@@ -104,6 +104,7 @@ export function FileCard({
             variant="ghost"
             size="icon"
             onClick={onRemove}
+            aria-label="Remove file"
             className={cn(
               "w-8 h-8 opacity-0 group-hover:opacity-100 transition-all",
               "hover:bg-red-700 hover:text-white"

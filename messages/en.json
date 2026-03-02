@@ -27,7 +27,9 @@
         "pickDate": "Pick a date",
         "refresh": "Refresh",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "swapLanguages": "Swap languages",
+        "clear": "Clear"
     },
     "Documents": {
         "title": "Uploaded Documents",
@@ -123,6 +125,7 @@
         "documentTitle": "Document Setup",
         "documentDescription": "Upload your document and choose translation languages",
         "dragAndDrop": "Drag and drop your document here",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB",
         "uploadDocument": "Upload Document",
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
