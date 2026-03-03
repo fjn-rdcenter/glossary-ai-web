@@ -76,6 +76,11 @@ export function DocumentSetupStep({
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
 
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname === "translatesphere.fujinet.net";
+  const maxSizeMB = isPublicDomain ? 20 : 50;
+
   // [NEW] Error Dialog State
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -109,9 +114,6 @@ export function DocumentSetupStep({
       return;
     }
 
-    const isPublicDomain =
-      window.location.hostname === "translatesphere.fujinet.net";
-    const maxSizeMB = isPublicDomain ? 20 : 50;
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     if (file.size > maxSizeBytes) {
@@ -225,7 +227,7 @@ export function DocumentSetupStep({
                 </div>
                 <p className="text-xl font-medium text-foreground mb-2">
                   {trmlDocumentSetup("dragAndDrop")}
-                  <p className="text-sm text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles")}</p>
+                  <span className="text-sm text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles", { maxSize: maxSizeMB })}</span>
                 </p>
                 <p className="text-base text-muted-foreground mb-6">{trmlCommon("or")}</p>
                 <input

@@ -499,7 +499,7 @@ export default function DashboardPage() {
                     <p className="text-2xl font-medium">
                       {isDragActive ? trml("dropFile") : trml("clickOrDrag")}
                       <span className="block text-sm text-muted-foreground font-normal">
-                        {trml("supportedFiles")}
+                        {trml("supportedFiles", { maxSize: maxSizeMB })}
                       </span>
                         </p>
                     </div>
