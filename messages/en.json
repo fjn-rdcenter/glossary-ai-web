@@ -109,9 +109,9 @@
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
         "continue": "Continue",
-        "fileTooLarge": "File is too large. Maximum size is 50MB.",
+        "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
         "fileTooLargeTitle": "File Too Large",
-        "fileTooLargeDescription": "The file you are trying to upload exceeds the 50MB maximum size limit. Please choose a smaller file."
+        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file."
     },
     "Translate": {
         "error": "Error",
@@ -130,7 +130,7 @@
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
         "translateImagesDescription": "Extract and translate text from images in your document",
-        "fileTooLarge": "The file size cannot exceed 50MB."
+        "fileTooLarge": "The file size cannot exceed {maxSize}MB."
     },
     "GlossarySelection": {
         "selectGlossary": "Select Glossary",
@@ -422,7 +422,7 @@
         "step6Title": "Start Translation",
         "step6Description": "Once you're ready, click this button to begin the translation process. You can track the progress in real-time.",
         "onboardingHelp": "View user guide again",
-        "fileTooLarge": "File is too large. Maximum size is 50MB."
+        "fileTooLarge": "File is too large. Maximum size is {maxSize}MB."
     },
     "GlossaryListTour": {
         "welcomeTitle": "Manage Glossaries",
