@@ -117,9 +117,7 @@ export function DocumentSetupStep({
     if (file.size > maxSizeBytes) {
       setErrorDialog({
         open: true,
-        message:
-          trmlDocumentSetup("fileTooLarge") ||
-          `File is too large. Maximum size is ${maxSizeMB}MB.`,
+        message: trmlDocumentSetup("fileTooLarge", { maxSize: maxSizeMB }),
       });
       return;
     }
