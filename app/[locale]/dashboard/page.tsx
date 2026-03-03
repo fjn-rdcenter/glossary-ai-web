@@ -49,6 +49,10 @@ import { toast } from "sonner";
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname === "translatesphere.fujinet.net";
+  const maxSizeMB = isPublicDomain ? 20 : 50;
   const [isDragActive, setIsDragActive] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [stats, setStats] = useState({
@@ -398,7 +402,7 @@ export default function DashboardPage() {
   }, []);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    maxSize: 50 * 1024 * 1024,
+    maxSize: maxSizeMB * 1024 * 1024,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
@@ -492,8 +496,11 @@ export default function DashboardPage() {
                     <input {...getInputProps()} />
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-10 h-10 text-primary" /></div>
                     <div className="flex flex-col gap-2">
-                        <p className="text-2xl font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}
-                        <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles")}</p>
+                    <p className="text-2xl font-medium">
+                      {isDragActive ? trml("dropFile") : trml("clickOrDrag")}
+                      <span className="block text-sm text-muted-foreground font-normal">
+                        {trml("supportedFiles")}
+                      </span>
                         </p>
                     </div>
                 </div>
@@ -581,7 +588,7 @@ export default function DashboardPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{trml("fileTooLargeTitle") || "File Too Large"}</AlertDialogTitle>
             <AlertDialogDescription>
-              {trml("fileTooLargeDescription") || "The file you are trying to upload exceeds the 50MB maximum size limit. Please choose a smaller file."}
+              {trml("fileTooLargeDescription", { maxSize: maxSizeMB })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
