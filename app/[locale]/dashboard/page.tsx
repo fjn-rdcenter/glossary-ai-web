@@ -64,19 +64,19 @@ export default function DashboardPage() {
 
   const tourImages = {
     history: {
-      en: "/v2/walkthrough/history-preview/history-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/history-preview/history-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/history-preview/history-preview-ja-resized.mp4",
+      en: "/new/walkthrough/history-preview/history-preview-en-resized.mp4",
+      vi: "/new/walkthrough/history-preview/history-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/history-preview/history-preview-ja-resized.mp4",
     },
     glossary: {
-      en: "/v2/walkthrough/glossary-preview/glossary-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/glossary-preview/glossary-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/glossary-preview/glossary-preview-ja-resized.mp4",
+      en: "/new/walkthrough/glossary-preview/glossary-preview-en-resized.mp4",
+      vi: "/new/walkthrough/glossary-preview/glossary-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/glossary-preview/glossary-preview-ja-resized.mp4",
     },
     documents: {
-      en: "/v2/walkthrough/document-preview/document-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/document-preview/document-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/document-preview/document-preview-ja-resized.mp4",
+      en: "/new/walkthrough/document-preview/document-preview-en-resized.mp4",
+      vi: "/new/walkthrough/document-preview/document-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/document-preview/document-preview-ja-resized.mp4",
     }
   };
 
