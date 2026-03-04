@@ -13,6 +13,10 @@ export const getApiBaseUrl = () => {
         return "https://translatesphere.fujinet.net"; 
       }
       
+      if (hostname.includes("localhost")) {
+        return "http://localhost:18000";
+      }
+      
       return "http://172.16.6.10:18000";
     }
 

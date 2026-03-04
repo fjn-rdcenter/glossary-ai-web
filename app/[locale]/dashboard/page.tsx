@@ -396,9 +396,14 @@ export default function DashboardPage() {
     }
     setFiles(acceptedFiles);
   }, []);
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname === "translatesphere.fujinet.net";
+  const maxSizeMB = isPublicDomain ? 20 : 50;
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    maxSize: 50 * 1024 * 1024,
+    maxSize: maxSizeMB * 1024 * 1024,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
@@ -578,7 +583,7 @@ export default function DashboardPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{trml("fileTooLargeTitle") || "File Too Large"}</AlertDialogTitle>
             <AlertDialogDescription>
-              {trml("fileTooLargeDescription") || "The file you are trying to upload exceeds the 50MB maximum size limit. Please choose a smaller file."}
+              {trml("fileTooLargeDescription", { maxSize: maxSizeMB }) || `The file you are trying to upload exceeds the ${maxSizeMB}MB maximum size limit. Please choose a smaller file.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
