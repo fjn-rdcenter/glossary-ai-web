@@ -423,9 +423,9 @@ export default function DashboardPage() {
   };
 
   const currentStats = [
-    { label: "totalTranslation", value: loading ? "..." : stats.totalTranslations.toLocaleString(), change: "totalTranslationUnit", icon: FileText, trend: "neutral" },
-    { label: "activeGlossaries", value: loading ? "..." : stats.activeGlossaries.toString(), change: "activeGlossariesUnit", icon: BookOpen, trend: "neutral" },
-    { label: "documentsUploaded", value: loading ? "..." : stats.uniqueDocuments.toString(), change: "documentsUploadedUnit", icon: FileText, trend: "neutral" },
+    { label: "totalTranslation", value: loading ? "…" : stats.totalTranslations.toLocaleString(), change: "totalTranslationUnit", icon: FileText, trend: "neutral" },
+    { label: "activeGlossaries", value: loading ? "…" : stats.activeGlossaries.toString(), change: "activeGlossariesUnit", icon: BookOpen, trend: "neutral" },
+    { label: "documentsUploaded", value: loading ? "…" : stats.uniqueDocuments.toString(), change: "documentsUploadedUnit", icon: FileText, trend: "neutral" },
   ];
 
   return (
@@ -441,7 +441,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {currentStats.map((stat, i) => {
           let href = "/dashboard/history";
           if (stat.label === "activeGlossaries") href = "/dashboard/glossaries";
@@ -456,10 +456,10 @@ export default function DashboardPage() {
                     className="bg-secondary cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 h-full relative"
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-base font-medium text-muted-foreground">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
                         {trml(stat.label) ?? stat.label}
                       </CardTitle>
-                      <stat.icon className="h-5 w-5 text-muted-foreground" />
+                      <stat.icon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-4xl font-bold">{stat.value}</div>
@@ -488,14 +488,11 @@ export default function DashboardPage() {
           <CardContent>
              <AnimatePresence mode="wait">
               {files.length === 0 ? (
-                <div {...getRootProps()} className={cn("w-full rounded-2xl p-12 cursor-pointer flex flex-col items-center justify-center text-center gap-6 min-h-[300px] bg-card border-2 border-transparent shadow-sm hover:border-primary/50 transition-all", isDragActive && "border-primary")}>
+                <div {...getRootProps()} className={cn("w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px] bg-card border border-border shadow-sm hover:border-primary/50", isDragActive && "border-primary")}>
                     <input {...getInputProps()} />
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-10 h-10 text-primary" /></div>
-                    <div className="flex flex-col gap-2">
-                        <p className="text-2xl font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}
-                        <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles")}</p>
-                        </p>
-                    </div>
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
+                    <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
+                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles")}</p>
                 </div>
               ) : (
                 <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">

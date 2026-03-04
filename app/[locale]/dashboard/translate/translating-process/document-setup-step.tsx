@@ -136,12 +136,12 @@ export function DocumentSetupStep({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.15 }}
     >
-      <Card className="max-w-4xl mx-auto">
+      <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-3xl font-semibold">
+          <CardTitle className="text-2xl font-semibold">
             {trmlDocumentSetup("documentTitle")}
           </CardTitle>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-muted-foreground">
             {trmlDocumentSetup("documentDescription")}
           </p>
         </CardHeader>
@@ -187,8 +187,8 @@ export function DocumentSetupStep({
             ) : (
               <div
                 className="
-                  p-10 border-2 border-dashed border-border
-                  rounded-2xl text-center flex flex-col items-center justify-center min-h-[280px]
+                  p-6 border-2 border-dashed border-border
+                  rounded-xl text-center
                   transition-colors
                 "
                 onDragOver={(e) => {
@@ -216,14 +216,12 @@ export function DocumentSetupStep({
                   }
                 }}
               >
-                <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-6">
-                  <FileText className="w-12 h-12 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-medium text-foreground mb-2">
+                <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                <div className="text-bold text-muted-foreground">
                   {trmlDocumentSetup("dragAndDrop")}
-                  <p className="text-sm text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles")}</p>
-                </p>
-                <p className="text-base text-muted-foreground mb-6">{trmlCommon("or")}</p>
+                  <p className="text-xs text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles")}</p>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
                 <input
                   type="file"
                   id="file-upload"
@@ -240,10 +238,10 @@ export function DocumentSetupStep({
                 <Button
                   variant="outline"
                   size="lg"
-                  className="bg-transparent text-base h-12 px-8"
+                  className="bg-transparent"
                   onClick={() => document.getElementById("file-upload")?.click()}
                 >
-                  <Upload className="mr-2 w-5 h-5" />
+                  <Upload className="mr-2 w-4 h-4" />
                   {trmlDocumentSetup("uploadDocument")}
                 </Button>
               </div>
@@ -251,13 +249,13 @@ export function DocumentSetupStep({
           </div>
 
           {/* ================= LANGUAGE PAIR ================= */}
-          <div className="space-y-3" data-tour="language-selection">
-            <Label id="language-selection-label" className="text-lg">{trmlDocumentSetup("translationLanguages")}</Label>
+          <div className="space-y-2" data-tour="language-selection">
+            <Label>{trmlDocumentSetup("translationLanguages")}</Label>
 
             <div className="flex items-center gap-4">
               {/* Source language */}
               <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                <SelectTrigger className="h-14 text-base flex-1" aria-labelledby="language-selection-label">
+                <SelectTrigger className="h-12 flex-1" aria-labelledby="language-selection-label">
                   <SelectValue placeholder="From" />
                 </SelectTrigger>
                 <SelectContent>
@@ -286,7 +284,7 @@ export function DocumentSetupStep({
 
               {/* Target language */}
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                <SelectTrigger className="h-14 text-base flex-1" aria-labelledby="language-selection-label">
+                <SelectTrigger className="h-12 flex-1" aria-labelledby="language-selection-label">
                   <SelectValue placeholder="To" />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,7 +336,7 @@ export function DocumentSetupStep({
               className="group"
             >
               {isUploading
-                ? trmlCommon("uploading") || "Uploading..."
+                ? trmlCommon("uploading") || "Uploading…"
                 : trmlCommon("continue")}
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
