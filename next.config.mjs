@@ -15,7 +15,7 @@ const nextConfig = {
   turbopack: {
     root: path.resolve(process.cwd()),
   },
-  basePath: "/v2",
+  basePath: "/new",
   webpack(config) {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg'),
