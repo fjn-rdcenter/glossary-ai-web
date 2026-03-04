@@ -109,9 +109,9 @@
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 50MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
         "continue": "Tiếp tục",
-        "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là 50MB.",
+        "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
         "fileTooLargeTitle": "Tệp quá lớn",
-        "fileTooLargeDescription": "Tệp bạn đang cố tải lên vượt quá giới hạn kích thước tối đa 50MB. Vui lòng chọn một tệp nhỏ hơn."
+        "fileTooLargeDescription": "Tệp bạn đang cố tải lên vượt quá giới hạn kích thước tối đa {maxSize}MB. Vui lòng chọn một tệp nhỏ hơn."
     },
     "Translate": {
         "error": "Lỗi",
@@ -129,7 +129,7 @@
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
         "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu",
-        "fileTooLarge": "Kích thước tệp không được vượt quá 50MB."
+        "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB."
     },
     "GlossarySelection": {
         "selectGlossary": "Chọn bộ thuật ngữ",

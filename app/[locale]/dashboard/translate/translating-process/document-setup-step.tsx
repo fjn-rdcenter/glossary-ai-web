@@ -109,11 +109,15 @@ export function DocumentSetupStep({
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      // 50MB limit
+    const isPublicDomain =
+      window.location.hostname === "translatesphere.fujinet.net";
+    const maxSizeMB = isPublicDomain ? 20 : 50;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
       setErrorDialog({
         open: true,
-        message: trmlDocumentSetup("fileTooLarge") || "File is too large. Maximum size is 50MB.",
+        message: trmlDocumentSetup("fileTooLarge", { maxSize: maxSizeMB }),
       });
       return;
     }

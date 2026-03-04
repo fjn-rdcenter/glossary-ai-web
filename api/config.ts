@@ -3,10 +3,24 @@
  * Central configuration for API endpoints and settings
  */
 
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH;
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+export const getApiBaseUrl = () => {
+  if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+
+      if (hostname.includes("translatesphere.fujinet.net")) {
+        return "https://translatesphere.fujinet.net"; 
+      }
+      
+      return "http://172.16.6.10:18000";
+    }
+
+    return process.env.NEXT_PUBLIC_API_URL || "http://172.16.6.10:18000";
+};
 
 export const API_CONFIG = {
-  BASE_URL: BASE_PATH,
+  BASE_URL: getApiBaseUrl(),
   TIMEOUT: 30000, // 30 seconds
   
   // API Endpoints - Update these to match your backend routes
