@@ -398,7 +398,7 @@ export default function DashboardPage() {
   }, []);
   const isPublicDomain =
     typeof window !== "undefined" &&
-    window.location.hostname === "translatesphere.fujinet.net";
+    window.location.hostname.includes("translatesphere.fujinet.net");
   const maxSizeMB = isPublicDomain ? 20 : 50;
 
   const { getRootProps, getInputProps } = useDropzone({

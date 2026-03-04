@@ -110,7 +110,8 @@ export function DocumentSetupStep({
     }
 
     const isPublicDomain =
-      window.location.hostname === "translatesphere.fujinet.net";
+      typeof window !== "undefined" &&
+      window.location.hostname.includes("translatesphere.fujinet.net");
     const maxSizeMB = isPublicDomain ? 20 : 50;
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
