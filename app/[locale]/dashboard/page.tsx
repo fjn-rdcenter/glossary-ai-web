@@ -497,7 +497,7 @@ export default function DashboardPage() {
                     <input {...getInputProps()} />
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
                     <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
-                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles")}</p>
+                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
                 </div>
               ) : (
                 <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">

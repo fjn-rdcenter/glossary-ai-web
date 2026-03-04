@@ -82,6 +82,11 @@ export function DocumentSetupStep({
     message: "",
   });
 
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname.includes("translatesphere.fujinet.net");
+  const maxSizeMB = isPublicDomain ? 20 : 50;
+
   const handleRemoveFile = () => {
     setUploadedFile(null); // This triggers the logic in parent to clear everything
     // setFileToUpload(null) is called implicitly by parent's setUploadedFile wrapper if I implemented it that way,
@@ -109,10 +114,6 @@ export function DocumentSetupStep({
       return;
     }
 
-    const isPublicDomain =
-      typeof window !== "undefined" &&
-      window.location.hostname.includes("translatesphere.fujinet.net");
-    const maxSizeMB = isPublicDomain ? 20 : 50;
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     if (file.size > maxSizeBytes) {
@@ -224,7 +225,7 @@ export function DocumentSetupStep({
                 <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
                 <div className="text-bold text-muted-foreground">
                   {trmlDocumentSetup("dragAndDrop")}
-                  <p className="text-xs text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles")}</p>
+                  <p className="text-xs text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles", { maxSize: maxSizeMB })}</p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
                 <input
