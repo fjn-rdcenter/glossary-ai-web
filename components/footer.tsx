@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useContext } from "react";
-import LOGO_RD from "@/public/rd-center-logo.png";
+import LOGO_RD from "@/public/aiic-logo.png";
 import { useTranslations } from 'next-intl';
 
 function Footer() {
@@ -16,12 +16,12 @@ function Footer() {
             <div className="col-span-1 flex flex-col items-center">
               <Image
                 src={LOGO_RD}
-                alt={"FUJINET R&D CENTER"}
+                alt={"FUJINET AI Innovation CENTER"}
                 className="object-contain"
                 width={60}
               />
               <p className="font-bold text-lg whitespace-nowrap">
-                <span className="text-indigo-900">FUJINET R&D</span>
+                <span className="text-indigo-900">FUJINET AI INNOVATION</span>
                 <span className="text-orange-500 ml-1">CENTER</span>
               </p>
             </div>
@@ -35,7 +35,7 @@ function Footer() {
               <div className="flex flex-wrap">
                 {trml("phone")}
               </div>
-              <Link className="w-max" href="mailto:rdcenter@fujinet.net">
+              <Link className="w-max" href="mailto:aiic-support@fujinet.net">
                 {trml("email")}
               </Link>
             </div>
@@ -46,8 +46,8 @@ function Footer() {
               <Link className="w-max" href="https://www.fujinet.net/" target="_blank" rel="noopener noreferrer">
                 FUJINET SYSTEMS
               </Link>
-              <Link className="w-max" href="https://www.fujinet.net/rdcenter/" target="_blank" rel="noopener noreferrer">
-                FUJINET R&D CENTER
+              <Link className="w-max" href="https://aiinnovationcenter.fujinet.net/" target="_blank" rel="noopener noreferrer">
+                FUJINET AI INNOVATION CENTER
               </Link>
               <Link
                 className="w-max"
