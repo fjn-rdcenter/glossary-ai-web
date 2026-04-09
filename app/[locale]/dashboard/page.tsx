@@ -45,11 +45,11 @@ import { useTranslations, useLocale } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import { Logo } from "@/components/logo";
 import { toast } from "sonner";
+import { usePendingUploadStore } from "@/lib/pending-upload-store";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
-  const [isDragActive, setIsDragActive] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [stats, setStats] = useState({
     totalTranslations: 0,
@@ -86,6 +86,8 @@ export default function DashboardPage() {
   const [showSparkle, setShowSparkle] = useState(false);
 
   const { user, loading: userLoading, refreshUser } = useUser();
+  const setPendingFiles = usePendingUploadStore((state) => state.setPendingFiles);
+  const clearPendingFiles = usePendingUploadStore((state) => state.clearPendingFiles);
 
   useEffect(() => {
     setIsMounted(true);
@@ -155,9 +157,7 @@ export default function DashboardPage() {
   // Clean session storage... (Giữ nguyên)
   useEffect(() => {
     sessionStorage.clear(); // Xóa sạch cho gọn
-    if (typeof window !== "undefined") {
-      delete (window as any).__pendingFile;
-    }
+    clearPendingFiles();
   }, []);
 
   // --- CẤU HÌNH TOUR MỚI ---
@@ -401,22 +401,33 @@ export default function DashboardPage() {
     window.location.hostname.includes("translatesphere.fujinet.net");
   const maxSizeMB = isPublicDomain ? 20 : 50;
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     maxSize: maxSizeMB * 1024 * 1024,
+    maxFiles: 5,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
     },
-    multiple: false
+    multiple: true
   });
   
   const handleContinue = () => {
     if (files.length > 0) {
-      sessionStorage.setItem("pendingUploadFile", JSON.stringify({ name: files[0].name, size: files[0].size, type: files[0].type }));
-      if (typeof window !== "undefined") (window as any).__pendingFile = files[0];
+      const fileMetadataList = files.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      }));
+
+      sessionStorage.setItem("pendingUploadFiles", JSON.stringify(fileMetadataList));
+
+      // Keep backward compatibility for existing consumers reading a single key.
+      sessionStorage.setItem("pendingUploadFile", JSON.stringify(fileMetadataList[0]));
+
+      setPendingFiles(files);
       router.push("/dashboard/translate");
     }
   };
