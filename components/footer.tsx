@@ -12,24 +12,20 @@ function Footer() {
     <footer className="w-full pt-8 divide-y-2">
       <div className="flex justify-center pb-2">
         <div className="w-3/4">
-          <div className="flex gap-8 lg:flex-row flex-col justify-between">
-            <div className="col-span-1 flex flex-col items-center">
+          <div className="grid grid-cols-[2fr_3fr_2fr] gap-8 lg:grid-cols-[2fr_3fr_2fr] items-start">
+            <div className="flex flex-col items-start">
               <Image
                 src={LOGO_RD}
                 alt={"FUJINET AI Innovation CENTER"}
-                className="object-contain"
-                width={60}
+                className="object-contain w-full max-w-[220px]"
+                width={220}
               />
-              <p className="font-bold text-lg whitespace-nowrap">
-                <span className="text-indigo-900">FUJINET AI INNOVATION</span>
-                <span className="text-orange-500 ml-1">CENTER</span>
-              </p>
             </div>
-            <div className="col-span-2 flex flex-col text-[14px]">
+            <div className="flex flex-col text-[14px]">
               <p className="font-bold text-[16px]">
                 {trml("contact")}
               </p>
-              <Link className="w-max" href="https://g.page/FUJINET?share" target="_blank" rel="noopener noreferrer">
+              <Link className="" href="https://g.page/FUJINET?share" target="_blank" rel="noopener noreferrer">
                 {trml("address")}
               </Link>
               <div className="flex flex-wrap">
@@ -39,14 +35,14 @@ function Footer() {
                 {trml("email")}
               </Link>
             </div>
-            <div className="col-span-1 flex flex-col text-[14px]">
-              <p className="font-bold text-[16px] w-max">
+            <div className="flex flex-col text-[14px]">
+              <p className="font-bold text-[16px]">
                 {trml("mainPages")}
               </p>
               <Link className="w-max" href="https://www.fujinet.net/" target="_blank" rel="noopener noreferrer">
                 FUJINET SYSTEMS
               </Link>
-              <Link className="w-max" href="https://aiinnovationcenter.fujinet.net/" target="_blank" rel="noopener noreferrer">
+              <Link href="https://aiinnovationcenter.fujinet.net/" target="_blank" rel="noopener noreferrer">
                 FUJINET AI INNOVATION CENTER
               </Link>
               <Link
