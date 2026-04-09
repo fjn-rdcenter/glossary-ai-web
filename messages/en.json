@@ -27,7 +27,9 @@
         "pickDate": "Pick a date",
         "refresh": "Refresh",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "swapLanguages": "Swap languages",
+        "clear": "Clear"
     },
     "Documents": {
         "title": "Uploaded Documents",
@@ -85,7 +87,7 @@
         "signIn": "Sign in",
         "requestAccess": "Request access",
         "noAccount": "Don't have an account?",
-        "footer": "Developed by Fujinet RD Center",
+        "footer": "Developed by AI Innovation Center",
         "loginSuccess": "Login successful!",
         "loginError": "Login failed. Please check your credentials."
     },
@@ -104,9 +106,12 @@
         "quickUploadDescription": "Drag and drop documents here to start a new translation immediately.",
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag a file to upload",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to 50MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
-        "continue": "Continue"
+        "continue": "Continue",
+        "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
+        "fileTooLargeTitle": "File Too Large",
+        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file."
     },
     "Translate": {
         "error": "Error",
@@ -120,10 +125,12 @@
         "documentTitle": "Document Setup",
         "documentDescription": "Upload your document and choose translation languages",
         "dragAndDrop": "Drag and drop your document here",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to {maxSize}MB",
         "uploadDocument": "Upload Document",
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
-        "translateImagesDescription": "Extract and translate text from images in your document"
+        "translateImagesDescription": "Extract and translate text from images in your document",
+        "fileTooLarge": "The file size cannot exceed {maxSize}MB."
     },
     "GlossarySelection": {
         "selectGlossary": "Select Glossary",
@@ -414,7 +421,8 @@
         "step5Description": "Before starting the translation, review all your settings to make sure everything is correct.",
         "step6Title": "Start Translation",
         "step6Description": "Once you're ready, click this button to begin the translation process. You can track the progress in real-time.",
-        "onboardingHelp": "View user guide again"
+        "onboardingHelp": "View user guide again",
+        "fileTooLarge": "File is too large. Maximum size is {maxSize}MB."
     },
     "GlossaryListTour": {
         "welcomeTitle": "Manage Glossaries",

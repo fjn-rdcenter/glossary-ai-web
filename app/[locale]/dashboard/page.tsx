@@ -29,17 +29,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { FileCard } from "@/components/file-card";
 import { cn } from "@/lib/utils";
 import { useTranslations, useLocale } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import { Logo } from "@/components/logo";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [stats, setStats] = useState({
     totalTranslations: 0,
     activeGlossaries: 0,
@@ -53,19 +64,19 @@ export default function DashboardPage() {
 
   const tourImages = {
     history: {
-      en: "/v2/walkthrough/history-preview/history-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/history-preview/history-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/history-preview/history-preview-ja-resized.mp4",
+      en: "/new/walkthrough/history-preview/history-preview-en-resized.mp4",
+      vi: "/new/walkthrough/history-preview/history-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/history-preview/history-preview-ja-resized.mp4",
     },
     glossary: {
-      en: "/v2/walkthrough/glossary-preview/glossary-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/glossary-preview/glossary-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/glossary-preview/glossary-preview-ja-resized.mp4",
+      en: "/new/walkthrough/glossary-preview/glossary-preview-en-resized.mp4",
+      vi: "/new/walkthrough/glossary-preview/glossary-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/glossary-preview/glossary-preview-ja-resized.mp4",
     },
     documents: {
-      en: "/v2/walkthrough/document-preview/document-preview-en-resized.mp4",
-      vi: "/v2/walkthrough/document-preview/document-preview-vi-resized.mp4",
-      ja: "/v2/walkthrough/document-preview/document-preview-ja-resized.mp4",
+      en: "/new/walkthrough/document-preview/document-preview-en-resized.mp4",
+      vi: "/new/walkthrough/document-preview/document-preview-vi-resized.mp4",
+      ja: "/new/walkthrough/document-preview/document-preview-ja-resized.mp4",
     }
   };
 
@@ -373,11 +384,26 @@ export default function DashboardPage() {
     }
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], fileRejections: any[]) => {
+    if (fileRejections.length > 0) {
+      const sizeError = fileRejections.find(f => f.errors.find((e: any) => e.code === "file-too-large"));
+      if (sizeError) {
+        setShowSizeWarning(true);
+      } else {
+        toast.error("Invalid file format or too many files.");
+      }
+      return;
+    }
     setFiles(acceptedFiles);
   }, []);
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname.includes("translatesphere.fujinet.net");
+  const maxSizeMB = isPublicDomain ? 20 : 50;
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
+    maxSize: maxSizeMB * 1024 * 1024,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
@@ -402,9 +428,9 @@ export default function DashboardPage() {
   };
 
   const currentStats = [
-    { label: "totalTranslation", value: loading ? "..." : stats.totalTranslations.toLocaleString(), change: "totalTranslationUnit", icon: FileText, trend: "neutral" },
-    { label: "activeGlossaries", value: loading ? "..." : stats.activeGlossaries.toString(), change: "activeGlossariesUnit", icon: BookOpen, trend: "neutral" },
-    { label: "documentsUploaded", value: loading ? "..." : stats.uniqueDocuments.toString(), change: "documentsUploadedUnit", icon: FileText, trend: "neutral" },
+    { label: "totalTranslation", value: loading ? "…" : stats.totalTranslations.toLocaleString(), change: "totalTranslationUnit", icon: FileText, trend: "neutral" },
+    { label: "activeGlossaries", value: loading ? "…" : stats.activeGlossaries.toString(), change: "activeGlossariesUnit", icon: BookOpen, trend: "neutral" },
+    { label: "documentsUploaded", value: loading ? "…" : stats.uniqueDocuments.toString(), change: "documentsUploadedUnit", icon: FileText, trend: "neutral" },
   ];
 
   return (
@@ -441,8 +467,8 @@ export default function DashboardPage() {
                       <stat.icon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{stat.value}</div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <div className="text-4xl font-bold">{stat.value}</div>
+                      <p className="text-sm text-muted-foreground mt-1">
                         <span className="font-medium text-zinc-500">
                           {trml(stat.change) ?? stat.change}
                         </span>
@@ -471,6 +497,7 @@ export default function DashboardPage() {
                     <input {...getInputProps()} />
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
                     <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
+                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
                 </div>
               ) : (
                 <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">
@@ -550,6 +577,22 @@ export default function DashboardPage() {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      <AlertDialog open={showSizeWarning} onOpenChange={setShowSizeWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{trml("fileTooLargeTitle") || "File Too Large"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {trml("fileTooLargeDescription", { maxSize: maxSizeMB }) || `The file you are trying to upload exceeds the ${maxSizeMB}MB maximum size limit. Please choose a smaller file.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowSizeWarning(false)}>
+              {trmlOnboarding("gotIt") || "Got it"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageTransition>
   );
 }

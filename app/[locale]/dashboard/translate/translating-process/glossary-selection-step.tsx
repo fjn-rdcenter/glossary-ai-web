@@ -372,7 +372,7 @@ export function GlossarySelectionStep({
           <Card className="h-[calc(100vh-280px)] flex flex-col">
             <CardHeader className="pb-0 shrink-0">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
                   {trmlGlossarySelection("selectGlossary")}
                 </CardTitle>
                 <Button
@@ -389,6 +389,9 @@ export function GlossarySelectionStep({
               <div className="relative mt-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
+                  type="search"
+                  name="glossary-search"
+                  autoComplete="off"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={trmlGlossarySelection("searchGlossary")}
@@ -437,7 +440,7 @@ export function GlossarySelectionStep({
                                   setEditingGlossaryId(glossary.id);
                               }}
                               className={cn(
-                                "p-3 rounded-lg border cursor-pointer transition flex items-center justify-between gap-3 relative overflow-hidden select-none group",
+                                "p-3 rounded-lg border cursor-pointer transition flex items-center justify-between gap-4 relative overflow-hidden select-none group",
                                 isSelected
                                   ? "bg-secondary/40 border-primary/20"
                                   : "hover:bg-secondary/50",
@@ -451,7 +454,7 @@ export function GlossarySelectionStep({
                                     <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                                   )}
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-1">
                                   {trmlCommon(glossary.sourceLanguage)} →{" "}
                                   {trmlCommon(glossary.targetLanguage)} •{" "}
                                   {displayTermCount} terms
@@ -537,10 +540,13 @@ export function GlossarySelectionStep({
                     <div className="relative w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                       <input
+                        type="search"
+                        name="term-search"
+                        autoComplete="off"
                         value={termQuery}
                         onChange={(e) => setTermQuery(e.target.value)}
                         placeholder={trmlGlossarySelection("termsSearchPlaceholder")}
-                        className="h-8 w-full rounded-md border border-border bg-muted/20 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="h-8 w-full rounded-md border border-border bg-muted/20 pl-10 pr-3 text-base focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                   </div>
@@ -699,7 +705,7 @@ export function GlossarySelectionStep({
               </span>
               {conflictData?.examples && conflictData.examples.length > 0 && (
                 <span className="block bg-muted/50 p-2 rounded text-xs font-mono text-muted-foreground">
-                  {trmlGlossarySelection("duplicatedTermsExample")}: {conflictData.examples.join(", ")}...
+                  {trmlGlossarySelection("duplicatedTermsExample")}: {conflictData.examples.join(", ")}…
                 </span>
               )}
               <span className="block">

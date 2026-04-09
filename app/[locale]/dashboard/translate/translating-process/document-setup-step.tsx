@@ -82,6 +82,11 @@ export function DocumentSetupStep({
     message: "",
   });
 
+  const isPublicDomain =
+    typeof window !== "undefined" &&
+    window.location.hostname.includes("translatesphere.fujinet.net");
+  const maxSizeMB = isPublicDomain ? 20 : 50;
+
   const handleRemoveFile = () => {
     setUploadedFile(null); // This triggers the logic in parent to clear everything
     // setFileToUpload(null) is called implicitly by parent's setUploadedFile wrapper if I implemented it that way,
@@ -94,12 +99,7 @@ export function DocumentSetupStep({
     // Validate file type
     const allowedExtensions = [
       ".pdf",
-      ".doc",
       ".docx",
-      ".docm",
-      ".dotx",
-      ".dotm",
-      ".ppt",
       ".pptx",
       ".xlsx",
     ];
@@ -110,6 +110,16 @@ export function DocumentSetupStep({
       setErrorDialog({
         open: true,
         message: "Please upload only PowerPoint, Word, Excel, or PDF files.",
+      });
+      return;
+    }
+
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
+      setErrorDialog({
+        open: true,
+        message: trmlDocumentSetup("fileTooLarge", { maxSize: maxSizeMB }),
       });
       return;
     }
@@ -213,11 +223,11 @@ export function DocumentSetupStep({
                 }}
               >
                 <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">
+                <div className="text-bold text-muted-foreground">
                   {trmlDocumentSetup("dragAndDrop")}
-                </p>
-              <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
-
+                  <p className="text-xs text-muted-foreground font-normal">{trmlDocumentSetup("supportedFiles", { maxSize: maxSizeMB })}</p>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">{trmlCommon("or")}</p>
                 <input
                   type="file"
                   id="file-upload"
@@ -233,8 +243,9 @@ export function DocumentSetupStep({
 
                 <Button
                   variant="outline"
+                  size="lg"
                   className="bg-transparent"
-                onClick={() => document.getElementById("file-upload")?.click()}
+                  onClick={() => document.getElementById("file-upload")?.click()}
                 >
                   <Upload className="mr-2 w-4 h-4" />
                   {trmlDocumentSetup("uploadDocument")}
@@ -247,10 +258,10 @@ export function DocumentSetupStep({
           <div className="space-y-2" data-tour="language-selection">
             <Label>{trmlDocumentSetup("translationLanguages")}</Label>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Source language */}
               <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                <SelectTrigger className="h-12 flex-1">
+                <SelectTrigger className="h-12 flex-1" aria-labelledby="language-selection-label">
                   <SelectValue placeholder="From" />
                 </SelectTrigger>
                 <SelectContent>
@@ -267,6 +278,7 @@ export function DocumentSetupStep({
                 variant="ghost"
                 size="icon"
                 className="shrink-0"
+                aria-label={trmlCommon("swapLanguages") || "Swap languages"}
                 onClick={() => {
                   if (!sourceLanguage || !targetLanguage) return;
                   setSourceLanguage(targetLanguage);
@@ -278,7 +290,7 @@ export function DocumentSetupStep({
 
               {/* Target language */}
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                <SelectTrigger className="h-12 flex-1">
+                <SelectTrigger className="h-12 flex-1" aria-labelledby="language-selection-label">
                   <SelectValue placeholder="To" />
                 </SelectTrigger>
                 <SelectContent>
@@ -330,7 +342,7 @@ export function DocumentSetupStep({
               className="group"
             >
               {isUploading
-                ? trmlCommon("uploading") || "Uploading..."
+                ? trmlCommon("uploading") || "Uploading…"
                 : trmlCommon("continue")}
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>

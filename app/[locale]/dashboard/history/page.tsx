@@ -264,6 +264,17 @@ export default function HistoryPage() {
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          {dateRange && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDateRange(undefined)}
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              title={trmlCommon("clear")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700">
               <Filter className="w-4 h-4 mr-2 text-muted-foreground" />

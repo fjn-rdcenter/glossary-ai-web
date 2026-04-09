@@ -27,7 +27,9 @@
         "pickDate": "日付を選択",
         "refresh": "更新",
         "yes": "はい",
-        "no": "いいえ"
+        "no": "いいえ",
+        "swapLanguages": "言語を切り替える",
+        "clear": "フィルターをクリア"
     },
     "Documents": {
         "title": "アップロード済みのドキュメント",
@@ -85,7 +87,7 @@
         "signIn": "サインイン",
         "requestAccess": "アクセス権をリクエスト",
         "noAccount": "アカウントをお持ちでないですか？",
-        "footer": "Fujinet RD Center によって開発されました",
+        "footer": "AI Innovation Center によって開発されました",
         "loginSuccess": "ログインに成功しました！",
         "loginError": "ログインに失敗しました。認証情報を確認してください。"
     },
@@ -104,9 +106,12 @@
         "quickUploadDescription": "ドキュメントをここにドラッグ＆ドロップして、すぐに翻訳を開始できます。",
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 50MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 {maxSize}MB",
         "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
-        "continue": "次へ"
+        "continue": "次へ",
+        "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
+        "fileTooLargeTitle": "ファイルが大きすぎます",
+        "fileTooLargeDescription": "アップロードしようとしているファイルは、最大サイズ制限の{maxSize}MBを超えています。より小さなファイルを選択してください。"
     },
     "Translate": {
         "error": "エラー",
@@ -121,9 +126,11 @@
         "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
         "dragAndDrop": "ドキュメントをここにドラッグ＆ドロップしてください",
         "uploadDocument": "ドキュメントをアップロード",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 {maxSize}MB",
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
-        "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳"
+        "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳",
+        "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。"
     },
     "GlossarySelection": {
         "selectGlossary": "用語集を選択",

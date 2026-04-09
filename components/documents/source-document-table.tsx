@@ -29,6 +29,7 @@ import {
   Search,
   Filter,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -56,11 +57,15 @@ export function SourceDocumentTable() {
   // State for all data and display data
   const [allData, setAllData] = useState<SourceDocumentResponse[]>([]);
   const [loading, setLoading] = useState(true); 
-  const [isFetching, setIsFetching] = useState(false); 
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    size: 10,
+    total: 0,
+    totalPages: 0,
+  });
   
   // Pagination / Filter / Sort State
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
   const [sortField, setSortField] = useState<SourceDocumentSortField>("uploadedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchDocument, setSearchDocument] = useState("");
@@ -82,16 +87,12 @@ export function SourceDocumentTable() {
 
   // Reset page when filters change
   useEffect(() => {
-    setPage(1);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   }, [debouncedSearchDocument, dateRange]);
 
-  const fetchData = async (isInitial = false) => {
+  const fetchData = async () => {
     try {
-      if (isInitial) {
-        setLoading(true);
-      } else {
-        setIsFetching(true);
-      }
+      setLoading(true);
       
       // Fetch all documents (simulated with large size) for client-side filtering
       const result = await DocumentService.getSourceDocuments(
@@ -101,18 +102,22 @@ export function SourceDocumentTable() {
         "desc"
       );
       setAllData(result.items);
+      setPagination((prev) => ({
+        ...prev,
+        total: result.items.length,
+        totalPages: Math.ceil(result.items.length / prev.size),
+      }));
     } catch (error) {
       console.error(error);
       toast.error(t("fetchError"));
     } finally {
       setLoading(false);
-      setIsFetching(false);
     }
   };
 
   useEffect(() => {
     // Initial fetch
-    fetchData(true);
+    fetchData();
   }, []);
 
   // Client-side Filtering, Sorting, and Pagination
@@ -157,11 +162,11 @@ export function SourceDocumentTable() {
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
-  const totalItems = sortedData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const filteredTotal = sortedData.length;
+  const filteredTotalPages = Math.ceil(filteredTotal / pagination.size);
   const paginatedData = sortedData.slice(
-    (page - 1) * pageSize,
-    page * pageSize
+    (pagination.page - 1) * pagination.size,
+    pagination.page * pagination.size
   );
 
   const handleSort = (field: SourceDocumentSortField) => {
@@ -170,6 +175,7 @@ export function SourceDocumentTable() {
     } else {
       setSortField(field);
       setSortOrder("asc");
+      setPagination((prev) => ({ ...prev, page: 1 })); // Reset to page 1 on sort change
     }
   };
 
@@ -178,7 +184,8 @@ export function SourceDocumentTable() {
     try {
       await DocumentService.deleteDocument(documentToDelete);
       toast.success(t("deleteSuccess"));
-      fetchData(false);
+      // Refetch current page after deletion
+      fetchData();
     } catch (error) {
       console.error(error);
       toast.error(t("deleteError"));
@@ -204,12 +211,6 @@ export function SourceDocumentTable() {
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      setPage(newPage);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -222,8 +223,8 @@ export function SourceDocumentTable() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => fetchData(false)} disabled={isFetching || loading}>
-            <RefreshCw className={cn("w-4 h-4 mr-2", (isFetching || loading) ? "animate-spin" : "")} />
+          <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             {tCommon("refresh") || "Refresh"}
           </Button>
         </div>
@@ -238,10 +239,22 @@ export function SourceDocumentTable() {
             value={searchDocument}
             onChange={(e) => setSearchDocument(e.target.value)}
             className="pl-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700"
+            aria-label={t("searchDocuments")}
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          {dateRange && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDateRange(undefined)}
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              title={tCommon("clear")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -307,7 +320,7 @@ export function SourceDocumentTable() {
               </TableRow>
             ) : (
               paginatedData.map((doc) => (
-                <TableRow key={doc.id} className={isFetching ? "opacity-50 transition-opacity" : "transition-opacity"}>
+                <TableRow key={doc.id} className="transition-opacity">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -319,7 +332,14 @@ export function SourceDocumentTable() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(doc.uploadedAt), "MMM d, yyyy HH:mm")}
+                    {new Intl.DateTimeFormat("en", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    }).format(new Date(doc.uploadedAt))}
                   </TableCell>
                   <TableCell>{formatBytes(doc.size)}</TableCell>
                   <TableCell>{doc.usageCount}</TableCell>
@@ -356,34 +376,33 @@ export function SourceDocumentTable() {
         </Table>
       </div>
 
-      {/* Pagination matching HistoryPage Style */}
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
              {t("showing", {
-                  start: totalItems === 0 ? 0 : (page - 1) * pageSize + 1,
-                  end: Math.min(page * pageSize, totalItems),
-                  total: totalItems,
-              }) || tCommon("pageOf", { current: page, total: Math.max(totalPages, 1) })}
+                  start: filteredTotal === 0 ? 0 : (pagination.page - 1) * pagination.size + 1,
+                  end: Math.min(pagination.page * pagination.size, filteredTotal),
+                  total: filteredTotal,
+              }) || tCommon("pageOf", { current: pagination.page, total: Math.max(filteredTotalPages, 1) })}
         </div>
         <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page <= 1 || loading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              {tCommon("previous")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages || loading}
-            >
-              {tCommon("next")}
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+            disabled={pagination.page <= 1 || loading}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {tCommon("previous")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+            disabled={pagination.page >= filteredTotalPages || loading}
+          >
+            {tCommon("next")}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 

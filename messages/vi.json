@@ -27,7 +27,9 @@
         "pickDate": "Chọn ngày",
         "refresh": "Làm mới",
         "yes": "Có",
-        "no": "Không"
+        "no": "Không",
+        "swapLanguages": "Hoán đổi ngôn ngữ",
+        "clear": "Xóa bộ lọc"
     },
     "Documents": {
         "title": "Tài liệu đã tải lên",
@@ -85,7 +87,7 @@
         "signIn": "Đăng nhập",
         "requestAccess": "Yêu cầu quyền truy cập",
         "noAccount": "Chưa có tài khoản?",
-        "footer": "Phát triển bởi Fujinet RD Center",
+        "footer": "Phát triển bởi AI Innovation Center",
         "loginSuccess": "Đăng nhập thành công!",
         "loginError": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập."
     },
@@ -104,9 +106,12 @@
         "quickUploadDescription": "Kéo và thả tài liệu vào đây để bắt đầu dịch.",
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 50MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
-        "continue": "Tiếp tục"
+        "continue": "Tiếp tục",
+        "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
+        "fileTooLargeTitle": "Tệp quá lớn",
+        "fileTooLargeDescription": "Tệp bạn đang cố tải lên vượt quá giới hạn kích thước tối đa {maxSize}MB. Vui lòng chọn một tệp nhỏ hơn."
     },
     "Translate": {
         "error": "Lỗi",
@@ -120,10 +125,12 @@
         "documentTitle": "Thiết lập tài liệu",
         "documentDescription": "Tải tài liệu của bạn lên và chọn ngôn ngữ dịch",
         "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
         "uploadDocument": "Tải lên tài liệu",
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
-        "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu"
+        "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu",
+        "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB."
     },
     "GlossarySelection": {
         "selectGlossary": "Chọn bộ thuật ngữ",
