@@ -233,7 +233,7 @@ export function GuidanceClient() {
                         <div className="flex flex-col items-center text-center space-y-6">
                           <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg bg-gray-50 dark:bg-gray-900">
                             <Image
-                              src="/v2/step_1.png"
+                              src="/new/step_1.png"
                               alt="Select Files & Choose Languages"
                               fill
                               className="object-contain"
@@ -258,7 +258,7 @@ export function GuidanceClient() {
                         <div className="flex flex-col items-center text-center space-y-6">
                           <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg bg-gray-50 dark:bg-gray-900">
                             <Image
-                              src="/v2/step_2.png"
+                              src="/new/step_2.png"
                               alt="Choose Glossaries"
                               fill
                               className="object-contain"
@@ -283,7 +283,7 @@ export function GuidanceClient() {
                         <div className="flex flex-col items-center text-center space-y-6">
                           <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg bg-gray-50 dark:bg-gray-900">
                             <Image
-                              src="/v2/step_3.png"
+                              src="/new/step_3.png"
                               alt="Review Settings"
                               fill
                               className="object-contain"
@@ -308,7 +308,7 @@ export function GuidanceClient() {
                         <div className="flex flex-col items-center text-center space-y-6">
                           <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg bg-gray-50 dark:bg-gray-900">
                             <Image
-                              src="/v2/step_4.png"
+                              src="/new/step_4.png"
                               alt="Start Translation & Download"
                               fill
                               className="object-contain"
