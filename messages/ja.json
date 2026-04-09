@@ -87,7 +87,7 @@
         "signIn": "サインイン",
         "requestAccess": "アクセス権をリクエスト",
         "noAccount": "アカウントをお持ちでないですか？",
-        "footer": "Fujinet RD Center によって開発されました",
+        "footer": "AI Innovation Center によって開発されました",
         "loginSuccess": "ログインに成功しました！",
         "loginError": "ログインに失敗しました。認証情報を確認してください。"
     },
