@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileCard } from "@/components/file-card";
-import { TranslationStatus } from "../page";
+import { TranslationStatus } from "../types";
 import { useTranslations } from 'next-intl';
 
 interface TranslationExecutionStepProps {
@@ -30,7 +30,7 @@ interface TranslationExecutionStepProps {
   status: TranslationStatus;
   progress: number;
   onBack: () => void;
-  onStepChange: (step: number) => void;
+  onStepChange: (step: number, applyToAll?: boolean) => void;
   onStartTranslation: () => void;
   onCancelTranslation: () => void;
   onDownload: () => void;
@@ -160,10 +160,16 @@ export function TranslationExecutionStep({
                 <ArrowLeft className="mr-2 w-4 h-4" />
                 {trmlCommon("back")}
               </Button>
-              <Button onClick={() => onStepChange(3)} className="group">
-                {trmlCommon("continue")}
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => onStepChange(3, false)} className="group">
+                  {trmlTranslationExecution("applyToThisFile") || "Apply to this file"}
+                  <Check className="ml-2 w-4 h-4 transition-transform group-hover:scale-110" />
+                </Button>
+                <Button onClick={() => onStepChange(3, true)} className="group">
+                  {trmlTranslationExecution("applyToAllFiles") || "Apply to all files"}
+                  <Check className="ml-2 w-4 h-4 transition-transform group-hover:scale-110" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

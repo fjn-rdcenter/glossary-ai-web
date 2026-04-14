@@ -29,7 +29,12 @@
         "yes": "Yes",
         "no": "No",
         "swapLanguages": "Swap languages",
-        "clear": "Clear"
+        "clear": "Clear",
+        "apply": "Apply",
+        "translating": "Translating...",
+        "completed": "Completed",
+        "success": "Success",
+        "of": "of"
     },
     "Documents": {
         "title": "Uploaded Documents",
@@ -111,7 +116,10 @@
         "continue": "Continue",
         "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
         "fileTooLargeTitle": "File Too Large",
-        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file."
+        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file.",
+        "uploading": "Uploading...",
+        "addMoreFiles": "Add more files",
+        "maxFilesWarning": "You have reached the maximum number of files allowed for translation. Please proceed with the current files or remove some to add new ones."
     },
     "Translate": {
         "error": "Error",
@@ -119,7 +127,19 @@
         "noDocumentUploaded": "No document uploaded.",
         "documentSessionLost": "Document session lost. Please re-upload your file.",
         "failedToStartTranslation": "Failed to start translation.",
-        "downloadFailed": "Download failed."
+        "downloadFailed": "Download failed.",
+        "translationQueue": "Translation Queue",
+        "filesUploaded": "files ready for configuration.",
+        "batchApply": "Batch Apply Settings",
+        "startAll": "Start Translation",
+        "pendingConfig": "Pending configuration",
+        "editSettings": "Edit Settings",
+        "batchApplyDesc": "These settings will be applied to all pending files in the queue. Existing configured files will be overwritten.",
+        "setup": "Setup",
+        "imagesTranslated": "Images included",
+        "glossaryUsed": "{count, plural, one {# glossary} other {# glossaries}}",
+        "configTranslation": "Config Translation",
+        "clickToConfig": "Click to file to config"
     },
     "DocumentSetup": {
         "documentTitle": "Document Setup",
@@ -180,7 +200,11 @@
         "tryAgain": "Try Again",
         "startOver": "Start Over",
         "cancelledTitle": "Translation Cancelled",
-        "cancelledDesc": "The translation process was stopped."
+        "cancelledDesc": "The translation process was stopped.",
+        "saveConfig": "Save Configuration",
+        "applyToThisFile": "Apply to this file",
+        "applyToAllFiles": "Apply to all files",
+        "cancelAll": "Cancel All Translations"
     },
     "Glossaries": {
         "termDuplicatedTitle": "Duplicate Term",

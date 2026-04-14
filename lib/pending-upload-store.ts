@@ -1,8 +1,19 @@
 import { create } from "zustand";
 
+export type UploadedFileInfo = {
+  id: string;
+  file: File;
+  documentId: string;
+  metadata: {
+    name: string;
+    size: number;
+    type: string;
+  };
+};
+
 type PendingUploadState = {
-  pendingFiles: File[];
-  setPendingFiles: (files: File[]) => void;
+  pendingFiles: UploadedFileInfo[];
+  setPendingFiles: (files: UploadedFileInfo[]) => void;
   clearPendingFiles: () => void;
 };
 

@@ -14,6 +14,7 @@ import {
   History,
   ArrowRight,
   Lightbulb,
+  Loader2,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export default function DashboardPage() {
     uniqueDocuments: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const trml = useTranslations("Dashboard");
   const trmlTour = useTranslations("DashboardTour");
   const trmlOnboarding = useTranslations("Onboarding");
@@ -390,11 +392,20 @@ export default function DashboardPage() {
       if (sizeError) {
         setShowSizeWarning(true);
       } else {
-        toast.error("Invalid file format or too many files.");
+        toast.error("Invalid file format.");
       }
-      return;
     }
-    setFiles(acceptedFiles);
+
+    if (acceptedFiles.length === 0) return;
+
+    setFiles(prev => {
+      const combined = [...prev, ...acceptedFiles];
+      if (combined.length > 5) {
+        toast.warning(trml("maxFilesWarning") || "You can only upload up to 5 files. We took the first 5.");
+        return combined.slice(0, 5);
+      }
+      return combined;
+    });
   }, []);
   const isPublicDomain =
     typeof window !== "undefined" &&
@@ -404,7 +415,6 @@ export default function DashboardPage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     maxSize: maxSizeMB * 1024 * 1024,
-    maxFiles: 5,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
@@ -414,21 +424,41 @@ export default function DashboardPage() {
     multiple: true
   });
   
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (files.length > 0) {
-      const fileMetadataList = files.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      }));
+      setIsUploadingFiles(true);
+      try {
+        // Upload all files concurrently. Default language pairs will be overridden in the config screen if needed.
+        const uploadPromises = files.map(async (file) => {
+          // Use default "jp" to "vn" just for upload endpoint requirement.
+          const response = await TranslationService.uploadDocument(file, "jp", "vn");
+          return {
+            id: crypto.randomUUID(),
+            file,
+            documentId: response.id,
+            metadata: {
+              name: response.name,
+              size: response.size,
+              type: response.type,
+            }
+          };
+        });
 
-      sessionStorage.setItem("pendingUploadFiles", JSON.stringify(fileMetadataList));
+        const uploadedInfos = await Promise.all(uploadPromises);
 
-      // Keep backward compatibility for existing consumers reading a single key.
-      sessionStorage.setItem("pendingUploadFile", JSON.stringify(fileMetadataList[0]));
-
-      setPendingFiles(files);
-      router.push("/dashboard/translate");
+        setPendingFiles(uploadedInfos);
+        
+        // Remove old sessionStorage variables that were for a single file state
+        sessionStorage.removeItem("pendingUploadFiles");
+        sessionStorage.removeItem("pendingUploadFile");
+        
+        router.push("/dashboard/translate");
+      } catch (error) {
+        console.error("Failed to upload test documents:", error);
+        toast.error(trml("uploadFailed") || "Failed to upload documents. Please try again.");
+      } finally {
+        setIsUploadingFiles(false);
+      }
     }
   };
 
@@ -515,8 +545,26 @@ export default function DashboardPage() {
                     {files.map((file, index) => (
                         <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
                     ))}
-                    <div className="flex justify-center pt-4">
-                        <Button onClick={handleContinue} size="lg" className="min-w-[220px] gap-2">{trml('continue')} <ArrowRight className="w-4 h-4" /></Button>
+                    <div className="flex justify-center pt-4 gap-4">
+                        {files.length < 5 && (
+                          <div {...getRootProps()}>
+                            <input {...getInputProps()} />
+                            <Button variant="outline" size="lg" className="min-w-[150px]">
+                              {trml('addMoreFiles') || "Add More Files"}
+                            </Button>
+                          </div>
+                        )}
+                        <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
+                          {isUploadingFiles ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
+                            </>
+                          ) : (
+                            <>
+                                {trml('continue')} <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </Button>
                     </div>
                 </motion.div>
               )}

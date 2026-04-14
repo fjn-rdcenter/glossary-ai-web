@@ -166,29 +166,6 @@ export function DocumentSetupStep({
                     status="success"
                   />
                 </div>
-
-                {/* Remove action – full height */}
-                <button
-                  onClick={handleRemoveFile}
-                  className="
-                    group
-                    w-12
-                    flex items-center justify-center
-                    rounded-xl
-                    border border-border
-                    text-muted-foreground
-                    transition-all duration-200
-
-                    hover:bg-destructive
-                    hover:border-destructive
-                    hover:text-white
-
-                    active:bg-destructive/90
-                  "
-                  aria-label="Remove file"
-                >
-                  <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-                </button>
               </div>
             ) : (
               <div

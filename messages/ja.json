@@ -29,7 +29,12 @@
         "yes": "はい",
         "no": "いいえ",
         "swapLanguages": "言語を切り替える",
-        "clear": "フィルターをクリア"
+        "clear": "フィルターをクリア",
+        "apply": "適用",
+        "translating": "翻訳中...",
+        "completed": "完了",
+        "success": "成功",
+        "of": "／"
     },
     "Documents": {
         "title": "アップロード済みのドキュメント",
@@ -111,7 +116,10 @@
         "continue": "次へ",
         "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
         "fileTooLargeTitle": "ファイルが大きすぎます",
-        "fileTooLargeDescription": "アップロードしようとしているファイルは、最大サイズ制限の{maxSize}MBを超えています。より小さなファイルを選択してください。"
+        "fileTooLargeDescription": "アップロードしようとしているファイルは、最大サイズ制限の{maxSize}MBを超えています。より小さなファイルを選択してください。",
+        "uploading": "アップロード中...",
+        "addMoreFiles": "ファイルを追加",
+        "maxFilesWarning": "翻訳可能なファイルの最大数に達しました。現在のファイルで続行するか、いくつか削除して新しいファイルを追加してください。"
     },
     "Translate": {
         "error": "エラー",
@@ -119,14 +127,26 @@
         "noDocumentUploaded": "ドキュメントがアップロードされていません。",
         "documentSessionLost": "ドキュメントセッションが失われました。ファイルを再アップロードしてください。",
         "failedToStartTranslation": "翻訳の開始に失敗しました。",
-        "downloadFailed": "ダウンロードに失敗しました。"
+        "downloadFailed": "ダウンロードに失敗しました。",
+        "translationQueue": "翻訳キュー",
+        "filesUploaded": "件のファイルが設定待ちです。",
+        "batchApply": "設定を一括適用",
+        "startAll": "すべて翻訳開始",
+        "pendingConfig": "設定待ち",
+        "editSettings": "設定を編集",
+        "batchApplyDesc": "これらの設定は、キュー内のすべての設定待ちファイルに適用されます。既に設定されているファイルの設定は上書きされます。",
+        "setup": "設定",
+        "imagesTranslated": "画像を含む",
+        "glossaryUsed": "{count, plural, one {用語集 # 件} other {用語集 # 件}}",
+        "configTranslation": "翻訳設定",
+        "clickToConfig": "クリックしてファイルを設定"
     },
     "DocumentSetup": {
         "documentTitle": "ドキュメント設定",
         "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
         "dragAndDrop": "ドキュメントをここにドラッグ＆ドロップしてください",
-        "uploadDocument": "ドキュメントをアップロード",
         "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 {maxSize}MB",
+        "uploadDocument": "ドキュメントをアップロード",
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
         "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳",
@@ -162,8 +182,8 @@
         "document": "ドキュメント",
         "glossariesCount": "{count, plural, one {用語集} other {用語集}}",
         "termsCount": "{count, plural, one {件の用語} other {件の用語}}",
-        "noGlossarySelected": "用語集が選択されていません",
         "translateImages": "翻訳画像オプション",
+        "noGlossarySelected": "用語集が選択されていません",
         "translateTitle": "翻訳の準備完了",
         "translateDescription": "下のボタンをクリックして翻訳を開始してください",
         "startTranslating": "翻訳を開始",
@@ -180,7 +200,11 @@
         "tryAgain": "再試行",
         "startOver": "最初からやり直す",
         "cancelledTitle": "翻訳をキャンセルしました",
-        "cancelledDesc": "翻訳プロセスが停止されました。"
+        "cancelledDesc": "翻訳プロセスが停止されました。",
+        "saveConfig": "設定を保存",
+        "applyToThisFile": "このファイルに適用",
+        "applyToAllFiles": "すべてのファイルに適用",
+        "cancelAll": "すべての翻訳をキャンセル"
     },
     "Glossaries": {
         "termDuplicatedTitle": "重複する用語",
@@ -202,10 +226,6 @@
         "backToManualEntry": "手動入力に戻る",
         "previewTerms": "用語をプレビュー",
         "searchTermsPlaceholder": "追加された用語を検索...",
-        "termsUpload": ".txt または .csv ファイルをアップロードするにはクリックしてください",
-        "termsUploadFormat": "ファイルは以下の形式である必要があります:",
-        "termsUploadExample": "原文, 訳文",
-        "termsUploadMaxSize": "最大ファイルサイズ: 5MB",
         "dropToUpload": ".txtまたは.csvファイルをドラッグ＆ドロップ、またはクリックしてアップロード",
         "clickToUpload": ".txtまたは.csvファイルをドラッグ＆ドロップ、またはクリックしてアップロード",
         "uploadFormatLabel": "各行は用語ペアを表し、以下の形式に従う必要があります：",
@@ -425,7 +445,8 @@
         "step5Description": "翻訳を開始する前に、すべての設定が正しいことを確認してください。",
         "step6Title": "翻訳開始",
         "step6Description": "準備ができたら、このボタンをクリックして翻訳プロセスを開始します。進行状況をリアルタイムで追跡できます。",
-        "onboardingHelp": "ガイドをもう一度見る"
+        "onboardingHelp": "ガイドをもう一度見る",
+        "fileTooLarge": "ファイルサイズが大きすぎます。最大サイズは{maxSize}MBです。"
     },
     "GlossaryListTour": {
         "welcomeTitle": "用語集の管理",
