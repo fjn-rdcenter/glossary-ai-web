@@ -44,7 +44,7 @@ import { GlossaryService } from "@/api/services";
 import { GlossaryResponse, GlossaryTermResponse } from "@/api/types";
 import { getLanguageName } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/error-utils";
 
 export const dynamic = "force-dynamic";
@@ -69,7 +69,7 @@ export default function GlossaryDetailPage() {
   const [deleteAction, setDeleteAction] = useState<"glossary" | "terms" | null>(
     null
   );
-  
+
   // [NEW] Error Dialog State
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -81,6 +81,9 @@ export default function GlossaryDetailPage() {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTerms, setTotalTerms] = useState(0);
+  const [myPermission, setMyPermission] = useState<string | null>(null);
+
+  const isOwner = myPermission === "owner" || myPermission === "admin";
 
   useEffect(() => {
     if (id === "new") {
@@ -88,25 +91,30 @@ export default function GlossaryDetailPage() {
       return;
     }
     fetchGlossaryData();
-  }, [id, router, page, pageSize]); // Add page and pageSize dependencies
+  }, [id, page, pageSize]); // Add page and pageSize dependencies
 
   const fetchGlossaryData = async () => {
     setLoading(true);
     try {
-      // Fetch Glossary Details with pagination
-      const glossaryData = await GlossaryService.getGlossaryById(id, { page, size: pageSize });
+      // Fetch Glossary Details and my permission
+      const [glossaryData, permissionData] = await Promise.all([
+        GlossaryService.getGlossaryById(id, { page, size: pageSize }),
+        GlossaryService.getMyPermission(id).catch(() => ({ permission: "view" as const })) // Fallback to view if error
+      ]);
+
       setGlossary(glossaryData);
-      
+      setMyPermission(permissionData.permission);
+
       if (glossaryData.terms) {
-          setTerms(glossaryData.terms.items);
-          setTotalPages(glossaryData.terms.pages || 1);
-          setTotalTerms(glossaryData.terms.total || 0);
+        setTerms(glossaryData.terms.items);
+        setTotalPages(glossaryData.terms.pages || 1);
+        setTotalTerms(glossaryData.terms.total || 0);
       } else {
-          setTerms([]);
-          setTotalPages(1);
-          setTotalTerms(0);
+        setTerms([]);
+        setTotalPages(1);
+        setTotalTerms(0);
       }
-      
+
     } catch (error) {
       console.error("Failed to fetch glossary details", error);
       setErrorDialog({
@@ -175,21 +183,21 @@ export default function GlossaryDetailPage() {
       } else if (deleteAction === "terms") {
         // Delete specific terms
         await Promise.all(
-            Array.from(selectedTerms).map(termId => 
-                GlossaryService.deleteTerm(glossary.id, termId)
-            )
+          Array.from(selectedTerms).map(termId =>
+            GlossaryService.deleteTerm(glossary.id, termId)
+          )
         );
-        
+
         // Refresh or local update
         setTerms((prev) => prev.filter((t) => !selectedTerms.has(t.id)));
         setSelectedTerms(new Set());
-        
+
         // Also update glossary term count if possible or refetch
-        fetchGlossaryData(); 
-       
+        fetchGlossaryData();
+
         toast({
-            title: trmlGlossaries("deleted"),
-            description: trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size }),
+          title: trmlGlossaries("deleted"),
+          description: trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size }),
         });
       }
     } catch (error) {
@@ -207,12 +215,12 @@ export default function GlossaryDetailPage() {
   if (id === "new") return null;
 
   if (loading && !glossary) { // Only show full loading if glossary not loaded yet
-     return (
-        <div className="container mx-auto px-6 py-10 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-             <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
-        </div>
-     );
+    return (
+      <div className="container mx-auto px-6 py-10 text-center">
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="mt-2 text-muted-foreground">{trmlGlossaries("loading")}</p>
+      </div>
+    );
   }
 
   if (!glossary) {
@@ -238,7 +246,7 @@ export default function GlossaryDetailPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push("/dashboard/glossaries")}
+              onClick={() => router.back()}
               className="mt-1"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -253,7 +261,7 @@ export default function GlossaryDetailPage() {
               </p>
               {/* Description - moved here */}
               <div className="mt-2 text-sm italic text-muted-foreground/80 max-w-2xl">
-                 {glossary.description || trmlGlossaries("noDescription")}
+                {glossary.description || trmlGlossaries("noDescription")}
               </div>
             </div>
           </div>
@@ -267,6 +275,7 @@ export default function GlossaryDetailPage() {
             <Button
               variant="outline"
               onClick={() => router.push(`/dashboard/glossaries/${id}/edit`)}
+              disabled={!isOwner}
             >
               <Edit className="mr-2 w-4 h-4" />
               {trmlGlossaries("edit")}
@@ -274,13 +283,14 @@ export default function GlossaryDetailPage() {
             <Button
               variant="outline"
               className="text-destructive hover:text-destructive bg-transparent"
+              disabled={!isOwner}
               onClick={() => {
                 setDeleteAction("glossary");
                 setShowDeleteWarning(true);
               }}
             >
               <Trash2 className="mr-2 w-4 h-4" />
-                {trmlGlossaries("deleteGlossary")}
+              {trmlGlossaries("deleteGlossary")}
             </Button>
 
             <AlertDialog
@@ -291,8 +301,8 @@ export default function GlossaryDetailPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>
                     {deleteAction === "glossary" ||
-                    (deleteAction === "terms" &&
-                      selectedTerms.size === terms.length && terms.length > 0)
+                      (deleteAction === "terms" &&
+                        selectedTerms.size === terms.length && terms.length > 0)
                       ? trmlGlossaries("deleteGlossaryConfirm")
                       : trmlGlossaries("deleteSelectedTitle")}
                   </AlertDialogTitle>
@@ -300,8 +310,8 @@ export default function GlossaryDetailPage() {
                     {deleteAction === "glossary"
                       ? trmlGlossaries("confirmDeleteGlossary", { glossaryName: glossary.name })
                       : selectedTerms.size === terms.length && terms.length > 0
-                      ? trmlGlossaries("confirmDeleteAllTerms", { glossaryName: glossary.name })
-                      : trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size })}
+                        ? trmlGlossaries("confirmDeleteAllTerms", { glossaryName: glossary.name })
+                        : trmlGlossaries("confirmDeleteCount", { count: selectedTerms.size })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -388,11 +398,11 @@ export default function GlossaryDetailPage() {
                     </motion.tr>
                   ))}
                   {loading && (
-                      <TableRow>
-                          <TableCell colSpan={4} className="h-24 text-center">
-                              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
-                          </TableCell>
-                      </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        <RefreshCw className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -424,7 +434,7 @@ export default function GlossaryDetailPage() {
                     {trmlCommon("previous")}
                   </Button>
                   <div className="text-sm font-medium">
-                     {page} / {totalPages}
+                    {page} / {totalPages}
                   </div>
                   <Button
                     variant="outline"
@@ -450,12 +460,12 @@ export default function GlossaryDetailPage() {
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -49,7 +49,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { GlossaryDetailResponse } from "@/lib/types";
 import { GlossarySummary } from "@/components/glossary/glossary-summary";
 import { useTranslations } from 'next-intl';
-import { useToast } from "@/components/ui/use-toast"; // [NEW] Link to toast
+import { useToast } from "@/hooks/use-toast"; // [NEW] Link to toast
 import { getErrorMessage } from "@/lib/error-utils"; // [NEW] Link to error util
 import { FileDropzone } from "@/components/ui/file-dropzone"; // [NEW] Import Dropzone
 

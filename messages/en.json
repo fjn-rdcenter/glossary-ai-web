@@ -34,7 +34,9 @@
         "translating": "Translating...",
         "completed": "Completed",
         "success": "Success",
-        "of": "of"
+        "cancelled": "Cancelled",
+        "of": "of",
+        "stepIndicator": "Step {current} of {total}"
     },
     "Documents": {
         "title": "Uploaded Documents",
@@ -190,7 +192,7 @@
         "translating": "Translating...",
         "processing": "Processing your document",
         "complete": "complete",
-        "cancel": "Cancel Translation",
+        "cancel": "Cancel",
         "successTitle": "Translation Complete!",
         "successDesc": "Your document has been successfully translated",
         "download": "Download File",
@@ -306,7 +308,43 @@
         "searchEmptyHint": "Try a different search term",
         "createFirst": "Create your first glossary to get started",
         "create": "Create",
-        "showing": "Showing {start} to {end} of {total} {total, plural, one {glossary} other {glossaries}}"
+        "myGlossaries": "My Glossaries",
+        "marketplace": "Marketplace",
+        "sharedWithMe": "Shared with Me",
+        "showing": "Showing {start} to {end} of {total} {total, plural, one {glossary} other {glossaries}}",
+        "share": "Share",
+        "shareDescription": "Manage who can view or clone this glossary.",
+        "userPrincipal": "User",
+        "publicPrincipal": "Public",
+        "userPlaceholder": "Username",
+        "everyonePlaceholder": "Everyone",
+        "expiresOptional": "Expires (Optional):",
+        "setExpiration": "Set expiration",
+        "expires": "Expires",
+        "peopleWithAccess": "People with access",
+        "loadingPermissions": "Loading permissions...",
+        "owner": "Owner",
+        "anyoneWithAccess": "Anyone with access",
+        "noAdditionalPermissions": "No additional permissions granted.",
+        "userRequired": "Please enter a username",
+        "existingPermission": "This user/public access already exists. Please update or revoke the existing permission first.",
+        "shareSuccess": {
+            "title": "Access granted",
+            "success": "Successfully shared with {target}",
+            "anyone": "anyone"
+        },
+        "permissionUpdated": "Permission updated",
+        "accessRemoved": "Access removed",
+        "getGlossary": "Get This",
+        "cloneGlossary": "Clone Glossary",
+        "cloneGlossaryDescription": "Create a copy of this glossary. Make sure to use a unique name.",
+        "clone": "Clone",
+        "cloning": "Cloning...",
+        "cloneSuccess": {
+            "title": "Success",
+            "description": "Glossary cloned successfully"
+        },
+        "alreadyOwner": "You are already the owner of this glossary."
     },
     "History": {
         "historyTitle": "Translation History",
@@ -450,13 +488,15 @@
     },
     "GlossaryListTour": {
         "welcomeTitle": "Manage Glossaries",
-        "welcomeDescription": "This is where you \"teach\" AI how to translate your company's specialized terms correctly.<br/>Using Glossaries makes translations more <b>consistent</b> and <b>accurate</b>.",
+        "welcomeDescription": "This is where you \"teach\" AI how to translate your company's specialized terms correctly.<br></br>Using Glossaries makes translations more <b>consistent</b> and <b>accurate</b>.",
         "createTitle": "Easy Creation",
         "createDescription": "You can create an empty glossary and enter terms manually, or <b>Import</b> quickly from an existing Excel/CSV file.",
+        "tabsTitle": "Explore Glossaries",
+        "tabsDescription": "Switch between <b>My Glossaries</b>, explore the <b>Marketplace</b>, or view glossaries <b>Shared</b> with you.",
         "searchTitle": "Search & Filter",
         "searchDescription": "When you have many dictionaries, use this tool to quickly find them by name or description.",
         "detailTitle": "Glossary Details",
-        "detailDescription": "Each card shows source/target languages and term count.<br/>Click on the card to view terms, or use the <b>(...)</b> menu to Edit/Delete."
+        "detailDescription": "Each card shows source/target languages and term count.<br></br>Click on the card to view terms, or use the <b>(...)</b> menu to Edit/Delete, or click the <b>Share</b> button to share this glossary with others."
     },
     "GlossaryCreateTour": {
         "welcomeTitle": "Create New Glossary",
@@ -468,9 +508,9 @@
         "descTitle": "Description (Optional)",
         "descDescription": "Add notes about the purpose of this glossary to help the team understand.",
         "tabsTitle": "2 Input Methods",
-        "tabsDescription": "<b>Manual Entry</b>: Type each term.<br/><b>Import File</b>: Upload CSV/TXT for bulk import.",
+        "tabsDescription": "<b>Manual Entry</b>: Type each term.<br></br><b>Import File</b>: Upload CSV/TXT for bulk import.",
         "tableTitle": "Terms Table",
-        "tableDescription": "Enter <b>Source</b> (original term) and <b>Target</b> (desired translation).<br/>The system auto-suggests Target = Source if left empty.",
+        "tableDescription": "Enter <b>Source</b> (original term) and <b>Target</b> (desired translation).<br></br>The system auto-suggests Target = Source if left empty.",
         "addTermTitle": "Add New Term",
         "addTermDescription": "Click this button to add a new term entry row. You can add as many terms as you like.",
         "saveTitle": "Summary & Save",

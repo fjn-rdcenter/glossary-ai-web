@@ -48,96 +48,118 @@ export function MultiFileOverview({
   const trmlTranslationExecution = useTranslations("TranslationExecution"); 
 
   return (
-    <Card className="max-w-4xl mx-auto shadow-sm p-4 sm:p-6 border border-border rounded-xl">
-      <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-medium tracking-tight mb-1">{trmlTranslate("configTranslation") || "Config Translation"}</h2>
-        <p className="text-primary text-sm">{trmlTranslate("clickToConfig") || "Click to file to config"}</p>
-      </div>
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-semibold">
+          {trmlTranslate("configTranslation") || "Config Translation"}
+        </CardTitle>
+        <CardDescription>
+          {trmlTranslate("clickToConfig") || "Click to file to config"}
+        </CardDescription>
+      </CardHeader>
 
-      <div className="grid gap-4">
-        {files.map((file, index) => {
-          const Icon = getFileIcon(file.metadata.type);
-          const extension = getFileExtension(file.metadata.name);
+      <CardContent className="space-y-8">
+        {/* Files List */}
+        <div className="space-y-3">
+          {files.map((file, index) => {
+            const Icon = getFileIcon(file.metadata.type);
+            const extension = getFileExtension(file.metadata.name);
 
-          return (
-            <div
-              key={file.id}
-              className={`flex items-center justify-between p-4 rounded-xl border border-border shadow-sm transition-colors cursor-pointer hover:border-primary/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 bg-background`}
-              onClick={() => onSetupFile(file.id)}
-            >
-              <div className="flex items-center gap-4 flex-1">
-                {/* File Icon/Thumbnail */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-primary" />
+            return (
+              <div
+                key={file.id}
+                className="p-4 rounded-lg border border-border bg-background hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => onSetupFile(file.id)}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  {/* Left section: Icon and file info */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    {/* File Icon */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-primary text-primary-foreground shadow-sm border border-background">
+                        {extension}
+                      </div>
+                    </div>
+
+                    {/* File Info */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <p className="font-medium text-foreground truncate text-sm">
+                        {file.metadata.name}
+                      </p>
+                      <span className="text-sm text-muted-foreground mt-0.5">
+                        {formatFileSize(file.metadata.size)}
+                      </span>
+                    </div>
+
+                    {/* Checkmark when configured */}
+                    {file.configStatus === "configured" && (
+                      <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                    )}
                   </div>
-                  <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-primary text-primary-foreground shadow-sm border border-background">
-                    {extension}
+
+                  {/* Right section: Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant={file.configStatus === "configured" ? "outline" : "default"}
+                      size="sm"
+                      className="hidden sm:flex"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onSetupFile(file.id); 
+                      }}
+                    >
+                      <Settings className="w-4 h-4 mr-1.5" />
+                      {file.configStatus === "configured" 
+                        ? (trmlTranslate("editSettings") || "Edit") 
+                        : (trmlTranslate("setup") || "Setup")
+                      }
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="sm:hidden text-muted-foreground hover:text-foreground"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onSetupFile(file.id); 
+                      }}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+
+                    {onRemoveFile && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          onRemoveFile(file.id); 
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-                {/* File Information */}
-                <div className="flex-1 min-w-0 flex flex-col justify-center ml-2">
-                  <p className="font-medium text-foreground truncate text-sm sm:text-base">{file.metadata.name}</p>
-                  <span className="text-sm text-primary/80 mt-0.5">
-                    {formatFileSize(file.metadata.size)}
-                  </span>
-                </div>
               </div>
-
-              <div className="flex items-center gap-2 sm:gap-3 ml-4" onClick={(e) => e.stopPropagation()}>
-                {/* Checkmark when configured */}
-                {file.configStatus === "configured" ? (
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-green-600" />
-                  </div>
-                ) : null}
-
-                {/* Setup button as requested by user to keep */}
-                <Button
-                  variant={file.configStatus === "configured" ? "outline" : "default"}
-                  size="sm"
-                  className="hidden sm:flex"
-                  onClick={(e) => { e.stopPropagation(); onSetupFile(file.id); }}
-                >
-                  <Settings className="w-4 h-4 mr-1 sm:mr-2" />
-                  {file.configStatus === "configured" ? (trmlTranslate("editSettings") || "Edit") : (trmlTranslate("setup") || "Setup")}
-                </Button>
-
-                {/* Setup icon for mobile */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="sm:hidden text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); onSetupFile(file.id); }}
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-
-                {/* Delete button */}
-                {onRemoveFile && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors relative left-1"
-                    onClick={(e) => { e.stopPropagation(); onRemoveFile(file.id); }}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
       {files.length > 0 && (
-        <div className="flex justify-end items-center mt-8 pt-2">
-          <Button onClick={onStartAll} disabled={!isAllConfigured} className="gap-2 min-w-[120px] px-6">
+        <div className="flex justify-end pt-4">
+          <Button onClick={onStartAll} disabled={!isAllConfigured} className="gap-2">
             {trmlTranslationExecution("startTranslating") || "Start Translating"} <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       )}
+      </CardContent>
     </Card>
   );
 }

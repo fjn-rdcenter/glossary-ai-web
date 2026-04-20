@@ -161,13 +161,17 @@ function TranslatePageContent() {
          pollingInterval.current = null;
       }
     }
+  }, [fileConfigs, appState, checkStatus]);
+
+  // Clean up interval only when component unmounts
+  useEffect(() => {
     return () => {
        if (pollingInterval.current) {
            clearInterval(pollingInterval.current);
            pollingInterval.current = null;
        }
     };
-  }, [fileConfigs, appState, checkStatus]);
+  }, []);
 
   // --- Handlers ---
   

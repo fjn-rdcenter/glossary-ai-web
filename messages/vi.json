@@ -34,7 +34,9 @@
         "translating": "Đang dịch...",
         "completed": "Hoàn thành",
         "success": "Thành công",
-        "of": "trên"
+        "cancelled": "Đã hủy",
+        "of": "trên",
+        "stepIndicator": "Bước {current} trên {total}"
     },
     "Documents": {
         "title": "Tài liệu đã tải lên",
@@ -190,7 +192,7 @@
         "translating": "Đang dịch...",
         "processing": "Đang xử lý tài liệu",
         "complete": "Hoàn tất",
-        "cancel": "Hủy dịch",
+        "cancel": "Hủy",
         "successTitle": "Dịch thành công!",
         "successDesc": "Tài liệu của bạn đã được dịch thành công",
         "download": "Tải tệp",
@@ -306,7 +308,43 @@
         "searchEmptyHint": "Thử từ khóa khác",
         "createFirst": "Tạo bộ thuật ngữ đầu tiên để bắt đầu",
         "create": "Tạo",
-        "showing": "Hiển thị {start}-{end} trên {total} {total, plural, one {bộ thuật ngữ} other {bộ thuật ngữ}}"
+        "myGlossaries": "Thuật ngữ của tôi",
+        "marketplace": "Công khai",
+        "sharedWithMe": "Được chia sẻ với tôi",
+        "showing": "Hiển thị {start}-{end} trên {total} {total, plural, one {bộ thuật ngữ} other {bộ thuật ngữ}}",
+        "share": "Chia sẻ",
+        "shareDescription": "Quản lý ai có thể xem hoặc sao chép bộ thuật ngữ này.",
+        "userPrincipal": "Người dùng",
+        "publicPrincipal": "Công khai",
+        "userPlaceholder": "Tên người dùng",
+        "everyonePlaceholder": "Mọi người",
+        "expiresOptional": "Hết hạn vào (không bắt buộc)",
+        "setExpiration": "Đặt ngày hết hạn",
+        "expires": "Hết hạn",
+        "peopleWithAccess": "Người có quyền truy cập",
+        "loadingPermissions": "Đang tải quyền truy cập...",
+        "owner": "Chủ sở hữu",
+        "anyoneWithAccess": "Mọi người có quyền truy cập",
+        "noAdditionalPermissions": "Không có quyền nào được cấp.",
+        "userRequired": "Vui lòng nhập tên người dùng",
+        "existingPermission": "Người dùng hoặc quyền truy cập công khai này đã tồn tại. Vui lòng cập nhật hoặc thu hồi quyền hiện có trước.",
+        "shareSuccess": {
+            "title": "Đã cấp quyền truy cập",
+            "success": "Đã chia sẻ thành công với {target}",
+            "anyone": "mọi người"
+        },
+        "permissionUpdated": "Quyền đã được cập nhật",
+        "accessRemoved": "Đã xóa quyền truy cập",
+        "getGlossary": "Lấy bộ thuật ngữ này",
+        "cloneGlossary": "Sao chép bộ thuật ngữ",
+        "cloneGlossaryDescription": "Tạo một bản sao của bộ thuật ngữ này. Hãy đảm bảo sử dụng một tên duy nhất.",
+        "clone": "Sao chép",
+        "cloning": "Đang sao chép...",
+        "cloneSuccess": {
+            "title": "Thành công",
+            "description": "Sao chép bộ thuật ngữ thành công"
+        },
+        "alreadyOwner": "Bạn đã có bộ thuật ngữ này rồi."
     },
     "History": {
         "historyTitle": "Lịch sử dịch",
@@ -453,10 +491,12 @@
         "welcomeDescription": "Đây là nơi bạn thiết lập các thuật ngữ chuyên ngành để hệ thống dịch đúng theo quy ước thuật ngữ.<br></br><br></br>Sử dụng Glossary giúp bản dịch <b>nhất quán</b> và <b>chính xác</b> hơn.",
         "createTitle": "Tạo mới dễ dàng",
         "createDescription": "Bạn có thể tạo bộ thuật ngữ rỗng và nhập tay từng từ, hoặc <b>Import</b> nhanh từ file Excel/CSV có sẵn.",
+        "tabsTitle": "Khám phá bộ thuật ngữ",
+        "tabsDescription": "Chuyển qua lại giữa <b>My Glossaries</b>, tìm kiếm trên <b>Marketplace</b>, hoặc xem các bộ từ được <b>Shared</b> (chia sẻ) với bạn.",
         "searchTitle": "Tìm kiếm & Lọc",
         "searchDescription": "Khi số lượng bộ từ điển nhiều lên, hãy dùng công cụ này để tìm nhanh theo tên hoặc mô tả.",
         "detailTitle": "Chi tiết bộ từ điển",
-        "detailDescription": "Mỗi thẻ hiển thị ngôn ngữ nguồn/đích và số lượng từ.<br></br><br></br>Bấm vào thẻ để xem danh sách từ, hoặc dùng menu <b>(...)</b> để Chỉnh sửa/Xóa."
+        "detailDescription": "Mỗi thẻ hiển thị ngôn ngữ nguồn/đích và số lượng từ.<br></br><br></br>Bấm vào thẻ để xem danh sách từ, hoặc dùng menu <b>(...)</b> để Chỉnh sửa/Xóa, hoặc bấm vào nút <b>Share</b> để chia sẻ bộ từ điển này với người khác."
     },
     "GlossaryCreateTour": {
         "welcomeTitle": "Tạo Bộ Thuật Ngữ Mới",

@@ -34,7 +34,9 @@
         "translating": "翻訳中...",
         "completed": "完了",
         "success": "成功",
-        "of": "／"
+        "cancelled": "キャンセル済み",
+        "of": "／",
+        "stepIndicator": "ステップ {current} / {total}"
     },
     "Documents": {
         "title": "アップロード済みのドキュメント",
@@ -190,7 +192,7 @@
         "translating": "翻訳中...",
         "processing": "ドキュメントを処理しています",
         "complete": "完了",
-        "cancel": "翻訳をキャンセル",
+        "cancel": "キャンセル",
         "successTitle": "翻訳が完了しました！",
         "successDesc": "ドキュメントの翻訳が成功しました",
         "download": "ファイルをダウンロード",
@@ -306,7 +308,43 @@
         "searchEmptyHint": "別の検索ワードを試してください",
         "createFirst": "最初の用語集を作成して始めましょう",
         "create": "作成",
-        "showing": "全 {total} {total, plural, one {用語集} other {用語集}}中 {start}～{end} 件を表示"
+        "myGlossaries": "マイ用語集",
+        "marketplace": "公開",
+        "sharedWithMe": "共有アイテム",
+        "showing": "全 {total} {total, plural, one {用語集} other {用語集}}中 {start}～{end} 件を表示",
+        "share": "共有",
+        "shareDescription": "この用語集を閲覧または複製できるユーザーを管理します。",
+        "userPrincipal": "ユーザー",
+        "publicPrincipal": "公開",
+        "userPlaceholder": "ユーザー名",
+        "everyonePlaceholder": "全員",
+        "expiresOptional": "有効期限（任意）:",
+        "setExpiration": "有効期限を設定",
+        "expires": "有効期限",
+        "peopleWithAccess": "アクセス権を持つユーザー",
+        "loadingPermissions": "権限を読み込み中...",
+        "owner": "所有者",
+        "anyoneWithAccess": "アクセス可能な全員",
+        "noAdditionalPermissions": "追加の権限は付与されていません。",
+        "userRequired": "ユーザー名を入力してください",
+        "existingPermission": "このユーザーまたは公開アクセスは既に存在します。既存の権限を更新するか、削除してください。",
+        "shareSuccess": {
+            "title": "アクセスが付与されました",
+            "success": "{target} と共有しました",
+            "anyone": "誰でも"
+        },
+        "permissionUpdated": "権限が更新されました",
+        "accessRemoved": "アクセスが削除されました",
+        "getGlossary": "入手",
+        "cloneGlossary": "用語集を複製",
+        "cloneGlossaryDescription": "この用語集のコピーを作成します。一意の名前を使用してください。",
+        "clone": "複製",
+        "cloning": "複製中...",
+        "cloneSuccess": {
+            "title": "成功",
+            "description": "用語集が正常に複製されました"
+        },
+        "alreadyOwner": "この用語集はすでにあなたが所有しています。"
     },
     "History": {
         "historyTitle": "翻訳履歴",
@@ -450,13 +488,15 @@
     },
     "GlossaryListTour": {
         "welcomeTitle": "用語集の管理",
-        "welcomeDescription": "ここでは、企業の専門用語を正しく翻訳する方法を AI に「教える」ことができます。<br/>用語集を使用すると、翻訳の<b>一貫性</b>と<b>正確性</b>が向上します。",
+        "welcomeDescription": "ここでは、企業の専門用語を正しく翻訳する方法を AI に「教える」ことができます。<br></br>用語集を使用すると、翻訳の<b>一貫性</b>と<b>正確性</b>が向上します。",
         "createTitle": "簡単に作成",
         "createDescription": "空の用語集を作成して用語を手動で入力するか、既存の Excel/CSV ファイルからすばやく<b>インポート</b>できます。",
+        "tabsTitle": "用語集を探索",
+        "tabsDescription": "<b>マイ用語集</b>、<b>マーケットプレイス</b>の探索、または<b>共有</b>された用語集の表示を切り替えます。",
         "searchTitle": "検索とフィルタ",
         "searchDescription": "辞書が増えてきたら、このツールを使って名前や説明からすばやく検索できます。",
         "detailTitle": "用語集の詳細",
-        "detailDescription": "各カードには、翻訳元/翻訳先の言語と用語数が表示されます。<br/>カードをクリックして用語を表示するか、<b>(...)</b> メニューを使用して編集/削除します。"
+        "detailDescription": "各カードには原文/訳文の言語と用語数が表示されます。<br></br>カードをクリックして用語を表示するか、(...) メニューで編集/削除を行ってください。また、[共有] ボタンでこの用語集を他のユーザーと共有することもできます。"
     },
     "GlossaryCreateTour": {
         "welcomeTitle": "✨ 新しい用語集の作成",
@@ -468,9 +508,9 @@
         "descTitle": "説明（任意）",
         "descDescription": "この用語集の使用目的についてのメモを追加すると、チームが理解しやすくなります。",
         "tabsTitle": "2つの入力方法",
-        "tabsDescription": "<b>手動入力</b>: 用語を1つずつ入力します。<br/><b>ファイルインポート</b>: CSV/TXTをアップロードして一括インポートします。",
+        "tabsDescription": "<b>手動入力</b>: 用語を1つずつ入力します。<br></br><b>ファイルインポート</b>: CSV/TXTをアップロードして一括インポートします。",
         "tableTitle": "用語テーブル",
-        "tableDescription": "<b>原文</b>（元の用語）と<b>訳文</b>（希望する翻訳）を入力します。<br/>空欄の場合、システムは自動的に訳文＝原文として提案します。",
+        "tableDescription": "<b>原文</b>（元の用語）と<b>訳文</b>（希望する翻訳）を入力します。<br></br>空欄の場合、システムは自動的に訳文＝原文として提案します。",
         "addTermTitle": "新しい用語を追加",
         "addTermDescription": "このボタンをクリックして、新しい用語の入力行を追加します。用語はいくつでも追加できます。",
         "saveTitle": "概要と保存",
