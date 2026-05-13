@@ -5,22 +5,28 @@
 
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-export const getApiBaseUrl = () => {
-  if (typeof window !== "undefined") {
-      const hostname = window.location.hostname;
+export const getApiBaseUrl = (): string => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      if (hostname.includes("translatesphere.fujinet.net")) {
-        return "https://translatesphere.fujinet.net"; 
-      }
-      
-      if (hostname.includes("localhost")) {
-        return "http://localhost:18000";
-      }
-      
-      return "http://172.16.6.10:18000";
-    }
+  if (typeof window === "undefined") {
+    return envUrl || "http://172.16.6.10:18000";
+  }
 
-    return process.env.NEXT_PUBLIC_API_URL || "http://172.16.6.10:18000";
+  const { hostname, host } = window.location;
+
+  if (hostname.includes("translatesphere.fujinet.net")) {
+    return "https://translatesphere.fujinet.net";
+  }
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "http://localhost:28000";
+  }
+
+  if (host === "172.16.6.10:23000") {
+    return "http://172.16.6.10:28000";
+  }
+
+  return envUrl || "http://172.16.6.10:18000";
 };
 
 export const API_CONFIG = {
