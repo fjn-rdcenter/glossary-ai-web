@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useRouter, usePathname } from "@/i18n/routing"
-import { LayoutDashboard, FileText, BookOpen, History, LogOut, Globe, PlayCircle, X } from "lucide-react"
+import { LayoutDashboard, FileText, BookOpen, History, LogOut, PlayCircle, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AuthService } from "@/api/services"
 import {
@@ -32,6 +32,25 @@ export function Sidebar() {
   const { setOpenMobile, setOpen, isMobile } = useSidebar()
   const trml = useTranslations("Sidebar");
   const locale = useLocale();
+
+  const localeDisplayMap: Record<string, { flag: string; label: string }> = {
+    en: { 
+      flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1ec-1f1e7.svg", 
+      label: "English" 
+    },
+    vi: { 
+      flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1fb-1f1f3.svg", 
+      label: "Tiếng Việt" 
+    },
+    ja: { 
+      flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1ef-1f1f5.svg", 
+      label: "日本語" 
+    },
+  };
+  const localeDisplay = localeDisplayMap[locale] ?? {
+    flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f310.svg",
+    label: locale.toUpperCase(),
+  };
 
   const handleLogout = async () => {
     setOpenMobile(false);
@@ -92,8 +111,14 @@ export function Sidebar() {
                 id="sidebar-language-switcher"
                 className="w-full flex items-center gap-3 justify-start px-3 py-2.5 h-auto text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-2xl"
               >
-                <Globe className="w-5 h-5 shrink-0" />
-                <span className="uppercase">{locale}</span>
+                <span className="w-5 h-5 shrink-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
+                  <img 
+                    src={localeDisplay.flag} 
+                    alt={localeDisplay.label}
+                    className="w-full h-auto object-cover" // Giúp ảnh phẳng và lấp đầy khung
+                  />
+                </span>
+                <span>{localeDisplay.label}</span>
               </SidebarMenuButton>
             </LanguageSwitcher>
           </SidebarMenuItem>

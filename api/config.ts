@@ -47,10 +47,17 @@ export const API_CONFIG = {
     // Glossaries
     GLOSSARIES: {
       BASE: "/api/v2/glossaries",
+      PUBLIC: "/api/v2/glossaries/public",
+      SHARED_WITH_ME: "/api/v2/glossaries/shared-with-me",
       BY_ID: (id: string) => `/api/v2/glossaries/${id}`,
       TERMS: (glossaryId: string) => `/api/v2/glossaries/${glossaryId}/terms`,
       TERM_BY_ID: (glossaryId: string, termId: string) => 
         `/api/v2/glossaries/${glossaryId}/terms/${termId}`,
+      PERMISSIONS: (id: string) => `/api/v2/glossaries/${id}/permissions`,
+      MY_PERMISSION: (id: string) => `/api/v2/glossaries/${id}/permissions/my-permission`,
+      PERMISSION_BY_ID: (id: string, permissionId: string) => 
+        `/api/v2/glossaries/${id}/permissions/${permissionId}`,
+      CLONE: (id: string) => `/api/v2/glossaries/${id}/clone`,
     },
     
     // Documents

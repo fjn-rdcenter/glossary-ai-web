@@ -271,3 +271,50 @@ export type UpdateGlossaryRequest = GlossaryUpdate;
 export type TermResponse = GlossaryTermResponse;
 export type StartTranslationRequest = TranslationJobCreate;
 export type StartTranslationResponse = TranslationJobResponse;
+
+// --- Glossary Permission Schemas ---
+
+export type PermissionStatus = "pending" | "accepted" | "revoked";
+export type PermissionType = "view" | "clone" | "edit" | "admin";
+export type PrincipalType = "user" | "team" | "public" | "link";
+
+export interface GlossaryPermissionBaseResponse {
+  principalType: PrincipalType;
+  principalId: string | null;
+  permission: PermissionType;
+  expiresAt: string | null;
+  id: string;
+  status: PermissionStatus;
+  grantedBy: string;
+  createdAt: string;
+}
+
+export interface GlossaryPermissionAdminResponse {
+  glossaryId: string;
+  ownerId: string;
+  ownerName: string;
+  publicPermission: GlossaryPermissionBaseResponse | null;
+  userPermissions: GlossaryPermissionBaseResponse[];
+}
+
+export interface GlossaryPermissionCreate {
+  principalType: PrincipalType;
+  principalId?: string | null;
+  permission?: PermissionType;
+  expiresAt?: string | null;
+}
+
+export interface GlossaryPermissionUpdate {
+  permission?: PermissionType | null;
+  status?: PermissionStatus | null;
+  expiresAt?: string | null;
+}
+
+export interface MyGlossaryPermissionResponse {
+  permission: PermissionType | "owner";
+}
+
+export interface GlossaryCloneCreate {
+  name?: string | null;
+  description?: string | null;
+}

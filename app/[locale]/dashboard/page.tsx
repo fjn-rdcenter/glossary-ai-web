@@ -14,6 +14,7 @@ import {
   History,
   ArrowRight,
   Lightbulb,
+  Loader2,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -45,11 +46,11 @@ import { useTranslations, useLocale } from "next-intl";
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from "react-joyride";
 import { Logo } from "@/components/logo";
 import { toast } from "sonner";
+import { usePendingUploadStore } from "@/lib/pending-upload-store";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
-  const [isDragActive, setIsDragActive] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [stats, setStats] = useState({
     totalTranslations: 0,
@@ -57,6 +58,7 @@ export default function DashboardPage() {
     uniqueDocuments: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const trml = useTranslations("Dashboard");
   const trmlTour = useTranslations("DashboardTour");
   const trmlOnboarding = useTranslations("Onboarding");
@@ -86,6 +88,8 @@ export default function DashboardPage() {
   const [showSparkle, setShowSparkle] = useState(false);
 
   const { user, loading: userLoading, refreshUser } = useUser();
+  const setPendingFiles = usePendingUploadStore((state) => state.setPendingFiles);
+  const clearPendingFiles = usePendingUploadStore((state) => state.clearPendingFiles);
 
   useEffect(() => {
     setIsMounted(true);
@@ -155,9 +159,7 @@ export default function DashboardPage() {
   // Clean session storage... (Giữ nguyên)
   useEffect(() => {
     sessionStorage.clear(); // Xóa sạch cho gọn
-    if (typeof window !== "undefined") {
-      delete (window as any).__pendingFile;
-    }
+    clearPendingFiles();
   }, []);
 
   // --- CẤU HÌNH TOUR MỚI ---
@@ -390,18 +392,27 @@ export default function DashboardPage() {
       if (sizeError) {
         setShowSizeWarning(true);
       } else {
-        toast.error("Invalid file format or too many files.");
+        toast.error("Invalid file format.");
       }
-      return;
     }
-    setFiles(acceptedFiles);
+
+    if (acceptedFiles.length === 0) return;
+
+    setFiles(prev => {
+      const combined = [...prev, ...acceptedFiles];
+      if (combined.length > 5) {
+        toast.warning(trml("maxFilesWarning") || "You can only upload up to 5 files. We took the first 5.");
+        return combined.slice(0, 5);
+      }
+      return combined;
+    });
   }, []);
   const isPublicDomain =
     typeof window !== "undefined" &&
     window.location.hostname.includes("translatesphere.fujinet.net");
   const maxSizeMB = isPublicDomain ? 20 : 50;
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     maxSize: maxSizeMB * 1024 * 1024,
     accept: {
@@ -410,14 +421,44 @@ export default function DashboardPage() {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
     },
-    multiple: false
+    multiple: true
   });
   
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (files.length > 0) {
-      sessionStorage.setItem("pendingUploadFile", JSON.stringify({ name: files[0].name, size: files[0].size, type: files[0].type }));
-      if (typeof window !== "undefined") (window as any).__pendingFile = files[0];
-      router.push("/dashboard/translate");
+      setIsUploadingFiles(true);
+      try {
+        // Upload all files concurrently. Default language pairs will be overridden in the config screen if needed.
+        const uploadPromises = files.map(async (file) => {
+          // Use default "jp" to "vn" just for upload endpoint requirement.
+          const response = await TranslationService.uploadDocument(file, "jp", "vn");
+          return {
+            id: crypto.randomUUID(),
+            file,
+            documentId: response.id,
+            metadata: {
+              name: response.name,
+              size: response.size,
+              type: response.type,
+            }
+          };
+        });
+
+        const uploadedInfos = await Promise.all(uploadPromises);
+
+        setPendingFiles(uploadedInfos);
+        
+        // Remove old sessionStorage variables that were for a single file state
+        sessionStorage.removeItem("pendingUploadFiles");
+        sessionStorage.removeItem("pendingUploadFile");
+        
+        router.push("/dashboard/translate");
+      } catch (error) {
+        console.error("Failed to upload test documents:", error);
+        toast.error(trml("uploadFailed") || "Failed to upload documents. Please try again.");
+      } finally {
+        setIsUploadingFiles(false);
+      }
     }
   };
 
@@ -504,8 +545,26 @@ export default function DashboardPage() {
                     {files.map((file, index) => (
                         <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
                     ))}
-                    <div className="flex justify-center pt-4">
-                        <Button onClick={handleContinue} size="lg" className="min-w-[220px] gap-2">{trml('continue')} <ArrowRight className="w-4 h-4" /></Button>
+                    <div className="flex justify-center pt-4 gap-4">
+                        {files.length < 5 && (
+                          <div {...getRootProps()}>
+                            <input {...getInputProps()} />
+                            <Button variant="outline" size="lg" className="min-w-[150px]">
+                              {trml('addMoreFiles') || "Add More Files"}
+                            </Button>
+                          </div>
+                        )}
+                        <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
+                          {isUploadingFiles ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
+                            </>
+                          ) : (
+                            <>
+                                {trml('continue')} <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </Button>
                     </div>
                 </motion.div>
               )}
