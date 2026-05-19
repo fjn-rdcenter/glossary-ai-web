@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { TranslationService, GlossaryService, AuthService } from "@/api/services";
 import { useUser } from "@/components/contexts/user-context";
+import { nanoid } from 'nanoid';
 
 import {
   Upload,
@@ -433,7 +434,7 @@ export default function DashboardPage() {
           // Use default "jp" to "vn" just for upload endpoint requirement.
           const response = await TranslationService.uploadDocument(file, "jp", "vn");
           return {
-            id: crypto.randomUUID(),
+            id: nanoid(),
             file,
             documentId: response.id,
             metadata: {

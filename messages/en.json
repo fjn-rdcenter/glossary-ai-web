@@ -120,6 +120,7 @@
         "fileTooLargeTitle": "File Too Large",
         "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file.",
         "uploading": "Uploading...",
+        "uploadFailed": "Uploaded Failed",
         "addMoreFiles": "Add more files",
         "maxFilesWarning": "You have reached the maximum number of files allowed for translation. Please proceed with the current files or remove some to add new ones."
     },

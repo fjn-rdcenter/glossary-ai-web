@@ -120,6 +120,7 @@
         "fileTooLargeTitle": "ファイルが大きすぎます",
         "fileTooLargeDescription": "アップロードしようとしているファイルは、最大サイズ制限の{maxSize}MBを超えています。より小さなファイルを選択してください。",
         "uploading": "アップロード中...",
+        "uploadFailed": "Uploaded Failed",
         "addMoreFiles": "ファイルを追加",
         "maxFilesWarning": "翻訳可能なファイルの最大数に達しました。現在のファイルで続行するか、いくつか削除して新しいファイルを追加してください。"
     },
