@@ -4,10 +4,7 @@ import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
-import { StepIndicator } from "@/components/step-indicator";
-import { DocumentSetupStep } from "./translating-process/document-setup-step";
-import { GlossarySelectionStep } from "./translating-process/glossary-selection-step";
-import { TranslationExecutionStep } from "./translating-process/translation-execution-step";
+import { UnifiedFileSetup } from "./components/unified-file-setup";
 import { TranslationService, GlossaryService, AuthService } from "@/api/services";
 import { useUser } from "@/components/contexts/user-context";
 import { usePendingUploadStore } from "@/lib/pending-upload-store";
@@ -26,33 +23,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Lightbulb } from "lucide-react";
+import { AlertTriangle, Lightbulb, Settings, FileText } from "lucide-react";
 import Joyride, { CallBackProps, EVENTS, ACTIONS, STATUS, Step, TooltipRenderProps } from "react-joyride";
 
 export const dynamic = "force-dynamic";
-
-const steps = [
-  { id: "document", label: "Document" },
-  { id: "glossary", label: "Glossary" },
-  { id: "preview", label: "Preview" },
-];
 
 function TranslatePageContent() {
   const router = useRouter();
   const trmlCommon = useTranslations("Common");
   const trmlOnboarding = useTranslations("Onboarding");
   const trmlTranslate = useTranslations("Translate");
-  
+  const trmlDocumentSetup = useTranslations("DocumentSetup");
+  const trmlGlossarySelection = useTranslations("GlossarySelection");
+  const trmlTranslationExecution = useTranslations("TranslationExecution");
+
   // Stores
   const { pendingFiles } = usePendingUploadStore();
-  
+
   // Application State
   const [appState, setAppState] = useState<"loading" | "overview" | "setup" | "translating">("loading");
-  
+
   const [fileConfigs, setFileConfigs] = useState<FileConfigState[]>([]);
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(0); // For setup wizard
-  
+
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
@@ -69,27 +62,32 @@ function TranslatePageContent() {
 
   // Initialize from pendingFiles
   useEffect(() => {
-     if (pendingFiles && pendingFiles.length > 0 && appState === "loading") {
-         const initialConfigs: FileConfigState[] = pendingFiles.map(pf => ({
-             id: pf.id,
-             file: pf.file,
-             documentId: pf.documentId,
-             metadata: pf.metadata,
-             sourceLanguage: "jp",
-             targetLanguage: "vn",
-             translateImages: false,
-             glossaryOption: "none",
-             selectedGlossaries: [],
-             configStatus: "pending",
-             translationStatus: "idle",
-             jobId: null,
-             progress: 0,
-         }));
-         setFileConfigs(initialConfigs);
-         setAppState("overview");
-     } else if (appState === "loading") {
-         router.push("/dashboard");
-     }
+    if (pendingFiles && pendingFiles.length > 0 && appState === "loading") {
+      const initialConfigs: FileConfigState[] = pendingFiles.map(pf => ({
+        id: pf.id,
+        file: pf.file,
+        documentId: pf.documentId,
+        metadata: pf.metadata,
+        sourceLanguage: "jp",
+        targetLanguage: "vn",
+        translateImages: false,
+        glossaryOption: "none",
+        selectedGlossaries: [],
+        configStatus: "pending",
+        translationStatus: "idle",
+        jobId: null,
+        progress: 0,
+      }));
+      setFileConfigs(initialConfigs);
+      if (initialConfigs.length > 0) {
+        setEditingFileId(initialConfigs[0].id);
+        setAppState("setup");
+      } else {
+        setAppState("overview");
+      }
+    } else if (appState === "loading") {
+      router.push("/dashboard");
+    }
   }, [pendingFiles, appState, router]);
 
   // Fetch Glossaries when needed
@@ -128,18 +126,18 @@ function TranslatePageContent() {
       setFileConfigs(prev => prev.map(file => {
         const update = statusUpdates.find(u => u.id === file.id);
         if (!update) return file;
-        
+
         let newStatus: TranslationStatus = "translating";
         if (update.status.status === "completed") newStatus = "success";
         else if (update.status.status === "failed") newStatus = "error";
         else if (update.status.status === "cancelled") newStatus = "cancelled";
 
         return {
-           ...file,
-           translationStatus: newStatus,
-           progress: update.status.status === "completed" ? 100 : update.status.progress,
-           errorMessage: update.status.errorMessage,
-           targetDocumentId: update.status.targetDocument
+          ...file,
+          translationStatus: newStatus,
+          progress: update.status.status === "completed" ? 100 : update.status.progress,
+          errorMessage: update.status.errorMessage,
+          targetDocumentId: update.status.targetDocument
         };
       }));
     } catch (error) {
@@ -157,8 +155,8 @@ function TranslatePageContent() {
       }
     } else {
       if (pollingInterval.current) {
-         clearInterval(pollingInterval.current);
-         pollingInterval.current = null;
+        clearInterval(pollingInterval.current);
+        pollingInterval.current = null;
       }
     }
   }, [fileConfigs, appState, checkStatus]);
@@ -166,168 +164,203 @@ function TranslatePageContent() {
   // Clean up interval only when component unmounts
   useEffect(() => {
     return () => {
-       if (pollingInterval.current) {
-           clearInterval(pollingInterval.current);
-           pollingInterval.current = null;
-       }
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+        pollingInterval.current = null;
+      }
     };
   }, []);
 
   // --- Handlers ---
-  
+
   const handleSetupFile = (id: string) => {
-      setEditingFileId(id);
-      setCurrentStep(0);
-      setAppState("setup");
+    setEditingFileId(id);
+    setAppState("setup");
   };
 
   const handleUpdateEditingFile = (updates: Partial<FileConfigState>) => {
-      setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates } : f));
+    setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates } : f));
   };
 
   const editingFile = fileConfigs.find(f => f.id === editingFileId);
 
-  const handleNextStep = () => {
-     if (currentStep < 2) {
-         setCurrentStep(c => c + 1);
-     }
-  };
+  const handleSaveConfig = (applyToAll: boolean = false) => {
+    const currentEditingFile = fileConfigs.find(f => f.id === editingFileId);
+    if (!currentEditingFile) return;
 
-  const handlePrevStep = () => {
-    if (currentStep > 0) {
-        setCurrentStep(c => c - 1);
+    let updatedConfigs: FileConfigState[] = [];
+    if (applyToAll) {
+      updatedConfigs = fileConfigs.map(f => ({
+        ...f,
+        sourceLanguage: currentEditingFile.sourceLanguage,
+        targetLanguage: currentEditingFile.targetLanguage,
+        translateImages: currentEditingFile.translateImages,
+        glossaryOption: currentEditingFile.glossaryOption,
+        selectedGlossaries: currentEditingFile.selectedGlossaries,
+        configStatus: "configured"
+      }));
     } else {
-        setAppState("overview");
-        setEditingFileId(null);
+      updatedConfigs = fileConfigs.map(f => f.id === editingFileId ? { ...f, configStatus: "configured" } : f);
+    }
+    setFileConfigs(updatedConfigs);
+
+    // Auto-advance logic: Find the next file that is still pending configuration
+    let nextUnconfiguredId: string | null = null;
+    if (!applyToAll) {
+      const currentIndex = fileConfigs.findIndex(f => f.id === editingFileId);
+      // Look for next pending files starting after the current index
+      const nextPending = fileConfigs.slice(currentIndex + 1).find(f => f.configStatus === "pending");
+      if (nextPending) {
+        nextUnconfiguredId = nextPending.id;
+      } else {
+        // Wrap around to find any pending file from the start
+        const prevPending = fileConfigs.slice(0, currentIndex).find(f => f.configStatus === "pending");
+        if (prevPending) {
+          nextUnconfiguredId = prevPending.id;
+        }
+      }
+    }
+
+    if (nextUnconfiguredId) {
+      setEditingFileId(nextUnconfiguredId);
+      setAppState("setup");
     }
   };
 
-  const handleSaveConfig = (applyToAll: boolean = false) => {
-      const currentEditingFile = fileConfigs.find(f => f.id === editingFileId);
-      if (applyToAll && currentEditingFile) {
-          setFileConfigs(prev => prev.map(f => ({
-              ...f,
-              sourceLanguage: currentEditingFile.sourceLanguage,
-              targetLanguage: currentEditingFile.targetLanguage,
-              translateImages: currentEditingFile.translateImages,
-              glossaryOption: currentEditingFile.glossaryOption,
-              selectedGlossaries: currentEditingFile.selectedGlossaries,
-              configStatus: "configured"
-          })));
-      } else {
-          handleUpdateEditingFile({ configStatus: "configured" });
+  const handleStartAll = async () => {
+    setAppState("translating");
+
+    // Start translation for all configured and idle files
+    const filesToStart = fileConfigs.filter(f => f.configStatus === "configured" && f.translationStatus === "idle");
+
+    // Optimistically set to translating
+    setFileConfigs(prev => prev.map(f =>
+      filesToStart.find(fs => fs.id === f.id)
+        ? { ...f, translationStatus: "translating", progress: 0 }
+        : f
+    ));
+
+    for (const file of filesToStart) {
+      try {
+        const job = await TranslationService.startTranslation({
+          sourceLanguage: file.sourceLanguage,
+          targetLanguage: file.targetLanguage,
+          documentId: file.documentId,
+          isTranslateImage: file.translateImages,
+          glossaries: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? file.selectedGlossaries : undefined,
+        });
+
+        let newStatus: TranslationStatus = "translating";
+        if (job.status === "completed") newStatus = "success";
+        else if (job.status === "failed") newStatus = "error";
+        else if (job.status === "cancelled") newStatus = "cancelled";
+
+        setFileConfigs(prev => prev.map(f => f.id === file.id ? {
+          ...f,
+          jobId: job.id,
+          translationStatus: newStatus,
+          progress: job.status === "completed" ? 100 : job.progress || 0,
+        } : f));
+      } catch (error) {
+        console.error(`Failed to start translation for ${file.metadata.name}`, error);
+        setFileConfigs(prev => prev.map(f => f.id === file.id ? { ...f, translationStatus: "error", errorMessage: "Failed to start" } : f));
       }
-      setAppState("overview");
-      setEditingFileId(null);
+    }
   };
 
-  const handleStartAll = async () => {
-     setAppState("translating");
-     
-     // Start translation for all configured and idle files
-     const filesToStart = fileConfigs.filter(f => f.configStatus === "configured" && f.translationStatus === "idle");
-     
-     // Optimistically set to translating
-     setFileConfigs(prev => prev.map(f => 
-         filesToStart.find(fs => fs.id === f.id) 
-           ? { ...f, translationStatus: "translating", progress: 0 } 
-           : f
-     ));
+  const handleAddFiles = (newFiles: Array<{ documentId: string; metadata: { name: string; size: number; type: string } }>) => {
+    const newConfigs: FileConfigState[] = newFiles.map(f => ({
+      id: `file_${Date.now()}_${Math.random()}`,
+      documentId: f.documentId,
+      metadata: f.metadata,
+      sourceLanguage: "jp",
+      targetLanguage: "vn",
+      translateImages: false,
+      glossaryOption: "none",
+      selectedGlossaries: [],
+      configStatus: "pending",
+      translationStatus: "idle",
+      jobId: null,
+      progress: 0,
+    }));
 
-     for (const file of filesToStart) {
-         try {
-             const job = await TranslationService.startTranslation({
-                 sourceLanguage: file.sourceLanguage,
-                 targetLanguage: file.targetLanguage,
-                 documentId: file.documentId,
-                 isTranslateImage: file.translateImages,
-                 glossaries: file.glossaryOption === "existing" ? file.selectedGlossaries : undefined,
-             });
-             
-             let newStatus: TranslationStatus = "translating";
-             if (job.status === "completed") newStatus = "success";
-             else if (job.status === "failed") newStatus = "error";
-             else if (job.status === "cancelled") newStatus = "cancelled";
+    setFileConfigs(prev => [...prev, ...newConfigs]);
 
-             setFileConfigs(prev => prev.map(f => f.id === file.id ? { 
-                ...f, 
-                jobId: job.id,
-                translationStatus: newStatus,
-                progress: job.status === "completed" ? 100 : job.progress || 0,
-             } : f));
-         } catch (error) {
-             console.error(`Failed to start translation for ${file.metadata.name}`, error);
-             setFileConfigs(prev => prev.map(f => f.id === file.id ? { ...f, translationStatus: "error", errorMessage: "Failed to start" } : f));
-         }
-     }
+    // Auto-select the first new file for setup
+    if (newConfigs.length > 0) {
+      setEditingFileId(newConfigs[0].id);
+      if (appState === "overview") {
+        setAppState("setup");
+      }
+    }
   };
 
   const handleDownload = async (jobId: string, filename: string) => {
-      try {
-          const blob = await TranslationService.downloadTranslatedDocument(jobId);
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-      } catch (error) {
-          setErrorDialog({ open: true, message: "Download failed." });
-      }
+    try {
+      const blob = await TranslationService.downloadTranslatedDocument(jobId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setErrorDialog({ open: true, message: "Download failed." });
+    }
   };
 
   const handleCancelAll = async () => {
-      const translating = fileConfigs.filter(f => f.translationStatus === "translating" && f.jobId);
-      for (const file of translating) {
-          try {
-             await TranslationService.cancelTranslation(file.jobId!);
-          } catch (e) { console.error(e); }
-      }
-      setFileConfigs(prev => prev.map(f => f.translationStatus === "translating" ? { ...f, translationStatus: "cancelled" } : f));
-  };
-  
-  const handleCancelFile = async (fileId: string) => {
-      const file = fileConfigs.find(f => f.id === fileId);
-      if (file && (file.translationStatus === "translating" || file.translationStatus === "idle") && file.jobId) {
-          try {
-             await TranslationService.cancelTranslation(file.jobId);
-          } catch (e) { console.error(e); }
-          setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "cancelled" } : f));
-      } else if (file && file.translationStatus === "idle" && !file.jobId) {
-          // If it hasn't even started sending request yet
-          setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "cancelled" } : f));
-      }
-  };
-  
-  const handleRetry = async (fileId: string) => {
-      const file = fileConfigs.find(f => f.id === fileId);
-      if (!file) return;
-
-      setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "translating", progress: 0 } : f));
+    const translating = fileConfigs.filter(f => f.translationStatus === "translating" && f.jobId);
+    for (const file of translating) {
       try {
-             const job = await TranslationService.startTranslation({
-                 sourceLanguage: file.sourceLanguage,
-                 targetLanguage: file.targetLanguage,
-                 documentId: file.documentId,
-                 isTranslateImage: file.translateImages,
-                 glossaries: file.glossaryOption === "existing" ? file.selectedGlossaries : undefined,
-             });
+        await TranslationService.cancelTranslation(file.jobId!);
+      } catch (e) { console.error(e); }
+    }
+    setFileConfigs(prev => prev.map(f => f.translationStatus === "translating" ? { ...f, translationStatus: "cancelled" } : f));
+  };
 
-             let newStatus: TranslationStatus = "translating";
-             if (job.status === "completed") newStatus = "success";
-             else if (job.status === "failed") newStatus = "error";
-             else if (job.status === "cancelled") newStatus = "cancelled";
+  const handleCancelFile = async (fileId: string) => {
+    const file = fileConfigs.find(f => f.id === fileId);
+    if (file && (file.translationStatus === "translating" || file.translationStatus === "idle") && file.jobId) {
+      try {
+        await TranslationService.cancelTranslation(file.jobId);
+      } catch (e) { console.error(e); }
+      setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "cancelled" } : f));
+    } else if (file && file.translationStatus === "idle" && !file.jobId) {
+      // If it hasn't even started sending request yet
+      setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "cancelled" } : f));
+    }
+  };
 
-             setFileConfigs(prev => prev.map(f => f.id === file.id ? { 
-                ...f, 
-                jobId: job.id,
-                translationStatus: newStatus,
-                progress: job.status === "completed" ? 100 : job.progress || 0,
-             } : f));
-       } catch (error) {
-             setFileConfigs(prev => prev.map(f => f.id === file.id ? { ...f, translationStatus: "error", errorMessage: "Failed to start" } : f));
-       }
+  const handleRetry = async (fileId: string) => {
+    const file = fileConfigs.find(f => f.id === fileId);
+    if (!file) return;
+
+    setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "translating", progress: 0 } : f));
+    try {
+      const job = await TranslationService.startTranslation({
+        sourceLanguage: file.sourceLanguage,
+        targetLanguage: file.targetLanguage,
+        documentId: file.documentId,
+        isTranslateImage: file.translateImages,
+        glossaries: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? file.selectedGlossaries : undefined,
+      });
+
+      let newStatus: TranslationStatus = "translating";
+      if (job.status === "completed") newStatus = "success";
+      else if (job.status === "failed") newStatus = "error";
+      else if (job.status === "cancelled") newStatus = "cancelled";
+
+      setFileConfigs(prev => prev.map(f => f.id === file.id ? {
+        ...f,
+        jobId: job.id,
+        translationStatus: newStatus,
+        progress: job.status === "completed" ? 100 : job.progress || 0,
+      } : f));
+    } catch (error) {
+      setFileConfigs(prev => prev.map(f => f.id === file.id ? { ...f, translationStatus: "error", errorMessage: "Failed to start" } : f));
+    }
   };
 
   if (appState === "loading") {
@@ -335,99 +368,106 @@ function TranslatePageContent() {
   }
 
   return (
-    <PageTransition className="container mx-auto px-6">
-      {appState === "setup" && (
-          <SlideUp>
-            <StepIndicator steps={steps} currentStep={currentStep} className="mb-6" />
-          </SlideUp>
-      )}
-
+    <PageTransition className="container mx-auto px-6 max-w-7xl">
       <AnimatePresence mode="wait">
-         {appState === "overview" && (
-             <motion.div key="overview" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-                 <MultiFileOverview
-                    files={fileConfigs}
-                    onSetupFile={handleSetupFile}
-                    onRemoveFile={(id) => setFileConfigs(prev => prev.filter(f => f.id !== id))}
-                    onStartAll={handleStartAll}
-                    isAllConfigured={fileConfigs.length > 0 && fileConfigs.every(f => f.configStatus === "configured")}
-                 />
-             </motion.div>
-         )}
+        {(appState === "overview" || appState === "setup") && (
+          <motion.div
+            key="config-side-by-side"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mt-6"
+          >
+            {/* Left Master: File List Sidebar */}
+            <div className="lg:col-span-4 shrink-0">
+              <MultiFileOverview
+                files={fileConfigs}
+                activeFileId={editingFileId}
+                onSetupFile={handleSetupFile}
+                onRemoveFile={(id) => {
+                  const updated = fileConfigs.filter(f => f.id !== id);
+                  setFileConfigs(updated);
+                  if (updated.length === 0) {
+                    router.push("/dashboard");
+                  } else if (editingFileId === id) {
+                    // If deleted active file, auto-select the first of the remaining files
+                    setEditingFileId(updated[0].id);
+                  }
+                }}
+                onAddFiles={handleAddFiles}
+                onStartAll={handleStartAll}
+                isAllConfigured={fileConfigs.length > 0 && fileConfigs.every(f => f.configStatus === "configured")}
+              />
+            </div>
 
-         {appState === "setup" && editingFile && (
-             <motion.div key="setup" initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:-20}}>
-                {currentStep === 0 && (
-                   <DocumentSetupStep
-                     uploadedFile={editingFile.metadata}
-                     setUploadedFile={() => {}} // Disabled dropping new files here
-                     setFileToUpload={() => {}} 
-                     sourceLanguage={editingFile.sourceLanguage}
-                     setSourceLanguage={(l) => handleUpdateEditingFile({ sourceLanguage: l })}
-                     targetLanguage={editingFile.targetLanguage}
-                     setTargetLanguage={(l) => handleUpdateEditingFile({ targetLanguage: l })}
-                     translateImages={editingFile.translateImages}
-                     setTranslateImages={(v) => handleUpdateEditingFile({ translateImages: v })}
-                     onNext={handleNextStep}
-                     onBack={handlePrevStep}
-                   />
-                )}
-                {currentStep === 1 && (
-                   <GlossarySelectionStep
-                     glossaryOption={editingFile.glossaryOption}
-                     setGlossaryOption={(o) => handleUpdateEditingFile({ glossaryOption: o })}
-                     selectedGlossaries={editingFile.selectedGlossaries}
-                     setSelectedGlossaries={(g) => handleUpdateEditingFile({ selectedGlossaries: g })}
-                     sourceLanguage={editingFile.sourceLanguage}
-                     targetLanguage={editingFile.targetLanguage}
-                     searchQuery={searchQuery}
-                     setSearchQuery={setSearchQuery}
-                     termQuery={termQuery}
-                     setTermQuery={setTermQuery}
-                     glossaries={glossaries}
-                     onNext={handleNextStep}
-                     onBack={handlePrevStep}
-                     onRefresh={fetchGlossaries}
-                     isCreatingOpen={isCreatingGlossaryOpen}
-                     onCreatingOpenChange={setIsCreatingGlossaryOpen}
-                   />
-                )}
-                {currentStep === 2 && (
-                   <TranslationExecutionStep
-                     currentStep={2} // Using only preview mode
-                     uploadedFile={editingFile.metadata}
-                     sourceLanguage={editingFile.sourceLanguage}
-                     targetLanguage={editingFile.targetLanguage}
-                     glossaryOption={editingFile.glossaryOption}
-                     selectedGlossaryList={glossaries.filter(g => editingFile.selectedGlossaries.includes(g.id))}
-                     translateImages={editingFile.translateImages}
-                     status="idle"
-                     progress={0}
-                     onBack={handlePrevStep}
-                     onStepChange={(s, applyToAll) => { if (s===3) handleSaveConfig(applyToAll) }}
-                     onStartTranslation={() => {}}
-                     onCancelTranslation={() => {}}
-                     onDownload={() => {}}
-                     onNewTranslation={() => {}}
-                     onRetry={() => {}}
-                   />
-                )}
-             </motion.div>
-         )}
+            {/* Right Detail: Setup Wizard */}
+            <div className="lg:col-span-8 flex flex-col h-full border rounded-lg bg-background p-6 shadow-md relative">
+              {editingFile ? (
+                <>
+                  <div className="mb-6 shrink-0 flex items-center justify-between pb-4 gap-4 flex-wrap">
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">
+                        {trmlTranslate("fileConfiguration") || "File Configuration"}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs">
+                          <FileText className="w-3.5 h-3.5 text-primary/80" />
+                          <span className="max-w-[240px] sm:max-w-[400px] truncate font-mono" title={editingFile.metadata.name}>
+                            {editingFile.metadata.name}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-         {appState === "translating" && (
-             <motion.div key="translating" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-                 <MultiTranslationProgress
-                    files={fileConfigs}
-                    isAllCompleted={fileConfigs.every(f => ["success", "error", "cancelled"].includes(f.translationStatus))}
-                    onDownload={handleDownload}
-                    onRetry={handleRetry}
-                    onCancelAll={handleCancelAll}
-                    onCancel={handleCancelFile}
-                    onNewTranslation={() => router.push("/dashboard")}
-                 />
-             </motion.div>
-         )}
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <UnifiedFileSetup
+                      editingFile={editingFile}
+                      onUpdateFile={handleUpdateEditingFile}
+                      glossaries={glossaries}
+                      searchQuery={searchQuery}
+                      setSearchQuery={setSearchQuery}
+                      termQuery={termQuery}
+                      setTermQuery={setTermQuery}
+                      isCreatingOpen={isCreatingGlossaryOpen}
+                      onCreatingOpenChange={setIsCreatingGlossaryOpen}
+                      onRefreshGlossaries={fetchGlossaries}
+                      onSaveConfig={handleSaveConfig}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Settings className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-lg">
+                      {trmlTranslate("noFileSelected") || "No File Selected"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
+                      {trmlTranslate("selectFileInstruction") || "Select a file from the list on the left to start configuring its settings."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {appState === "translating" && (
+          <motion.div key="translating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <MultiTranslationProgress
+              files={fileConfigs}
+              isAllCompleted={fileConfigs.every(f => ["success", "error", "cancelled"].includes(f.translationStatus))}
+              onDownload={handleDownload}
+              onRetry={handleRetry}
+              onCancelAll={handleCancelAll}
+              onCancel={handleCancelFile}
+              onNewTranslation={() => router.push("/dashboard")}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
       <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
         <AlertDialogContent>

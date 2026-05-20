@@ -1,5 +1,6 @@
 {
     "Common": {
+        "configured": "Đã cấu hình",
         "en": "Tiếng Anh",
         "vn": "Tiếng Việt",
         "vi": "Tiếng Việt",
@@ -125,6 +126,7 @@
         "maxFilesWarning": "Bạn đã đạt đến số lượng tệp tối đa được phép dịch. Vui lòng tiếp tục với các tệp hiện tại hoặc xóa bớt để thêm tệp mới."
     },
     "Translate": {
+        "fileConfiguration": "Cấu hình tệp",
         "error": "Lỗi",
         "sessionExpired": "Phiên làm việc đã hết hạn",
         "noDocumentUploaded": "Chưa có tài liệu nào được tải lên.",
@@ -156,6 +158,7 @@
         "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB."
     },
     "GlossarySelection": {
+        "noGlossary": "Không dùng bộ thuật ngữ",
         "selectGlossary": "Chọn bộ thuật ngữ",
         "newGlossary": "Tạo mới",
         "searchGlossary": "Tìm kiếm bộ thuật ngữ",
