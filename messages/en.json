@@ -75,7 +75,8 @@
         "Glossaries": "Glossaries",
         "History": "History",
         "User Guidance": "User Guidance",
-        "signOut": "Sign out"
+        "signOut": "Sign out",
+        "Release Notes": "Release Notes"
     },
     "StepIndicator": {
         "Document": "Document",

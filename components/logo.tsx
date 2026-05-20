@@ -11,15 +11,15 @@ interface LogoProps {
 }
 
 const logoSizes = {
-  sm: "h-10 w-auto",
-  md: "h-20 w-auto",
-  lg: "h-48 w-auto",
+  sm: "h-28 w-auto",
+  md: "h-48 w-auto",
+  lg: "h-56 w-auto",
 }
 
 const textSizes = {
-  sm: "text-lg",
-  md: "text-xl",
-  lg: "text-4xl",
+  sm: "text-2xl",
+  md: "text-3xl",
+  lg: "text-7xl",
 }
 
 export function Logo({ className, imageClassName, size = "lg", variant = "icon" }: LogoProps) {
