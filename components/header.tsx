@@ -10,7 +10,7 @@ import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
 import { useUser } from "@/components/contexts/user-context"
-import { AuthService } from "@/api/services"
+import { AuthService, releaseNotesService, ReleaseNote } from "@/api/services"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTranslations } from "next-intl";
+import { ReleaseNotesDialog } from "@/components/release-notes-dialog";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +45,34 @@ export function Header() {
   };
 
   const trml = useTranslations("Header");
-  const trmlLogin = useTranslations("Login");
+
+  const [releases, setReleases] = useState<ReleaseNote[]>([]);
+  const [latestRead, setLatestRead] = useState<string>("");
+  const [hasNewRelease, setHasNewRelease] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      releaseNotesService.getReleaseNotes().then(data => {
+        setReleases(data.releases);
+        setLatestRead(data.latest_read_release);
+        
+        if (data.releases.length > 0 && data.releases[0].version !== data.latest_read_release) {
+          setHasNewRelease(true);
+        }
+      }).catch(err => {
+        console.error("Failed to fetch release notes", err);
+      });
+    }
+  }, [user]);
+
+  const handleReleaseNotesOpened = () => {
+    if (hasNewRelease && releases.length > 0) {
+      const latestVersion = releases[0].version;
+      setHasNewRelease(false);
+      setLatestRead(latestVersion);
+      releaseNotesService.markAsRead(latestVersion).catch(console.error);
+    }
+  };
 
   const navItems = [
     { href: "/dashboard/glossaries", label: "Glossaries", icon: BookOpen },
@@ -67,6 +95,34 @@ export function Header() {
           <TooltipProvider>
             {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+
+              if (item.href === "/release-notes") {
+                return (
+                  <Tooltip key={item.href}>
+                    <ReleaseNotesDialog 
+                      title={trml(item.label) ?? item.label} 
+                      releases={releases} 
+                      onOpen={handleReleaseNotesOpened}
+                    >
+                      <TooltipTrigger asChild>
+                        <button className={cn("relative text-sm font-medium flex items-center gap-2 transition-colors", isActive ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
+                          <item.icon className="w-5 h-5" />
+                          {hasNewRelease && (
+                            <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                    </ReleaseNotesDialog>
+                    <TooltipContent>
+                      <p>{trml(item.label) ?? item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
               return (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>
@@ -110,7 +166,7 @@ export function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                {trmlLogin("signOut")}
+                {trml("signOut")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

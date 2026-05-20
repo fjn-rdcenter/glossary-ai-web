@@ -61,9 +61,12 @@
     "Header": {
         "welcome": "おかえりなさい",
         "searchPlaceholder": "ドキュメントや用語集を検索...",
+        "Dashboard": "ダッシュボード",
+        "Translate": "翻訳",
         "Glossaries": "用語集",
         "History": "履歴",
         "User Guidance": "ご利用ガイド",
+        "signOut": "ログアウト",
         "Release Notes": "リリースノート"
     },
     "Footer": {

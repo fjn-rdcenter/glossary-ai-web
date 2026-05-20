@@ -59,11 +59,14 @@
         "showing": "Showing {start} to {end} of {total} {total, plural, one {document} other {documents}}"
     },
     "Header": {
-        "welcome": "Welcome back",
-        "searchPlaceholder": "Search documents, glossaries...",
+        "welcome": "Welcome",
+        "searchPlaceholder": "Search for documents, glossaries...",
+        "Dashboard": "Dashboard",
+        "Translate": "Translate",
         "Glossaries": "Glossaries",
         "History": "History",
         "User Guidance": "User Guidance",
+        "signOut": "Log Out",
         "Release Notes": "Release Notes"
     },
     "Footer": {
