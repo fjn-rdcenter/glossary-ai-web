@@ -44,7 +44,7 @@ export function Header() {
   };
 
   const trml = useTranslations("Header");
-  const trmlSidebar = useTranslations("Sidebar");
+  const trmlLogin = useTranslations("Login");
 
   const navItems = [
     { href: "/dashboard/glossaries", label: "Glossaries", icon: BookOpen },
@@ -75,7 +75,7 @@ export function Header() {
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{trmlSidebar(item.label) ?? item.label}</p>
+                    <p>{trml(item.label) ?? item.label}</p>
                   </TooltipContent>
                 </Tooltip>
               )
@@ -110,7 +110,7 @@ export function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                Sign out
+                {trmlLogin("signOut")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

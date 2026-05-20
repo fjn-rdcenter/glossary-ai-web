@@ -31,20 +31,21 @@ export function Sidebar() {
   const pathname = usePathname()
   const { setOpenMobile, setOpen, isMobile } = useSidebar()
   const trml = useTranslations("Sidebar");
+  const trCommon = useTranslations("Common");
   const locale = useLocale();
 
   const localeDisplayMap: Record<string, { flag: string; label: string }> = {
     en: { 
       flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1ec-1f1e7.svg", 
-      label: "English" 
+      label: trCommon("en") 
     },
     vi: { 
       flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1fb-1f1f3.svg", 
-      label: "Tiếng Việt" 
+      label: trCommon("vi") 
     },
     ja: { 
       flag: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f1ef-1f1f5.svg", 
-      label: "日本語" 
+      label: trCommon("ja") 
     },
   };
   const localeDisplay = localeDisplayMap[locale] ?? {
