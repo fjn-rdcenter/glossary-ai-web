@@ -70,7 +70,6 @@ interface UnifiedFileSetupProps {
   isCreatingOpen: boolean;
   onCreatingOpenChange: (open: boolean) => void;
   onRefreshGlossaries: () => void;
-  onSaveConfig: (applyToAll: boolean) => void;
 }
 
 export function UnifiedFileSetup({
@@ -84,7 +83,6 @@ export function UnifiedFileSetup({
   isCreatingOpen,
   onCreatingOpenChange,
   onRefreshGlossaries,
-  onSaveConfig,
 }: UnifiedFileSetupProps) {
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
@@ -119,28 +117,75 @@ export function UnifiedFileSetup({
   // Pagination state
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
+  const [pagedGlossaries, setPagedGlossaries] = useState<GlossaryResponse[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingPagedGlossaries, setLoadingPagedGlossaries] = useState(false);
 
-  // Reset to page 1 when search query changes
+  // Fetch paginated glossaries from the backend API
+  const fetchPagedGlossaries = async (page: number, search: string) => {
+    setLoadingPagedGlossaries(true);
+    try {
+      const response = await GlossaryService.getGlossaries({
+        page,
+        size: ITEMS_PER_PAGE,
+        search: search || undefined,
+      });
+      setPagedGlossaries(response.items || []);
+      setTotalItems(response.total || 0);
+      setTotalPages(response.pages || 1);
+    } catch (error) {
+      console.error("Failed to fetch paged glossaries", error);
+    } finally {
+      setLoadingPagedGlossaries(false);
+    }
+  };
+
+  const prevSearchQueryRef = useRef(searchQuery);
+
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    const isSearchChanged = prevSearchQueryRef.current !== searchQuery;
+    prevSearchQueryRef.current = searchQuery;
 
-  // Filter glossaries based on committed search query
-  const filteredGlossaries = useMemo(() => {
-    return glossaries.filter((g) =>
-      g.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [glossaries, searchQuery]);
+    if (isSearchChanged && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
 
-  const totalPages = Math.max(1, Math.ceil(filteredGlossaries.length / ITEMS_PER_PAGE));
-  const pagedGlossaries = filteredGlossaries.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    fetchPagedGlossaries(currentPage, searchQuery);
+  }, [currentPage, searchQuery]);
 
   const handleCommitSearch = () => {
     setSearchQuery(localSearchInput);
   };
+
+  const selectedGlossariesList = useMemo(() => {
+    return editingFile.selectedGlossaries.map((id) => {
+      // Find in local loaded pagedGlossaries first
+      const foundInPaged = pagedGlossaries.find((g) => g.id === id);
+      if (foundInPaged) return foundInPaged;
+
+      // Find in parent list
+      const foundInParent = glossaries.find((g) => g.id === id);
+      if (foundInParent) return foundInParent;
+
+      // Find in fetched details
+      const foundInDetails = glossaryDetails[id];
+      if (foundInDetails) return foundInDetails;
+
+      // Fallback placeholder
+      return {
+        id,
+        name: "Loading...",
+        description: "",
+        sourceLanguage: "",
+        targetLanguage: "",
+        termCount: 0,
+        createdAt: "",
+        updatedAt: "",
+      } as GlossaryResponse;
+    });
+  }, [editingFile.selectedGlossaries, pagedGlossaries, glossaries, glossaryDetails]);
 
   // Helper: Fetch all terms recursively
   const fetchFullGlossary = async (id: string): Promise<GlossaryResponse | null> => {
@@ -338,13 +383,13 @@ export function UnifiedFileSetup({
 
   const handleCreateSuccess = () => {
     onRefreshGlossaries();
+    fetchPagedGlossaries(currentPage, searchQuery);
   };
 
   const handleEditSuccess = () => {
     onRefreshGlossaries();
+    fetchPagedGlossaries(currentPage, searchQuery);
   };
-
-  const isSaveDisabled = !editingFile.targetLanguage;
 
   return (
     <motion.div
@@ -365,9 +410,9 @@ export function UnifiedFileSetup({
             <h3 className="text-sm">Translation Options</h3>
           </div>
 
-          <div className="flex items-start gap-4">
+          <div className="flex items-stretch gap-4">
             {/* Language selectors */}
-            <div className="flex-1 bg-background rounded-lg border border-border p-3">
+            <div className="flex-1 bg-background rounded-lg border border-border p-3 flex flex-col justify-center">
               <div className="flex items-center gap-3">
                 {/* Source language */}
                 <div className="flex-1 space-y-1">
@@ -433,10 +478,10 @@ export function UnifiedFileSetup({
             </div>
 
             {/* Translate Images toggle */}
-            <div className="shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3 min-w-[180px]">
-              <div className="space-y-0.5">
+            <div className="shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3 w-[240px]">
+              <div className="space-y-1 flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                  <ImageIcon className="w-3.5 h-3.5 text-primary shrink-0" />
                   <Label
                     htmlFor="translate-images"
                     className="text-xs font-semibold cursor-pointer leading-none"
@@ -444,7 +489,7 @@ export function UnifiedFileSetup({
                     {trmlDocumentSetup("translateImages")}
                   </Label>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-tight">
+                <p className="text-[10px] text-muted-foreground leading-tight whitespace-normal break-words">
                   {trmlDocumentSetup("translateImagesDescription")}
                 </p>
               </div>
@@ -452,6 +497,7 @@ export function UnifiedFileSetup({
                 id="translate-images"
                 checked={editingFile.translateImages}
                 onCheckedChange={(checked) => onUpdateFile({ translateImages: checked })}
+                className="shrink-0"
               />
             </div>
           </div>
@@ -464,215 +510,303 @@ export function UnifiedFileSetup({
             <h3 className="text-sm">{trmlGlossarySelection("selectGlossary")}</h3>
           </div>
 
-          <div className="space-y-3">
-            {/* Search row */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  name="glossary-search"
-                  autoComplete="off"
-                  value={localSearchInput}
-                  onChange={(e) => setLocalSearchInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleCommitSearch();
-                  }}
-                  placeholder={trmlGlossarySelection("searchGlossary")}
-                  className="h-9 w-full rounded-md border border-border bg-background pl-3 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={handleCommitSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Search glossaries"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-              <Button
-                onClick={() => onCreatingOpenChange(true)}
-                className="h-9 shrink-0 gap-1.5 text-sm"
-                data-tour="create-glossary-btn"
-              >
-                <Plus className="w-4 h-4" />
-                {trmlGlossarySelection("newGlossary")}
-              </Button>
-            </div>
-
-            {/* Glossary list — 5 per page, no scroll */}
-            <div className="space-y-2">
-              {glossaries.length === 0 ? (
-                <div className="py-8 flex flex-col items-center justify-center text-center space-y-2 border border-dashed rounded-xl bg-secondary/5">
-                  <Book className="w-8 h-8 text-muted-foreground/30" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {trmlGlossarySelection("noGlossariesCreatedTitle")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {trmlGlossarySelection("noGlossariesCreatedDescription")}
-                    </p>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+            {/* Left Column: Selected Glossaries */}
+            <div className="space-y-3 bg-background rounded-xl border border-border/80 p-4 flex flex-col h-full min-h-[380px] shadow-sm">
+              <div className="flex items-center justify-between border-b pb-2">
+                <div className="flex items-center gap-2 text-foreground font-semibold">
+                  <Check className="w-4 h-4 text-primary" />
+                  <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
+                    Selected ({selectedGlossariesList.length})
+                  </span>
                 </div>
-              ) : (
-                <>
-                  {pagedGlossaries.map((glossary) => {
-                    const isSelected = editingFile.selectedGlossaries.includes(glossary.id);
-                    const isValidating = validatingId === glossary.id;
+                {selectedGlossariesList.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                    onClick={() => {
+                      onUpdateFile({
+                        selectedGlossaries: [],
+                        glossaryOption: "none",
+                      });
+                    }}
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto max-h-[365px] pr-1 space-y-2">
+                {selectedGlossariesList.length === 0 ? (
+                  <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center space-y-2.5 p-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center">
+                      <Book className="w-6 h-6 text-primary/40" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        No Glossaries Selected
+                      </p>
+                      <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1 leading-normal">
+                        Select glossaries from the list on the right to apply them to this document.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  selectedGlossariesList.map((glossary) => {
+                    const isPlaceholder = glossary.name === "Loading...";
                     const displayTermCount = glossaryDetails[glossary.id]?.termCount ?? glossary.termCount;
 
                     return (
-                      <TooltipProvider key={glossary.id}>
-                        <Tooltip delayDuration={500}>
-                          <TooltipTrigger asChild>
-                            <div
-                              onDoubleClick={(e) => {
+                      <div
+                        key={glossary.id}
+                        className="px-3.5 py-2.5 rounded-xl border border-primary/20 bg-primary/5/20 hover:bg-primary/5/30 transition flex items-center justify-between gap-3 relative group"
+                      >
+                        <div className="flex-1 min-w-0 pl-1">
+                          <p className="font-semibold text-xs text-foreground truncate">
+                            {glossary.name}
+                          </p>
+                          {!isPlaceholder && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {trmlCommon(glossary.sourceLanguage)} →{" "}
+                              {trmlCommon(glossary.targetLanguage)} •{" "}
+                              {displayTermCount} terms
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Preview Button */}
+                          {!isPlaceholder && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                if (!isValidating)
-                                  setEditingGlossaryId(glossary.id);
+                                setViewingGlossaryId(glossary.id);
+                                setPreviewSheetOpen(true);
                               }}
-                              className={cn(
-                                "px-4 py-3 rounded-xl border cursor-pointer transition flex items-center justify-between gap-4 relative select-none group",
-                                isSelected
-                                  ? "bg-primary/5 border-primary ring-1 ring-primary/25 shadow-sm"
-                                  : "bg-card border-border hover:border-primary/45 hover:bg-slate-50/50",
-                                isValidating && "opacity-70 pointer-events-none"
-                              )}
                             >
-                              <div className="flex-1 min-w-0 pl-1">
-                                <p className="font-semibold text-sm truncate flex items-center gap-1.5">
-                                  {glossary.name}
-                                  {isValidating && (
-                                    <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                                  )}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {trmlCommon(glossary.sourceLanguage)} →{" "}
-                                  {trmlCommon(glossary.targetLanguage)} •{" "}
-                                  {displayTermCount} terms
-                                </p>
-                              </div>
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
 
-                              <div className="flex items-center gap-1">
-                                {/* Preview Button */}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setViewingGlossaryId(glossary.id);
-                                    setPreviewSheetOpen(true);
-                                  }}
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </Button>
-
-                                {/* Edit Button */}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingGlossaryId(glossary.id);
-                                  }}
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </Button>
-
-                                {/* Selection Checkbox */}
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={(checked) =>
-                                    handleToggleGlossary(glossary.id, checked as boolean)
-                                  }
-                                  disabled={isValidating}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className={cn(
-                                    "h-5 w-5 border-2 rounded",
-                                    isSelected
-                                      ? "border-transparent bg-primary text-primary-foreground"
-                                      : "border-primary/50"
-                                  )}
-                                />
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>{trmlGlossarySelection("termTooltip")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                          {/* Remove Button */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleGlossary(glossary.id, false);
+                            }}
+                          >
+                            <Plus className="w-3.5 h-3.5 rotate-45" />
+                          </Button>
+                        </div>
+                      </div>
                     );
-                  })}
-
-                  {filteredGlossaries.length === 0 && searchQuery && (
-                    <p className="text-xs text-muted-foreground text-center py-6">
-                      {trmlGlossarySelection("noGlossaryFound")}
-                    </p>
-                  )}
-                </>
-              )}
+                  })
+                )}
+              </div>
             </div>
 
-            {/* Pagination */}
-            {filteredGlossaries.length > ITEMS_PER_PAGE && (
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-muted-foreground">
-                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredGlossaries.length)} of {filteredGlossaries.length}
-                </span>
-                <div className="flex items-center gap-1">
+            {/* Right Column: Select Glossary (Search, List, Pagination) */}
+            <div className="space-y-3 bg-background rounded-xl border border-border/80 p-4 flex flex-col justify-between shadow-sm">
+              <div className="space-y-3 flex-1">
+                {/* Search row */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      name="glossary-search"
+                      autoComplete="off"
+                      value={localSearchInput}
+                      onChange={(e) => setLocalSearchInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCommitSearch();
+                      }}
+                      placeholder={trmlGlossarySelection("searchGlossary")}
+                      className="h-9 w-full rounded-md border border-border bg-background pl-3 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCommitSearch}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Search glossaries"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  </div>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    aria-label="Previous page"
+                    onClick={() => onCreatingOpenChange(true)}
+                    className="h-9 shrink-0 gap-1.5 text-sm"
+                    data-tour="create-glossary-btn"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span className="text-xs font-medium min-w-[48px] text-center">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
+                    {trmlGlossarySelection("newGlossary")}
                   </Button>
                 </div>
+
+                {/* Glossary list — 5 per page, no scroll */}
+                <div className="space-y-2">
+                  {loadingPagedGlossaries ? (
+                    <div className="py-8 flex flex-col items-center justify-center text-center space-y-2 border border-dashed rounded-xl bg-secondary/5">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <p className="text-xs text-muted-foreground">Loading glossaries...</p>
+                    </div>
+                  ) : pagedGlossaries.length === 0 ? (
+                    <div className="py-8 flex flex-col items-center justify-center text-center space-y-2 border border-dashed rounded-xl bg-secondary/5">
+                      <Book className="w-8 h-8 text-muted-foreground/30" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {searchQuery
+                            ? trmlGlossarySelection("noGlossaryFound")
+                            : trmlGlossarySelection("noGlossariesCreatedTitle")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {!searchQuery && trmlGlossarySelection("noGlossariesCreatedDescription")}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {pagedGlossaries.map((glossary) => {
+                        const isSelected = editingFile.selectedGlossaries.includes(glossary.id);
+                        const isValidating = validatingId === glossary.id;
+                        const displayTermCount = glossaryDetails[glossary.id]?.termCount ?? glossary.termCount;
+
+                        return (
+                          <TooltipProvider key={glossary.id}>
+                            <Tooltip delayDuration={500}>
+                              <TooltipTrigger asChild>
+                                <div
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!isValidating)
+                                      setEditingGlossaryId(glossary.id);
+                                  }}
+                                  className={cn(
+                                    "px-4 py-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between gap-4 relative select-none group",
+                                    isSelected
+                                      ? "bg-primary/5 border-primary ring-1 ring-primary/25 shadow-sm"
+                                      : "bg-card border-border hover:border-primary/45 hover:bg-slate-50/50",
+                                    isValidating && "opacity-70 pointer-events-none"
+                                  )}
+                                >
+                                  <div className="flex-1 min-w-0 pl-1">
+                                    <p className="font-semibold text-xs truncate flex items-center gap-1.5">
+                                      {glossary.name}
+                                      {isValidating && (
+                                        <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                                      )}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                      {trmlCommon(glossary.sourceLanguage)} →{" "}
+                                      {trmlCommon(glossary.targetLanguage)} •{" "}
+                                      {displayTermCount} terms
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    {/* Preview Button */}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setViewingGlossaryId(glossary.id);
+                                        setPreviewSheetOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </Button>
+
+                                    {/* Edit Button */}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingGlossaryId(glossary.id);
+                                      }}
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </Button>
+
+                                    {/* Selection Checkbox */}
+                                    <Checkbox
+                                      checked={isSelected}
+                                      onCheckedChange={(checked) =>
+                                        handleToggleGlossary(glossary.id, checked as boolean)
+                                      }
+                                      disabled={isValidating}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className={cn(
+                                        "h-5 w-5 border-2 rounded",
+                                        isSelected
+                                          ? "border-transparent bg-primary text-primary-foreground"
+                                          : "border-primary/50"
+                                      )}
+                                    />
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p>{trmlGlossarySelection("termTooltip")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* Pagination */}
+              {totalItems > ITEMS_PER_PAGE && (
+                <div className="flex items-center justify-between pt-2 border-t mt-3">
+                  <span className="text-xs text-muted-foreground">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={currentPage === 1 || loadingPagedGlossaries}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-xs font-medium min-w-[48px] text-center">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={currentPage === totalPages || loadingPagedGlossaries}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* FIXED FOOTER ACTIONS */}
-      <div className="flex justify-end gap-3 pt-4 mt-auto shrink-0 bg-background">
-        <Button
-          variant="outline"
-          disabled={isSaveDisabled}
-          onClick={() => onSaveConfig(true)}
-          className="h-11 px-5 rounded-lg group gap-1.5"
-        >
-          {trmlTranslationExecution("applyToAllFiles") || "Apply to all files"}
-          <Check className="w-4 h-4 transition-transform group-hover:scale-110" />
-        </Button>
-        <Button
-          disabled={isSaveDisabled}
-          onClick={() => onSaveConfig(false)}
-          className="h-11 px-5 rounded-lg group gap-1.5"
-        >
-          {trmlTranslationExecution("applyToThisFile") || "Apply to this file"}
-          <Check className="w-4 h-4 transition-transform group-hover:scale-110" />
-        </Button>
-      </div>
+
 
       {/* DIALOGS & SHEET PREVIEWS */}
       <CreateGlossaryDialog

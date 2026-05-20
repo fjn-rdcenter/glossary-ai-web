@@ -51,13 +51,13 @@ export function MultiFileOverview({
   isAllConfigured
 }: MultiFileOverviewProps) {
   const trmlCommon = useTranslations("Common");
-  const trmlTranslate = useTranslations("Translate"); 
+  const trmlTranslate = useTranslations("Translate");
   const trmlTranslationExecution = useTranslations("TranslationExecution");
   const [addFileDialogOpen, setAddFileDialogOpen] = useState(false);
 
   const handleFilesAdded = (newFiles: Array<{ documentId: string; metadata: { name: string; size: number; type: string } }>) => {
     onAddFiles?.(newFiles);
-  }; 
+  };
 
   return (
     <Card className="h-full flex flex-col w-full shadow-md border-border">
@@ -166,9 +166,9 @@ export function MultiFileOverview({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          onRemoveFile(file.id); 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFile(file.id);
                         }}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -185,8 +185,8 @@ export function MultiFileOverview({
         {files.length > 0 && (
           <div className="pt-3 border-t mt-4 shrink-0 space-y-2">
             {files.length < 5 && (
-              <Button 
-                onClick={() => setAddFileDialogOpen(true)} 
+              <Button
+                onClick={() => setAddFileDialogOpen(true)}
                 variant="outline"
                 className="w-full gap-2 py-5 text-sm font-semibold"
               >
@@ -195,7 +195,7 @@ export function MultiFileOverview({
               </Button>
             )}
             <Button onClick={onStartAll} disabled={!isAllConfigured} className="w-full gap-2 py-5 text-sm font-semibold shadow-sm">
-              {trmlTranslationExecution("startTranslating") || "Start Translating"} 
+              {trmlTranslationExecution("startTranslating") || "Start Translating"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>

@@ -23,7 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Lightbulb, Settings, FileText } from "lucide-react";
+import { AlertTriangle, Lightbulb, Settings, FileText, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Joyride, { CallBackProps, EVENTS, ACTIONS, STATUS, Step, TooltipRenderProps } from "react-joyride";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ function TranslatePageContent() {
   // Initialize from pendingFiles
   useEffect(() => {
     if (pendingFiles && pendingFiles.length > 0 && appState === "loading") {
-      const initialConfigs: FileConfigState[] = pendingFiles.map(pf => ({
+      const initialConfigs: FileConfigState[] = pendingFiles.map((pf, index) => ({
         id: pf.id,
         file: pf.file,
         documentId: pf.documentId,
@@ -73,7 +74,7 @@ function TranslatePageContent() {
         translateImages: false,
         glossaryOption: "none",
         selectedGlossaries: [],
-        configStatus: "pending",
+        configStatus: index === 0 ? "configured" : "pending",
         translationStatus: "idle",
         jobId: null,
         progress: 0,
@@ -176,10 +177,11 @@ function TranslatePageContent() {
   const handleSetupFile = (id: string) => {
     setEditingFileId(id);
     setAppState("setup");
+    setFileConfigs(prev => prev.map(f => f.id === id ? { ...f, configStatus: "configured" } : f));
   };
 
   const handleUpdateEditingFile = (updates: Partial<FileConfigState>) => {
-    setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates } : f));
+    setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates, configStatus: "configured" } : f));
   };
 
   const editingFile = fileConfigs.find(f => f.id === editingFileId);
@@ -269,7 +271,7 @@ function TranslatePageContent() {
   };
 
   const handleAddFiles = (newFiles: Array<{ documentId: string; metadata: { name: string; size: number; type: string } }>) => {
-    const newConfigs: FileConfigState[] = newFiles.map(f => ({
+    const newConfigs: FileConfigState[] = newFiles.map((f, index) => ({
       id: `file_${Date.now()}_${Math.random()}`,
       documentId: f.documentId,
       metadata: f.metadata,
@@ -278,7 +280,7 @@ function TranslatePageContent() {
       translateImages: false,
       glossaryOption: "none",
       selectedGlossaries: [],
-      configStatus: "pending",
+      configStatus: index === 0 ? "configured" : "pending",
       translationStatus: "idle",
       jobId: null,
       progress: 0,
@@ -368,7 +370,7 @@ function TranslatePageContent() {
   }
 
   return (
-    <PageTransition className="container mx-auto px-6 max-w-7xl">
+    <PageTransition className="container mx-auto px-6 max-w-8xl">
       <AnimatePresence mode="wait">
         {(appState === "overview" || appState === "setup") && (
           <motion.div
@@ -404,7 +406,7 @@ function TranslatePageContent() {
             <div className="lg:col-span-8 flex flex-col h-full border rounded-lg bg-background p-6 shadow-md relative">
               {editingFile ? (
                 <>
-                  <div className="mb-6 shrink-0 flex items-center justify-between pb-4 gap-4 flex-wrap">
+                  <div className="mb-6 shrink-0 flex items-center justify-between pb-4 gap-4 border-b flex-wrap">
                     <div>
                       <h2 className="text-xl font-bold text-foreground">
                         {trmlTranslate("fileConfiguration") || "File Configuration"}
@@ -417,6 +419,17 @@ function TranslatePageContent() {
                           </span>
                         </span>
                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        disabled={!editingFile.targetLanguage}
+                        onClick={() => handleSaveConfig(true)}
+                        className="h-10 px-4 rounded-lg group gap-1.5 shadow-sm"
+                      >
+                        {trmlTranslationExecution("applyToAllFiles") || "Apply to all files"}
+                        <Check className="w-4 h-4 transition-transform group-hover:scale-110" />
+                      </Button>
                     </div>
                   </div>
 
@@ -432,7 +445,6 @@ function TranslatePageContent() {
                       isCreatingOpen={isCreatingGlossaryOpen}
                       onCreatingOpenChange={setIsCreatingGlossaryOpen}
                       onRefreshGlossaries={fetchGlossaries}
-                      onSaveConfig={handleSaveConfig}
                     />
                   </div>
                 </>
