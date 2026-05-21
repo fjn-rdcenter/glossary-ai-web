@@ -12,6 +12,7 @@ import {
   Eye,
   Calendar,
   ArrowRight,
+  ArrowLeft,
   RefreshCw,
   AlertTriangle,
   Lightbulb,
@@ -425,17 +426,27 @@ export default function GlossariesPage() {
 
   return (
     <>
-      <PageTransition className="container mx-auto px-6 py-10">
+      <PageTransition className="container mx-auto px-6">
         {/* Header */}
         <SlideUp>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-serif font-semibold text-foreground">
-                {trmlGlossaries("glossariesTitle")}
-              </h1>
-              <p className="mt-1 text-muted-foreground">
-                {trmlGlossaries("glossariesSubtitle")}
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/dashboard")}
+                className="mt-1 shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-serif font-semibold text-foreground">
+                  {trmlGlossaries("glossariesTitle")}
+                </h1>
+                <p className="mt-1 text-muted-foreground">
+                  {trmlGlossaries("glossariesSubtitle")}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => fetchGlossaries()} disabled={loading} className="mr-2">
@@ -467,7 +478,7 @@ export default function GlossariesPage() {
         </SlideUp>
 
         <SlideUp delay={0.05}>
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-4">
             <div id="glossary-tabs" className="w-full border-b border-border pb-2">
               <TabsList id="glossary-tab-list" className="w-fit h-auto bg-transparent p-0 gap-2">
                 {["my", "marketplace", "shared"].map((tab) => (
@@ -486,7 +497,7 @@ export default function GlossariesPage() {
 
         {/* Search and Select All */}
         <SlideUp delay={0.1}>
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-4 mb-4">
             <div
               id="search-glossaries" // [TOUR] Added ID
               className="relative flex-1 max-w-md flex gap-2"
@@ -583,7 +594,7 @@ export default function GlossariesPage() {
                             <DropdownMenuItem
                               onClick={() =>
                                 router.push(
-                                  `/dashboard/glossaries/${glossary.id}/edit`
+                                  `/dashboard/glossaries/${glossary.id}`
                                 )
                               }
                             >

@@ -17,8 +17,8 @@ function Footer() {
               <Image
                 src={LOGO_RD}
                 alt={"FUJINET AI Innovation CENTER"}
-                className="object-contain w-full max-w-[220px]"
-                width={220}
+                className="object-contain w-full max-w-[320px]"
+                width={320}
               />
             </div>
             <div className="flex flex-col text-[14px]">
