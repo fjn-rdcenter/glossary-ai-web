@@ -4,7 +4,7 @@ import { API_CONFIG } from "../config";
 export interface ReleaseNote {
   version: string;
   date: string;
-  changes: string[];
+  changes: string[] | Record<string, string[]>;
   url?: string;
 }
 

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useLocale } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +21,18 @@ export function ReleaseNotesDialog({
   releases?: any[];
   onOpen?: () => void;
 }) {
+  const locale = useLocale();
   const handleOpenChange = (open: boolean) => {
     if (open && onOpen) {
       onOpen();
     }
+  };
+
+  const getChanges = (release: any) => {
+    if (Array.isArray(release.changes)) {
+      return release.changes;
+    }
+    return release.changes[locale] || release.changes['en'] || release.changes['vi'] || [];
   };
 
   return (
@@ -53,7 +62,7 @@ export function ReleaseNotesDialog({
                     </Badge>
                   </div>
                   <ul className="space-y-2 mt-3 text-sm text-muted-foreground list-disc pl-4 marker:text-muted-foreground/50">
-                    {release.changes.map((change: string, i: number) => (
+                    {getChanges(release).map((change: string, i: number) => (
                       <li key={i}>{change}</li>
                     ))}
                   </ul>
