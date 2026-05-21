@@ -23,7 +23,7 @@ export const getApiBaseUrl = (): string => {
   }
 
   if (host === "172.16.6.10:23000") {
-    return "http://172.16.6.10:28000";
+    return "http://172.16.6.10:18000";
   }
 
   return envUrl || "http://172.16.6.10:18000";

@@ -18,16 +18,38 @@ import {
 } from "@/lib/types";
 
 export class GlossaryService {
-  /**
-   * Get all glossaries
-   */
-  static async getGlossaries(search?: string): Promise<GlossaryResponse[]> {
+  static async getGlossaries(
+    search?: string
+  ): Promise<GlossaryResponse[]>;
+  static async getGlossaries(
+    params: { search?: string; page?: number; size?: number }
+  ): Promise<PaginatedResponse<GlossaryResponse>>;
+  static async getGlossaries(
+    searchOrParams?: string | { search?: string; page?: number; size?: number }
+  ): Promise<GlossaryResponse[] | PaginatedResponse<GlossaryResponse>> {
     try {
-      const params: Record<string, any> = { size: 100 };
-      if (search) params.search = search;
+      const params: Record<string, any> = {};
+      let isPaginationRequest = false;
+
+      if (typeof searchOrParams === "string") {
+        params.size = 100;
+        if (searchOrParams) params.search = searchOrParams;
+      } else if (searchOrParams && typeof searchOrParams === "object") {
+        isPaginationRequest = true;
+        if (searchOrParams.size !== undefined) params.size = searchOrParams.size;
+        if (searchOrParams.page !== undefined) params.page = searchOrParams.page;
+        if (searchOrParams.search) params.search = searchOrParams.search;
+      } else {
+        params.size = 100;
+      }
+
       const response = await apiClient.get<PaginatedResponse<GlossaryResponse>>(
         API_CONFIG.ENDPOINTS.GLOSSARIES.BASE, { params }
       );
+
+      if (isPaginationRequest) {
+        return response.data;
+      }
 
       return response.data.items || [];
     } catch (error) {

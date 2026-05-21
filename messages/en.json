@@ -1,5 +1,9 @@
 {
     "Common": {
+        "configured": "Configured",
+        "search": "Search",
+        "selected": "Selected",
+        "browseFiles": "browse files",
         "en": "English",
         "vn": "Vietnamese",
         "vi": "Vietnamese",
@@ -125,7 +129,16 @@
         "maxFilesWarning": "You have reached the maximum number of files allowed for translation. Please proceed with the current files or remove some to add new ones."
     },
     "Translate": {
+        "fileConfiguration": "File Configuration",
         "error": "Error",
+        "addMoreFiles": "Add more files",
+        "filesRemaining": "{remaining} more file(s) can be added.",
+        "uploadNew": "Upload New",
+        "browseExisting": "Browse Existing",
+        "addFiles": "Add Files",
+        "addSelected": "Add Selected ({count})",
+        "maxFilesReached": "You have reached the maximum number of files.",
+        "noDocuments": "No documents found",
         "sessionExpired": "Session Expired",
         "noDocumentUploaded": "No document uploaded.",
         "documentSessionLost": "Document session lost. Please re-upload your file.",
@@ -142,7 +155,11 @@
         "imagesTranslated": "Images included",
         "glossaryUsed": "{count, plural, one {# glossary} other {# glossaries}}",
         "configTranslation": "Config Translation",
-        "clickToConfig": "Click to file to config"
+        "clickToConfig": "Click to file to config",
+        "noFileSelected": "No File Selected",
+        "selectFileInstruction": "Select a file from the list on the left to start configuring its settings.",
+        "noFilesYet": "No files added yet",
+        "addFilesToStart": "Add files to start configuring translation"
     },
     "DocumentSetup": {
         "documentTitle": "Document Setup",
@@ -156,6 +173,7 @@
         "fileTooLarge": "The file size cannot exceed {maxSize}MB."
     },
     "GlossarySelection": {
+        "noGlossary": "No Glossary",
         "selectGlossary": "Select Glossary",
         "newGlossary": "Create New",
         "searchGlossary": "Search Glossaries",

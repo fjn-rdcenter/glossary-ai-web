@@ -1,5 +1,6 @@
 {
     "Common": {
+        "configured": "設定済み",
         "en": "英語",
         "vn": "ベトナム語",
         "vi": "ベトナム語",
@@ -125,6 +126,7 @@
         "maxFilesWarning": "翻訳可能なファイルの最大数に達しました。現在のファイルで続行するか、いくつか削除して新しいファイルを追加してください。"
     },
     "Translate": {
+        "fileConfiguration": "ファイル設定",
         "error": "エラー",
         "sessionExpired": "セッションの有効期限が切れました",
         "noDocumentUploaded": "ドキュメントがアップロードされていません。",
@@ -156,6 +158,7 @@
         "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。"
     },
     "GlossarySelection": {
+        "noGlossary": "用語集を使用しない",
         "selectGlossary": "用語集を選択",
         "newGlossary": "新規作成",
         "searchGlossary": "用語集を検索",

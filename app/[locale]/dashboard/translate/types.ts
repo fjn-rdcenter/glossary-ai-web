@@ -24,7 +24,6 @@ export type FileConfigState = {
   selectedGlossaries: string[];
   
   // Statuses
-  configStatus: "pending" | "configured";
   translationStatus: TranslationStatus;
   jobId: string | null;
   progress: number;
