@@ -121,16 +121,26 @@ export class TranslationService {
     }
   }
 
-  static async getTranslationHistory(): Promise<TranslationHistoryResponse[]> {
+  static async getTranslationHistory(): Promise<TranslationHistoryResponse[]>;
+  static async getTranslationHistory(
+    params: { page?: number; size?: number }
+  ): Promise<PaginatedResponse<TranslationHistoryResponse>>;
+  static async getTranslationHistory(
+    params?: { page?: number; size?: number }
+  ): Promise<TranslationHistoryResponse[] | PaginatedResponse<TranslationHistoryResponse>> {
     try {
-      // Backend returns a paginated response, but we return the items array
-      // to maintain compatibility with existing components.
-      // We explicitly request a larger size to "simulate" non-paginated history for now
+      const isPaginationRequest = !!params;
+      const requestParams = params || { size: 100 };
+
       const response = await apiClient.get<PaginatedResponse<TranslationHistoryResponse>>(
         API_CONFIG.ENDPOINTS.TRANSLATIONS.HISTORY, {
-          params: { size: 100 }
+          params: requestParams
         }
       );
+
+      if (isPaginationRequest) {
+        return response.data;
+      }
 
       return response.data.items || [];
     } catch (error) {

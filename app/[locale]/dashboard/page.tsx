@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { TranslationService, GlossaryService, AuthService } from "@/api/services";
+import { TranslationService, GlossaryService, DocumentService, AuthService } from "@/api/services";
 import { useUser } from "@/components/contexts/user-context";
 import { nanoid } from 'nanoid';
 
@@ -121,15 +121,15 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [jobs, glossaries] = await Promise.all([
-          TranslationService.getTranslationHistory(),
-          GlossaryService.getGlossaries(),
+        const [jobsResponse, glossariesResponse, documentsResponse] = await Promise.all([
+          TranslationService.getTranslationHistory({ page: 1, size: 1 }),
+          GlossaryService.getGlossaries({ page: 1, size: 1 }),
+          DocumentService.getSourceDocuments(1, 1),
         ]);
-        const uniqueDocs = new Set(jobs.map((j) => j.sourceDocument)).size;
         setStats({
-          totalTranslations: jobs.length,
-          activeGlossaries: glossaries.length,
-          uniqueDocuments: uniqueDocs,
+          totalTranslations: jobsResponse.total,
+          activeGlossaries: glossariesResponse.total,
+          uniqueDocuments: documentsResponse.total,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);

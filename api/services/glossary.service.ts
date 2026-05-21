@@ -60,14 +60,38 @@ export class GlossaryService {
   /**
    * Get public glossaries from marketplace
    */
-  static async getPublicGlossaries(search?: string): Promise<GlossaryResponse[]> {
+  static async getPublicGlossaries(
+    search?: string
+  ): Promise<GlossaryResponse[]>;
+  static async getPublicGlossaries(
+    params: { search?: string; page?: number; size?: number }
+  ): Promise<PaginatedResponse<GlossaryResponse>>;
+  static async getPublicGlossaries(
+    searchOrParams?: string | { search?: string; page?: number; size?: number }
+  ): Promise<GlossaryResponse[] | PaginatedResponse<GlossaryResponse>> {
     try {
-      const params: Record<string, any> = { size: 100 };
-      if (search) params.search = search;
+      const params: Record<string, any> = {};
+      let isPaginationRequest = false;
+
+      if (typeof searchOrParams === "string") {
+        params.size = 100;
+        if (searchOrParams) params.search = searchOrParams;
+      } else if (searchOrParams && typeof searchOrParams === "object") {
+        isPaginationRequest = true;
+        if (searchOrParams.size !== undefined) params.size = searchOrParams.size;
+        if (searchOrParams.page !== undefined) params.page = searchOrParams.page;
+        if (searchOrParams.search) params.search = searchOrParams.search;
+      } else {
+        params.size = 100;
+      }
+
       const response = await apiClient.get<PaginatedResponse<GlossaryResponse>>(
-        API_CONFIG.ENDPOINTS.GLOSSARIES.PUBLIC,
-        { params }
+        API_CONFIG.ENDPOINTS.GLOSSARIES.PUBLIC, { params }
       );
+
+      if (isPaginationRequest) {
+        return response.data;
+      }
 
       return response.data.items || [];
     } catch (error) {
@@ -78,14 +102,38 @@ export class GlossaryService {
   /**
    * Get glossaries shared with current user
    */
-  static async getSharedWithMeGlossaries(search?: string): Promise<GlossaryResponse[]> {
+  static async getSharedWithMeGlossaries(
+    search?: string
+  ): Promise<GlossaryResponse[]>;
+  static async getSharedWithMeGlossaries(
+    params: { search?: string; page?: number; size?: number }
+  ): Promise<PaginatedResponse<GlossaryResponse>>;
+  static async getSharedWithMeGlossaries(
+    searchOrParams?: string | { search?: string; page?: number; size?: number }
+  ): Promise<GlossaryResponse[] | PaginatedResponse<GlossaryResponse>> {
     try {
-      const params: Record<string, any> = { size: 100 };
-      if (search) params.search = search;
+      const params: Record<string, any> = {};
+      let isPaginationRequest = false;
+
+      if (typeof searchOrParams === "string") {
+        params.size = 100;
+        if (searchOrParams) params.search = searchOrParams;
+      } else if (searchOrParams && typeof searchOrParams === "object") {
+        isPaginationRequest = true;
+        if (searchOrParams.size !== undefined) params.size = searchOrParams.size;
+        if (searchOrParams.page !== undefined) params.page = searchOrParams.page;
+        if (searchOrParams.search) params.search = searchOrParams.search;
+      } else {
+        params.size = 100;
+      }
+
       const response = await apiClient.get<PaginatedResponse<GlossaryResponse>>(
-        API_CONFIG.ENDPOINTS.GLOSSARIES.SHARED_WITH_ME,
-        { params }
+        API_CONFIG.ENDPOINTS.GLOSSARIES.SHARED_WITH_ME, { params }
       );
+
+      if (isPaginationRequest) {
+        return response.data;
+      }
 
       return response.data.items || [];
     } catch (error) {

@@ -416,31 +416,36 @@ export default function HistoryPage() {
       </div>
 
        {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-xs text-muted-foreground">
             {trmlHistory("showing", {
               start: filteredTotal > 0 ? (pagination.page - 1) * pagination.size + 1 : 0,
               end: Math.min(pagination.page * pagination.size, filteredTotal),
               total: filteredTotal,
             })}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => handlePageChange(pagination.page - 1)}
             disabled={pagination.page <= 1}
+            aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
-            {trmlHistory("prev")}
           </Button>
+          <span className="text-xs font-medium min-w-[48px] text-center">
+            {pagination.page} / {filteredTotalPages}
+          </span>
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => handlePageChange(pagination.page + 1)}
             disabled={pagination.page >= filteredTotalPages}
+            aria-label="Next page"
           >
-            {trmlHistory("next")}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

@@ -1490,11 +1490,11 @@
                         "schema": {
                             "type": "integer",
                             "minimum": 1,
-                            "description": "Page number, must be \u003E= 1",
+                            "description": "Page number, must be >= 1",
                             "default": 1,
                             "title": "Page"
                         },
-                        "description": "Page number, must be \u003E= 1"
+                        "description": "Page number, must be >= 1"
                     },
                     {
                         "name": "size",
@@ -2106,7 +2106,7 @@
                 "properties": {
                     "file": {
                         "type": "string",
-                        "contentMediaType": "application/octet-stream",
+                        "format": "binary",
                         "title": "File"
                     }
                 },
@@ -3330,13 +3330,6 @@
                     "type": {
                         "type": "string",
                         "title": "Error Type"
-                    },
-                    "input": {
-                        "title": "Input"
-                    },
-                    "ctx": {
-                        "type": "object",
-                        "title": "Context"
                     }
                 },
                 "type": "object",

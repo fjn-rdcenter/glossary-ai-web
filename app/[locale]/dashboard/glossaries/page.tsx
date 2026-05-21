@@ -18,6 +18,8 @@ import {
   Lightbulb,
   Share2,
   Copy,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { GlossaryService, AuthService } from "@/api/services";
-import { GlossaryResponse } from "@/lib/types";
+import { GlossaryResponse, PaginatedResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getLanguageName, formatDate } from "@/lib/utils";
 import { useTranslations } from 'next-intl';
@@ -90,6 +92,10 @@ export default function GlossariesPage() {
   const [backendSearchQuery, setBackendSearchQuery] = useState("");
   const [glossaries, setGlossaries] = useState<GlossaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(12);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [selectedGlossaries, setSelectedGlossaries] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
@@ -127,6 +133,7 @@ export default function GlossariesPage() {
 
     setSearchQuery("");
     setBackendSearchQuery("");
+    setPage(1);
 
     const params = new URLSearchParams(searchParams.toString());
     if (nextTab === "my") {
@@ -139,22 +146,32 @@ export default function GlossariesPage() {
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  const fetchGlossaries = useCallback(async (search?: string) => {
+  const fetchGlossaries = useCallback(async (targetPage?: number, search?: string) => {
     setLoading(true);
     setSelectedGlossaries(new Set());
     try {
-      let response: GlossaryResponse[] = [];
-      const searchTerm = search ?? backendSearchQuery;
+      let response: PaginatedResponse<GlossaryResponse>;
+      const searchTerm = search !== undefined ? search : backendSearchQuery;
+      const currentPage = targetPage !== undefined ? targetPage : page;
+      
+      const params = {
+        search: searchTerm || undefined,
+        page: currentPage,
+        size: pageSize,
+      };
 
       if (activeTab === "marketplace") {
-        response = await GlossaryService.getPublicGlossaries(searchTerm || undefined);
+        response = await GlossaryService.getPublicGlossaries(params);
       } else if (activeTab === "shared") {
-        response = await GlossaryService.getSharedWithMeGlossaries(searchTerm || undefined);
+        response = await GlossaryService.getSharedWithMeGlossaries(params);
       } else {
-        response = await GlossaryService.getGlossaries(searchTerm || undefined);
+        response = await GlossaryService.getGlossaries(params);
       }
 
-      setGlossaries(Array.isArray(response) ? response : []);
+      setGlossaries(response.items || []);
+      setPage(response.page || 1);
+      setTotalItems(response.total || 0);
+      setTotalPages(response.pages || 0);
     } catch (error) {
       setErrorDialog({
         open: true,
@@ -163,7 +180,7 @@ export default function GlossariesPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, backendSearchQuery]);
+  }, [activeTab, backendSearchQuery, page, pageSize]);
 
   const handleGetGlossary = async (glossaryId: string, glossaryName: string) => {
     if (isCheckingClone) return;
@@ -188,8 +205,8 @@ export default function GlossariesPage() {
 
 
   useEffect(() => {
-    fetchGlossaries();
-  }, [fetchGlossaries]);
+    fetchGlossaries(page, backendSearchQuery);
+  }, [page, backendSearchQuery, fetchGlossaries]);
 
   useEffect(() => {
     // Check both backend status and localStorage
@@ -206,13 +223,19 @@ export default function GlossariesPage() {
 
   const handleSearch = useCallback(() => {
     setBackendSearchQuery(searchQuery);
-    fetchGlossaries(searchQuery);
-  }, [searchQuery, fetchGlossaries]);
+    setPage(1);
+  }, [searchQuery]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSearch();
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
     }
   };
 
@@ -687,6 +710,44 @@ export default function GlossariesPage() {
             </SlideUp>
           ))}
         </div>
+
+        {/* Pagination */}
+        {!loading && filteredGlossaries.length > 0 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-xs text-muted-foreground">
+              {trmlGlossaries("showing", {
+                start: totalItems > 0 ? (page - 1) * pageSize + 1 : 0,
+                end: Math.min(page * pageSize, totalItems),
+                total: totalItems,
+              })}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page <= 1}
+                aria-label={trmlCommon("previous") || "Previous page"}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs font-medium min-w-[48px] text-center">
+                {page} / {totalPages}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= totalPages}
+                aria-label={trmlCommon("next") || "Next page"}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Empty State */}
         {!loading && filteredGlossaries.length === 0 && (

@@ -59,7 +59,7 @@ type UITerm = {
   id: string; // Temporary ID or real ID
   source: string;
   target: string;
-  isNew?: boolean; 
+  isNew?: boolean;
 };
 
 interface GlossaryFormProps {
@@ -96,7 +96,7 @@ export function GlossaryForm({
   );
   // Track deleted terms in edit mode
   const [deletedTermIds, setDeletedTermIds] = useState<Set<string>>(new Set());
-  
+
   // [NEW] Error Dialog State
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -114,15 +114,15 @@ export function GlossaryForm({
       setDescription(initialData.description || "");
       setSourceLanguage(initialData.sourceLanguage);
       setTargetLanguage(initialData.targetLanguage);
-      
+
       if (initialData.terms && initialData.terms.items) {
         setTerms(initialData.terms.items.map(t => ({
-            id: t.id,
-            source: t.source,
-            target: t.target
+          id: t.id,
+          source: t.source,
+          target: t.target
         })));
       } else {
-         setTerms([]);
+        setTerms([]);
       }
     }
   }, [initialData]);
@@ -154,10 +154,10 @@ export function GlossaryForm({
       newSet.delete(id);
       return newSet;
     });
-    
+
     // If identifying real term (not temp/imported), track for deletion
-    if (mode === "edit" && !id.toString().startsWith("new-") && !id.toString().startsWith("imported-") && !id.toString().match(/^\d+$/) && id.length > 10) { 
-        setDeletedTermIds(prev => new Set(prev).add(id));
+    if (mode === "edit" && !id.toString().startsWith("new-") && !id.toString().startsWith("imported-") && !id.toString().match(/^\d+$/) && id.length > 10) {
+      setDeletedTermIds(prev => new Set(prev).add(id));
     }
   };
 
@@ -186,14 +186,14 @@ export function GlossaryForm({
       setShowDeleteWarning(true);
       return;
     }
-    
+
     // Track deletions
     if (mode === "edit") {
-        selectedTerms.forEach(id => {
-             if (!id.toString().startsWith("new-") && !id.toString().startsWith("imported-") && id !== "1") {
-                 setDeletedTermIds(prev => new Set(prev).add(id));
-             }
-        });
+      selectedTerms.forEach(id => {
+        if (!id.toString().startsWith("new-") && !id.toString().startsWith("imported-") && id !== "1") {
+          setDeletedTermIds(prev => new Set(prev).add(id));
+        }
+      });
     }
 
     setTerms(terms.filter((t) => !selectedTerms.has(t.id)));
@@ -201,7 +201,7 @@ export function GlossaryForm({
   };
 
   const confirmDeleteAllTerms = () => {
-    onCancel(); 
+    onCancel();
   };
 
   const updateTerm = (
@@ -248,50 +248,50 @@ export function GlossaryForm({
         description: trmlGlossaries("fileReadErrorMessage"),
       });
     };
-    
+
     reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (!text) return;
+      const text = event.target?.result as string;
+      if (!text) return;
 
-        if (text.includes("\ufffd")) {
-          setImportedFile(null);
-          toast({
-            variant: "destructive",
-            title: trmlGlossaries("encodingError"),
-            description: trmlGlossaries("encodingErrorMessage"),
-          });
-          return;
-        }
+      if (text.includes("\ufffd")) {
+        setImportedFile(null);
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("encodingError"),
+          description: trmlGlossaries("encodingErrorMessage"),
+        });
+        return;
+      }
 
-        const lines = text.split(/\r?\n/);
-        const importedTerms: UITerm[] = lines
-          .map((line, index) => {
-            if (!line.trim()) return null;
-            const parts = line.split(",");
-            const source = parts[0].trim();
-            const target = parts[1]?.trim();
-            
-            if (source) {
-                return {
-                    id: `imported-${Date.now()}-${index}`,
-                    source,
-                    target: target || source
-                };
-            }
-            return null;
-          })
-          .filter(Boolean) as UITerm[];
+      const lines = text.split(/\r?\n/);
+      const importedTerms: UITerm[] = lines
+        .map((line, index) => {
+          if (!line.trim()) return null;
+          const parts = line.split(",");
+          const source = parts[0].trim();
+          const target = parts[1]?.trim();
 
-        if (importedTerms.length > 0) {
-             setTerms([
-                ...terms.filter((t) => t.source || t.target),
-                ...importedTerms,
-             ]);
-             setImportedFile(null);
-             setActiveTab("manual");
-        } else {
-            setImportedFile(null);
-        }
+          if (source) {
+            return {
+              id: `imported-${Date.now()}-${index}`,
+              source,
+              target: target || source
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as UITerm[];
+
+      if (importedTerms.length > 0) {
+        setTerms([
+          ...terms.filter((t) => t.source || t.target),
+          ...importedTerms,
+        ]);
+        setImportedFile(null);
+        setActiveTab("manual");
+      } else {
+        setImportedFile(null);
+      }
     };
     reader.readAsText(importedFile, "UTF-8");
   };
@@ -299,74 +299,75 @@ export function GlossaryForm({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-        let resultGlossary: GlossaryDetailResponse;
+      let resultGlossary: GlossaryDetailResponse;
 
-        if (mode === "create") {
-            const created = await GlossaryService.createGlossary({
-                name,
-                sourceLanguage,
-                targetLanguage,
-            });
-            if (!created || !created.id) throw new Error("Failed to create glossary");
-            
-            resultGlossary = { ...created, terms: { items: [], total: 0, page: 1, size: 100, pages: 0 } };
-        } else {
-             if (!initialData) throw new Error("No initial data for edit");
-             await GlossaryService.updateGlossary(initialData.id, { 
-                name,
-                description: description || "" // Send empty string if cleared
-             }); 
-             resultGlossary = { ...initialData, name, description };
-             
-             // Handle Deletions
-             if (deletedTermIds.size > 0) {
-                 await Promise.all(Array.from(deletedTermIds).map(tid => 
-                     GlossaryService.deleteTerm(initialData.id, tid)
-                 ));
-             }
-        }
+      if (mode === "create") {
+        const created = await GlossaryService.createGlossary({
+          name,
+          description,
+          sourceLanguage,
+          targetLanguage,
+        });
+        if (!created || !created.id) throw new Error("Failed to create glossary");
 
-        const validTermsToSave = terms.filter(t => t.source.trim() && t.target.trim());
-        const isNewTerm = (id: string) => {
-          return id.startsWith("new-") || id.startsWith("imported-") || /^\d+$/.test(id);
-        }
-        // 1. Separate terms into new/imported vs existing/edited
-        const newTermsToUpsert = validTermsToSave.filter(t => isNewTerm(t.id));
-        const existingTermsToUpdate = validTermsToSave.filter(t => !isNewTerm(t.id));
+        resultGlossary = { ...created, terms: { items: [], total: 0, page: 1, size: 100, pages: 0 } };
+      } else {
+        if (!initialData) throw new Error("No initial data for edit");
+        await GlossaryService.updateGlossary(initialData.id, {
+          name,
+          description: description || "" // Send empty string if cleared
+        });
+        resultGlossary = { ...initialData, name, description };
 
-        // 2. Batch Upsert New Terms
-        if (newTermsToUpsert.length > 0) {
-             await GlossaryService.upsertTerms(
-                 resultGlossary.id, 
-                 newTermsToUpsert.map(t => ({ source: t.source, target: t.target }))
-             );
+        // Handle Deletions
+        if (deletedTermIds.size > 0) {
+          await Promise.all(Array.from(deletedTermIds).map(tid =>
+            GlossaryService.deleteTerm(initialData.id, tid)
+          ));
         }
+      }
 
-        // 3. Update Existing Terms (Sequentially or Parallel)
-        if (existingTermsToUpdate.length > 0) {
-             await Promise.all(existingTermsToUpdate.map(t => 
-                 GlossaryService.updateTerm(resultGlossary.id, t.id, { 
-                     source: t.source, 
-                     target: t.target 
-                 })
-             ));
-        }
-        
-        onSuccess(resultGlossary);
+      const validTermsToSave = terms.filter(t => t.source.trim() && t.target.trim());
+      const isNewTerm = (id: string) => {
+        return id.startsWith("new-") || id.startsWith("imported-") || /^\d+$/.test(id);
+      }
+      // 1. Separate terms into new/imported vs existing/edited
+      const newTermsToUpsert = validTermsToSave.filter(t => isNewTerm(t.id));
+      const existingTermsToUpdate = validTermsToSave.filter(t => !isNewTerm(t.id));
+
+      // 2. Batch Upsert New Terms
+      if (newTermsToUpsert.length > 0) {
+        await GlossaryService.upsertTerms(
+          resultGlossary.id,
+          newTermsToUpsert.map(t => ({ source: t.source, target: t.target }))
+        );
+      }
+
+      // 3. Update Existing Terms (Sequentially or Parallel)
+      if (existingTermsToUpdate.length > 0) {
+        await Promise.all(existingTermsToUpdate.map(t =>
+          GlossaryService.updateTerm(resultGlossary.id, t.id, {
+            source: t.source,
+            target: t.target
+          })
+        ));
+      }
+
+      onSuccess(resultGlossary);
 
     } catch (error) {
-        // Show Dialog instead of Toast
-        setErrorDialog({
-            open: true,
-            message: getErrorMessage(error),
-        });
+      // Show Dialog instead of Toast
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   };
 
   const validTerms = terms.filter((t) => t.source && t.target);
-  
+
   // Check for duplicates
   const sourceTerms = terms.map(t => t.source.trim()).filter(Boolean);
   const uniqueSourceTerms = new Set(sourceTerms);
@@ -378,347 +379,347 @@ export function GlossaryForm({
     <div className={cn("grid gap-8 items-start", isModal ? "grid-cols-1 lg:grid-cols-12" : "grid-cols-1 lg:grid-cols-12")}>
       {/* Main Form Area */}
       <div className={cn("space-y-6", isModal ? "lg:col-span-8" : "lg:col-span-8")}>
-         {/* Basic Info */}
-         <Card>
-            <CardHeader>
-              <CardTitle>{trmlGlossaries("basicInfo")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
+        {/* Basic Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{trmlGlossaries("basicInfo")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name">{trmlGlossaries("glossaryName")}</Label>
+              <Input
+                id="glossary-name-field"
+                placeholder={trmlGlossaries("glossaryNamePlaceholder")}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-10 px-3 py-2 text-sm leading-5 box-border overflow-hidden"
+              />
+            </div>
+
+            <div id="glossary-languages" className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">{trmlGlossaries("glossaryName")}</Label>
-                <Input
-                  id="glossary-name-field"
-                  placeholder={trmlGlossaries("glossaryNamePlaceholder")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-10 px-3 py-2 text-sm leading-5 box-border overflow-hidden"
-                />
+                <Label>{trmlCommon("sourceLanguage")}</Label>
+                <Select
+                  value={sourceLanguage}
+                  onValueChange={setSourceLanguage}
+                  disabled={mode === "edit"}
+                >
+                  <SelectTrigger className="h-11 w-full">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        {trmlCommon(lang.code)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              
-              <div id="glossary-languages" className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>{trmlCommon("sourceLanguage")}</Label>
-                  <Select
-                    value={sourceLanguage}
-                    onValueChange={setSourceLanguage}
-                    disabled={mode === "edit"} 
-                  >
-                    <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUPPORTED_LANGUAGES.map((lang) => (
+              <div className="space-y-2">
+                <Label>{trmlCommon("targetLanguage")}</Label>
+                <Select
+                  value={targetLanguage}
+                  onValueChange={setTargetLanguage}
+                  disabled={mode === "edit"}
+                >
+                  <SelectTrigger className="h-11 w-full">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_LANGUAGES
+                      .filter((l) => l.code !== sourceLanguage)
+                      .map((lang) => (
                         <SelectItem key={lang.code} value={lang.code}>
                           {trmlCommon(lang.code)}
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{trmlCommon("targetLanguage")}</Label>
-                  <Select
-                    value={targetLanguage}
-                    onValueChange={setTargetLanguage}
-                    disabled={mode === "edit"}
-                  >
-                    <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUPPORTED_LANGUAGES
-                        .filter((l) => l.code !== sourceLanguage)
-                        .map((lang) => (
-                          <SelectItem key={lang.code} value={lang.code}>
-                            {trmlCommon(lang.code)}
-                          </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{trmlGlossaries("descriptionForm")}</Label>
+              <Textarea
+                id="glossary-description-field"
+                placeholder={trmlGlossaries("descriptionFormPlaceholder")}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="resize-none min-h-[80px]"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Terms */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{trmlGlossaries("terms")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs id="glossary-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="manual">{trmlGlossaries("manualEntry")}</TabsTrigger>
+                <TabsTrigger value="import">{trmlGlossaries("importFile")}</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="manual" className="space-y-4">
+                {/* Bulk Actions */}
+                {selectedTerms.size > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg border border-border">
+                    <span className="text-sm font-medium">
+                      {trmlGlossaries("termCount", { count: selectedTerms.size })}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedTerms(new Set())}
+                      >
+                        {trmlGlossaries("clear")}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={deleteSelectedTerms}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        {trmlGlossaries("delete")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  id="glossary-term-table"
+                  ref={tableContainerRef}
+                  className="border border-border rounded-lg max-h-[400px] overflow-auto relative"
+                >
+                  <table className="w-full caption-bottom text-sm">
+                    <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                      <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedTerms.size === terms.length && terms.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead className="font-medium">{trmlCommon("source")}</TableHead>
+                        <TableHead className="font-medium">{trmlCommon("target")}</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <AnimatePresence>
+                        {terms.map((term) => (
+                          <motion.tr
+                            key={term.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className={cn(
+                              "border-b border-border last:border-0",
+                              selectedTerms.has(term.id) && "bg-secondary/30"
+                            )}
+                          >
+                            <TableCell className="p-2">
+                              <Checkbox
+                                checked={selectedTerms.has(term.id)}
+                                onCheckedChange={() => toggleTermSelection(term.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="p-2 relative group">
+                              <Input
+                                value={term.source}
+                                onChange={(e) => updateTerm(term.id, "source", e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    // Optional: Move focus or add new term if last one
+                                  }
+                                }}
+                                className={cn(
+                                  "border-0 bg-transparent focus-visible:ring-1 h-9 px-2 text-sm leading-5 box-border overflow-hidden",
+                                  // Highlight if duplicate (Case-Sensitive)
+                                  terms.filter(t => t.id !== term.id && t.source.trim() === term.source.trim() && term.source.trim()).length > 0
+                                    ? "text-destructive font-medium ring-1 ring-destructive/50 rounded-md bg-destructive/5"
+                                    : ""
+                                )}
+                                placeholder={trmlGlossaries("sourcePlaceholder")}
+                              />
+                              {/* Tooltip for duplicate */}
+                              {terms.filter(t => t.id !== term.id && t.source.trim() === term.source.trim() && term.source.trim()).length > 0 && (
+                                <div className="absolute left-2 -top-2 bg-destructive text-destructive-foreground text-[10px] px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                  {trmlGlossaries("duplicateTerm")}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="p-2">
+                              <Input
+                                value={term.target}
+                                onChange={(e) => updateTerm(term.id, "target", e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                className="border-0 bg-transparent focus-visible:ring-1 h-9 px-2 text-sm leading-5 box-border overflow-hidden"
+                                placeholder="Enter target (defaults to source)..."
+                              />
+                            </TableCell>
+                            <TableCell className="p-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeTerm(term.id)}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </motion.tr>
                         ))}
-                    </SelectContent>
-                  </Select>
+                      </AnimatePresence>
+                    </TableBody>
+                  </table>
                 </div>
-              </div>
 
-               <div className="space-y-2">
-                <Label htmlFor="description">{trmlGlossaries("descriptionForm")}</Label>
-                <Textarea
-                  id="glossary-description-field"
-                  placeholder={trmlGlossaries("descriptionFormPlaceholder")}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="resize-none min-h-[80px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                {hasDuplicates && (
+                  <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mt-2">
+                    <AlertTriangle className="w-4 h-4 ml-1" />
+                    <span className="font-medium">{trmlGlossaries("duplicateError")}</span>
+                  </div>
+                )}
 
-          {/* Terms */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{trmlGlossaries("terms")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs id="glossary-tabs" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="manual">{trmlGlossaries("manualEntry")}</TabsTrigger>
-                  <TabsTrigger value="import">{trmlGlossaries("importFile")}</TabsTrigger>
-                </TabsList>
+                <Button id="add-term-btn" variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
+                  <Plus className="mr-2 w-4 h-4" />
+                  {trmlGlossaries("addTerm")}
+                </Button>
+              </TabsContent>
 
-                <TabsContent value="manual" className="space-y-4">
-                  {/* Bulk Actions */}
-                  {selectedTerms.size > 0 && (
-                    <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg border border-border">
-                      <span className="text-sm font-medium">
-                        {trmlGlossaries("termCount", {count: selectedTerms.size})}
-                      </span>
-                      <div className="flex gap-2">
-                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedTerms(new Set())}
-                        >
-                          {trmlGlossaries("clear")}
+              <TabsContent value="import" className="space-y-4">
+                <div className={cn("border-2 border-dashed rounded-xl p-6 text-center transition-all", importedFile ? "border-primary bg-secondary/50" : "border-border hover:border-primary/50")}>
+                  {importedFile ? (
+                    <div className="flex flex-col items-center justify-center gap-4 py-4">
+                      <div className="flex items-center gap-3 p-3 bg-background rounded-lg border shadow-sm w-full max-w-sm">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="font-medium text-sm truncate">{importedFile.name}</p>
+                          <p className="text-xs text-muted-foreground">{trmlGlossaries("readyToImport")}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => setImportedFile(null)} className="shrink-0">
+                          <X className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={deleteSelectedTerms}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          {trmlGlossaries("delete")}
+                      </div>
+
+                      <div className="flex gap-2 w-full max-w-sm">
+                        <Button variant="outline" className="flex-1" onClick={() => setImportedFile(null)}>
+                          {trmlCommon("cancel")}
+                        </Button>
+                        <Button className="flex-1" onClick={handleProcessImport}>
+                          {trmlGlossaries("importAction")}
                         </Button>
                       </div>
                     </div>
-                  )}
+                  ) : (
 
-                  <div 
-                    id="glossary-term-table"
-                    ref={tableContainerRef}
-                    className="border border-border rounded-lg max-h-[400px] overflow-auto relative"
-                  >
-                    <table className="w-full caption-bottom text-sm">
-                      <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-                        <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                          <TableHead className="w-12">
-                            <Checkbox
-                              checked={selectedTerms.size === terms.length && terms.length > 0}
-                              onCheckedChange={toggleSelectAll}
-                            />
-                          </TableHead>
-                          <TableHead className="font-medium">{trmlCommon("source")}</TableHead>
-                          <TableHead className="font-medium">{trmlCommon("target")}</TableHead>
-                          <TableHead className="w-12"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <AnimatePresence>
-                          {terms.map((term) => (
-                            <motion.tr
-                              key={term.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className={cn(
-                                "border-b border-border last:border-0",
-                                selectedTerms.has(term.id) && "bg-secondary/30"
-                              )}
-                            >
-                               <TableCell className="p-2">
-                                <Checkbox
-                                  checked={selectedTerms.has(term.id)}
-                                  onCheckedChange={() => toggleTermSelection(term.id)}
-                                />
-                              </TableCell>
-                              <TableCell className="p-2 relative group">
-                                <Input
-                                  value={term.source}
-                                  onChange={(e) => updateTerm(term.id, "source", e.target.value)}
-                                  onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                          e.preventDefault();
-                                          // Optional: Move focus or add new term if last one
-                                      }
-                                  }}
-                                  className={cn(
-                                    "border-0 bg-transparent focus-visible:ring-1 h-9 px-2 text-sm leading-5 box-border overflow-hidden",
-                                    // Highlight if duplicate (Case-Sensitive)
-                                    terms.filter(t => t.id !== term.id && t.source.trim() === term.source.trim() && term.source.trim()).length > 0
-                                      ? "text-destructive font-medium ring-1 ring-destructive/50 rounded-md bg-destructive/5" 
-                                      : ""
-                                  )}
-                                  placeholder={trmlGlossaries("sourcePlaceholder")}
-                                />
-                                {/* Tooltip for duplicate */}
-                                {terms.filter(t => t.id !== term.id && t.source.trim() === term.source.trim() && term.source.trim()).length > 0 && (
-                                  <div className="absolute left-2 -top-2 bg-destructive text-destructive-foreground text-[10px] px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    {trmlGlossaries("duplicateTerm")}
-                                  </div>
-                                )}
-                              </TableCell>
-                              <TableCell className="p-2">
-                                <Input
-                                  value={term.target}
-                                  onChange={(e) => updateTerm(term.id, "target", e.target.value)}
-                                  onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                          e.preventDefault();
-                                      }
-                                  }}
-                                  className="border-0 bg-transparent focus-visible:ring-1 h-9 px-2 text-sm leading-5 box-border overflow-hidden"
-                                  placeholder="Enter target (defaults to source)..."
-                                />
-                              </TableCell>
-                              <TableCell className="p-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeTerm(term.id)}
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </TableCell>
-                            </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                      </TableBody>
-                    </table>
-                  </div>
-                  
-                  {hasDuplicates && (
-                    <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mt-2">
-                        <AlertTriangle className="w-4 h-4 ml-1" />
-                        <span className="font-medium">{trmlGlossaries("duplicateError")}</span>
-                    </div>
-                  )}
+                    <FileDropzone
+                      onFileSelect={(file) => {
+                        setImportedFile(file);
+                      }}
+                      accept={{
+                        'text/plain': ['.txt'],
+                        'text/csv': ['.csv']
+                      }}
+                      instructionMessage={
+                        <div className="space-y-4">
+                          {/* Header nhỏ gọn */}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Định dạng hỗ trợ:</span>
+                            <span className="font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+                              .CSV, .TXT
+                            </span>
+                          </div>
 
-                  <Button id="add-term-btn" variant="outline" onClick={addTerm} className="w-full bg-secondary/50 hover:bg-secondary mt-4">
-                    <Plus className="mr-2 w-4 h-4" />
-                    {trmlGlossaries("addTerm")}
-                  </Button>
-                </TabsContent>
+                          {/* Khu vực hướng dẫn chính */}
+                          <div className="rounded-lg border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/40 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/20">
+                            <div className="p-3 border-b border-blue-100 dark:border-blue-900/50 flex items-center gap-2">
+                              <span className="text-blue-600 dark:text-blue-400">💡</span>
+                              <p className="font-semibold text-sm text-foreground">
+                                Cấu trúc nội dung file
+                              </p>
+                            </div>
 
-                <TabsContent value="import" className="space-y-4">
-                    <div className={cn("border-2 border-dashed rounded-xl p-6 text-center transition-all", importedFile ? "border-primary bg-secondary/50" : "border-border hover:border-primary/50")}>
-                        {importedFile ? (
-                           <div className="flex flex-col items-center justify-center gap-4 py-4">
-                               <div className="flex items-center gap-3 p-3 bg-background rounded-lg border shadow-sm w-full max-w-sm">
-                                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                       <FileText className="w-5 h-5 text-primary" />
-                                   </div>
-                                   <div className="flex-1 text-left min-w-0">
-                                       <p className="font-medium text-sm truncate">{importedFile.name}</p>
-                                       <p className="text-xs text-muted-foreground">{trmlGlossaries("readyToImport")}</p>
-                                   </div>
-                                   <Button variant="ghost" size="icon" onClick={() => setImportedFile(null)} className="shrink-0">
-                                       <X className="w-4 h-4" />
-                                   </Button>
-                               </div>
-                               
-                               <div className="flex gap-2 w-full max-w-sm">
-                                   <Button variant="outline" className="flex-1" onClick={() => setImportedFile(null)}>
-                                       {trmlCommon("cancel")}
-                                   </Button>
-                                   <Button className="flex-1" onClick={handleProcessImport}>
-                                       {trmlGlossaries("importAction")}
-                                   </Button>
-                               </div>
-                           </div>
-                        ) : (
-
-                           <FileDropzone
-                             onFileSelect={(file) => {
-                                 setImportedFile(file);
-                             }}
-                             accept={{
-                                 'text/plain': ['.txt'],
-                                 'text/csv': ['.csv']
-                             }}
-                             instructionMessage={
-                              <div className="space-y-4">
-                                {/* Header nhỏ gọn */}
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">Định dạng hỗ trợ:</span>
-                                  <span className="font-mono font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
-                                    .CSV, .TXT
-                                  </span>
-                                </div>
-
-                                {/* Khu vực hướng dẫn chính */}
-                                <div className="rounded-lg border border-blue-200/60 dark:border-blue-800/60 bg-gradient-to-br from-blue-50/40 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/20">
-                                  <div className="p-3 border-b border-blue-100 dark:border-blue-900/50 flex items-center gap-2">
-                                    <span className="text-blue-600 dark:text-blue-400">💡</span>
-                                    <p className="font-semibold text-sm text-foreground">
-                                      Cấu trúc nội dung file
-                                    </p>
-                                  </div>
-                                  
-                                  <div className="p-3 space-y-3">
-                                    {/* Case 1: Đầy đủ */}
-                                    <div className="relative pl-3 border-l-2 border-blue-400 dark:border-blue-600">
-                                      <p className="text-xs font-medium text-foreground mb-1.5">
-                                        1. Cặp thuật ngữ (Khuyên dùng):
-                                      </p>
-                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
-                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
-                                          từ_gốc,từ_dịch
-                                        </code>
-                                        <div className="flex items-center gap-2 text-xs">
-                                          <span className="text-muted-foreground">Ví dụ:</span>
-                                          <code className="px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-mono border border-green-200 dark:border-green-800">
-                                            AI,Trí tuệ nhân tạo
-                                          </code>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Case 2: Rút gọn */}
-                                    <div className="relative pl-3 border-l-2 border-amber-400 dark:border-amber-600">
-                                      <p className="text-xs font-medium text-foreground mb-1.5">
-                                        2. Chỉ có từ gốc (Tự động điền):
-                                      </p>
-                                      <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
-                                        <code className="block text-xs font-mono text-muted-foreground mb-1">
-                                          từ_gốc
-                                        </code>
-                                        <div className="flex items-center gap-2 text-xs">
-                                          <span className="text-muted-foreground">Ví dụ:</span>
-                                          <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-mono border border-amber-200 dark:border-amber-800">
-                                            Samsung
-                                          </code>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Note nhỏ (Optional) */}
-                                  <div className="p-2 bg-blue-100/30 dark:bg-blue-900/10 text-[11px] text-center text-muted-foreground italic rounded-b-lg">
-                                    *Lưu ý: Không cần dòng tiêu đề (header)
+                            <div className="p-3 space-y-3">
+                              {/* Case 1: Đầy đủ */}
+                              <div className="relative pl-3 border-l-2 border-blue-400 dark:border-blue-600">
+                                <p className="text-xs font-medium text-foreground mb-1.5">
+                                  1. Cặp thuật ngữ (Khuyên dùng):
+                                </p>
+                                <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                  <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                    từ_gốc,từ_dịch
+                                  </code>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-muted-foreground">Ví dụ:</span>
+                                    <code className="px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-mono border border-green-200 dark:border-green-800">
+                                      AI,Trí tuệ nhân tạo
+                                    </code>
                                   </div>
                                 </div>
                               </div>
-                            }
-                           />
-                        )}
-                    </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+
+                              {/* Case 2: Rút gọn */}
+                              <div className="relative pl-3 border-l-2 border-amber-400 dark:border-amber-600">
+                                <p className="text-xs font-medium text-foreground mb-1.5">
+                                  2. Chỉ có từ gốc (Tự động điền):
+                                </p>
+                                <div className="bg-background/80 dark:bg-slate-950/50 rounded-md border border-border p-2.5">
+                                  <code className="block text-xs font-mono text-muted-foreground mb-1">
+                                    từ_gốc
+                                  </code>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-muted-foreground">Ví dụ:</span>
+                                    <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-mono border border-amber-200 dark:border-amber-800">
+                                      Samsung
+                                    </code>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Note nhỏ (Optional) */}
+                            <div className="p-2 bg-blue-100/30 dark:bg-blue-900/10 text-[11px] text-center text-muted-foreground italic rounded-b-lg">
+                              *Lưu ý: Không cần dòng tiêu đề (header)
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    />
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sidebar Summary */}
       <div className={cn("space-y-6 sticky top-6", isModal ? "lg:col-span-4" : "lg:col-span-4")}>
-          <GlossarySummary 
-             name={name}
-             sourceLanguage={sourceLanguage}
-             targetLanguage={targetLanguage}
-             termCount={validTerms.length}
-             isValid={isValid}
-             isSaving={isSaving}
-             mode={mode}
-             onSave={handleSave}
-             onCancel={onCancel}
-          />
+        <GlossarySummary
+          name={name}
+          sourceLanguage={sourceLanguage}
+          targetLanguage={targetLanguage}
+          termCount={validTerms.length}
+          isValid={isValid}
+          isSaving={isSaving}
+          mode={mode}
+          onSave={handleSave}
+          onCancel={onCancel}
+        />
       </div>
 
       {/* Delete Warning */}
@@ -730,13 +731,13 @@ export function GlossaryForm({
               {trmlGlossaries("confirmDeleteAll")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-               {trmlGlossaries("deleteWarning")}
+              {trmlGlossaries("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{trmlCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteAllTerms} className="bg-destructive text-destructive-foreground">
-               {trmlGlossaries("proceed")}
+              {trmlGlossaries("proceed")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -751,12 +752,12 @@ export function GlossaryForm({
               {trmlCommon("error")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground font-medium mt-2">
-               {errorDialog.message}
+              {errorDialog.message}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setErrorDialog({ open: false, message: "" })}>
-               {trmlCommon("close") || "Close"} 
+              {trmlCommon("close") || "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
