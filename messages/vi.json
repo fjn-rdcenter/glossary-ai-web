@@ -61,7 +61,12 @@
     },
     "Header": {
         "welcome": "Chào mừng",
-        "searchPlaceholder": "Tìm tài liệu, bộ thuật ngữ..."
+        "searchPlaceholder": "Tìm tài liệu, bộ thuật ngữ...",
+        "Glossaries": "Thuật ngữ",
+        "History": "Lịch sử",
+        "User Guidance": "Hướng dẫn sử dụng",
+        "signOut": "Đăng xuất",
+        "Release Notes": "Nhật ký thay đổi"
     },
     "Footer": {
         "contact": "Liên hệ",
@@ -69,14 +74,6 @@
         "phone": "Số nội bộ: 5903",
         "email": "Email: aiic-support@fujinet.net",
         "mainPages": "Trang chính"
-    },
-    "Sidebar": {
-        "Dashboard": "Dashboard",
-        "Translate": "Dịch",
-        "Glossaries": "Thuật ngữ",
-        "History": "Lịch sử",
-        "User Guidance": "Hướng dẫn sử dụng",
-        "signOut": "Đăng xuất"
     },
     "StepIndicator": {
         "Document": "Tài liệu",
@@ -93,6 +90,7 @@
         "rememberMe": "Ghi nhớ đăng nhập",
         "forgotPassword": "Quên mật khẩu?",
         "signIn": "Đăng nhập",
+        "signOut": "Đăng xuất",
         "requestAccess": "Yêu cầu quyền truy cập",
         "noAccount": "Chưa có tài khoản?",
         "footer": "Phát triển bởi AI Innovation Center",
@@ -240,6 +238,7 @@
         "supportedFormats": "Hỗ trợ .txt, .csv",
         "noTermsAdded": "Chưa có thuật ngữ nào",
         "createGlossary": "Tạo bộ thuật ngữ",
+        "createGlossaryDescription": "Định nghĩa thuật ngữ tùy chỉnh cho bản dịch",
         "error": "Lỗi",
         "failedToLoadGlossary": "Không thể tải bộ thuật ngữ",
         "editTitle": "Chỉnh sửa bộ thuật ngữ",

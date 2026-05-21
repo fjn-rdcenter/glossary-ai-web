@@ -75,5 +75,11 @@ export const API_CONFIG = {
       CANCEL: (jobId: string) => `/api/v2/translations/${jobId}/cancel`,
       HISTORY: "/api/v2/translations",
     },
+
+    // Release Notes
+    RELEASE_NOTES: {
+      BASE: "/api/v2/release-notes",
+      MARK_READ: "/api/v2/release-notes/read",
+    },
   },
 } as const;

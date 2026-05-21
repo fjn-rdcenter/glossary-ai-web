@@ -63,8 +63,15 @@
         "showing": "Showing {start} to {end} of {total} {total, plural, one {document} other {documents}}"
     },
     "Header": {
-        "welcome": "Welcome back",
-        "searchPlaceholder": "Search documents, glossaries..."
+        "welcome": "Welcome",
+        "searchPlaceholder": "Search for documents, glossaries...",
+        "Dashboard": "Dashboard",
+        "Translate": "Translate",
+        "Glossaries": "Glossaries",
+        "History": "History",
+        "User Guidance": "User Guidance",
+        "signOut": "Log Out",
+        "Release Notes": "Release Notes"
     },
     "Footer": {
         "contact": "Contact",
@@ -72,14 +79,6 @@
         "phone": "Internal Ext: 5903",
         "email": "Email: aiic-support@fujinet.net",
         "mainPages": "Main Pages"
-    },
-    "Sidebar": {
-        "Dashboard": "Dashboard",
-        "Translate": "Translate",
-        "Glossaries": "Glossaries",
-        "History": "History",
-        "User Guidance": "User Guidance",
-        "signOut": "Sign out"
     },
     "StepIndicator": {
         "Document": "Document",
@@ -96,6 +95,7 @@
         "rememberMe": "Remember me",
         "forgotPassword": "Forgot password?",
         "signIn": "Sign in",
+        "signOut": "Sign out",
         "requestAccess": "Request access",
         "noAccount": "Don't have an account?",
         "footer": "Developed by AI Innovation Center",
@@ -255,6 +255,7 @@
         "supportedFormats": "Supports .txt, .csv",
         "noTermsAdded": "No terms added yet",
         "createGlossary": "Create Glossary",
+        "createGlossaryDescription": "Define custom terminology for translations",
         "error": "Error",
         "failedToLoadGlossary": "Failed to load glossary",
         "editTitle": "Edit Glossary",

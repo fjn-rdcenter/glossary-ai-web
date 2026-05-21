@@ -61,7 +61,14 @@
     },
     "Header": {
         "welcome": "おかえりなさい",
-        "searchPlaceholder": "ドキュメントや用語集を検索..."
+        "searchPlaceholder": "ドキュメントや用語集を検索...",
+        "Dashboard": "ダッシュボード",
+        "Translate": "翻訳",
+        "Glossaries": "用語集",
+        "History": "履歴",
+        "User Guidance": "ご利用ガイド",
+        "signOut": "ログアウト",
+        "Release Notes": "リリースノート"
     },
     "Footer": {
         "contact": "お問い合わせ",
@@ -69,14 +76,6 @@
         "phone": "内線: 5903",
         "email": "メール: aiic-support@fujinet.net",
         "mainPages": "メインページ"
-    },
-    "Sidebar": {
-        "Dashboard": "ダッシュボード",
-        "Translate": "翻訳",
-        "Glossaries": "用語集",
-        "History": "履歴",
-        "User Guidance": "ご利用ガイド",
-        "signOut": "サインアウト"
     },
     "StepIndicator": {
         "Document": "ドキュメント",
@@ -93,6 +92,7 @@
         "rememberMe": "ログイン状態を保持する",
         "forgotPassword": "パスワードをお忘れですか？",
         "signIn": "サインイン",
+        "signOut": "サインアウト",
         "requestAccess": "アクセス権をリクエスト",
         "noAccount": "アカウントをお持ちでないですか？",
         "footer": "AI Innovation Center によって開発されました",
@@ -240,6 +240,7 @@
         "supportedFormats": ".txt, .csv 形式に対応",
         "noTermsAdded": "用語がまだ追加されていません",
         "createGlossary": "用語集を作成",
+        "createGlossaryDescription": "翻訳用のカスタム用語を定義する",
         "error": "エラー",
         "failedToLoadGlossary": "用語集の読み込みに失敗しました",
         "editTitle": "用語集を編集",

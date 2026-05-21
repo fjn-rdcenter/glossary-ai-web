@@ -95,7 +95,6 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsMounted(true);
 
-    // Preload tour videos for current locale
     const preloadVideos = () => {
       const videos = [
         tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.vi,
@@ -141,7 +140,6 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
-  // Trigger tour Logic... (Giữ nguyên)
   useEffect(() => {
     if (
       !userLoading &&
@@ -150,20 +148,16 @@ export default function DashboardPage() {
       !localStorage.getItem("onboardingTourCompleted")
     ) {
       setShowSparkle(true);
-      // Delay nhỏ để đảm bảo DOM đã render hết ID
       setTimeout(() => {
         setRunTour(true);
       }, 1200);
     }
   }, [user, userLoading]);
 
-  // Clean session storage... (Giữ nguyên)
   useEffect(() => {
-    sessionStorage.clear(); // Xóa sạch cho gọn
+    sessionStorage.clear();
     clearPendingFiles();
   }, []);
-
-  // --- CẤU HÌNH TOUR MỚI ---
 
   const CustomTooltip = ({
     index,
@@ -176,16 +170,16 @@ export default function DashboardPage() {
     isLastStep
   }: TooltipRenderProps) => {
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            primaryProps.onClick(e as any);
-          }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-      }, [primaryProps]);
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          primaryProps.onClick(e as any);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [primaryProps]);
 
     return (
       <div
@@ -194,15 +188,15 @@ export default function DashboardPage() {
       >
         {/* Header / Image Area */}
         <div className="p-5 flex flex-col gap-3">
-            {/* Step Counter */}
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
-                <span>Step {index + 1} of {size}</span>
-            </div>
+          {/* Step Counter */}
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
+            <span>Step {index + 1} of {size}</span>
+          </div>
 
-            {/* Content Body */}
-            <div className="text-sm">
-                {step.content}
-            </div>
+          {/* Content Body */}
+          <div className="text-sm">
+            {step.content}
+          </div>
         </div>
 
         {/* Footer Buttons */}
@@ -244,16 +238,16 @@ export default function DashboardPage() {
       placement: 'center',
       content: (
         <div className="text-center py-2 px-1">
-           <div className="flex justify-center mb-4">
-             <Logo size="md" variant="icon" />
-           </div>
-           <h3 className="text-lg font-bold mb-2">{trmlTour("welcomeTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed text-left">
-             {trmlTour.rich("welcomeDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br />
-             })}
-           </p>
+          <div className="flex justify-center mb-4">
+            <Logo size="md" variant="icon" />
+          </div>
+          <h3 className="text-lg font-bold mb-2">{trmlTour("welcomeTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed text-left">
+            {trmlTour.rich("welcomeDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       disableBeacon: true,
@@ -262,24 +256,24 @@ export default function DashboardPage() {
       target: '#metric-history',
       content: (
         <div>
-           <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <video 
-                preload="auto"
-                src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.vi}
-                className="w-full h-auto object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-           </div>
-           <h3 className="font-bold text-base mb-1">{trmlTour("historyTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trmlTour.rich("historyDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br />
-             })}
-           </p>
+          <div className="mb-3 rounded-lg overflow-hidden border border-border">
+            <video
+              preload="auto"
+              src={tourImages.history[locale as keyof typeof tourImages.history] || tourImages.history.vi}
+              className="w-full h-auto object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+          <h3 className="font-bold text-base mb-1">{trmlTour("historyTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlTour.rich("historyDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -289,24 +283,24 @@ export default function DashboardPage() {
       target: '#metric-glossary',
       content: (
         <div>
-           <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <video 
-                preload="auto"
-                src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.vi}
-                className="w-full h-auto object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-           </div>
-           <h3 className="font-bold text-base mb-1">{trmlTour("glossaryTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trmlTour.rich("glossaryDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br />
-             })}
-           </p>
+          <div className="mb-3 rounded-lg overflow-hidden border border-border">
+            <video
+              preload="auto"
+              src={tourImages.glossary[locale as keyof typeof tourImages.glossary] || tourImages.glossary.vi}
+              className="w-full h-auto object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+          <h3 className="font-bold text-base mb-1">{trmlTour("glossaryTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlTour.rich("glossaryDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -315,24 +309,24 @@ export default function DashboardPage() {
       target: '#metric-documents',
       content: (
         <div>
-           <div className="mb-3 rounded-lg overflow-hidden border border-border">
-              <video 
-                preload="auto"
-                src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.vi}
-                className="w-full h-auto object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-           </div>
-           <h3 className="font-bold text-base mb-1">{trmlTour("documentsTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trmlTour.rich("documentsDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br />
-             })}
-           </p>
+          <div className="mb-3 rounded-lg overflow-hidden border border-border">
+            <video
+              preload="auto"
+              src={tourImages.documents[locale as keyof typeof tourImages.documents] || tourImages.documents.vi}
+              className="w-full h-auto object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+          <h3 className="font-bold text-base mb-1">{trmlTour("documentsTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlTour.rich("documentsDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -341,18 +335,18 @@ export default function DashboardPage() {
       target: '#upload-zone',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trmlTour("uploadTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trmlTour.rich("uploadDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               i: (chunks: any) => <i>{chunks}</i>,
-               br: () => <br />
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trmlTour("uploadTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlTour.rich("uploadDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              i: (chunks: any) => <i>{chunks}</i>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'top',
-      spotlightClicks: false,     
+      spotlightClicks: false,
       floaterProps: {
         disableAnimation: false,
         disableFlip: true,
@@ -364,7 +358,7 @@ export default function DashboardPage() {
     const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunTour(false);
-      
+
       // Remove focus from any element to prevent accidental restarts via Enter
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
@@ -372,8 +366,8 @@ export default function DashboardPage() {
 
       // Try to sync with backend
       try {
-        await AuthService.updateUserProfile({ 
-          walkthrough_status: { dashboard_tour: true } 
+        await AuthService.updateUserProfile({
+          walkthrough_status: { dashboard_tour: true }
         });
         // Refresh user context to get updated walkthrough_status
         await refreshUser();
@@ -424,7 +418,7 @@ export default function DashboardPage() {
     },
     multiple: true
   });
-  
+
   const handleContinue = async () => {
     if (files.length > 0) {
       setIsUploadingFiles(true);
@@ -448,11 +442,11 @@ export default function DashboardPage() {
         const uploadedInfos = await Promise.all(uploadPromises);
 
         setPendingFiles(uploadedInfos);
-        
+
         // Remove old sessionStorage variables that were for a single file state
         sessionStorage.removeItem("pendingUploadFiles");
         sessionStorage.removeItem("pendingUploadFile");
-        
+
         router.push("/dashboard/translate");
       } catch (error) {
         console.error("Failed to upload test documents:", error);
@@ -483,8 +477,8 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mt-1">{trml("dashboardDescription")}</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" asChild><Link href="/dashboard/history"><History className="w-4 h-4 mr-2" />{trml("fullHistory")}</Link></Button>
-            <Button asChild><Link href="/dashboard/translate"><Upload className="w-4 h-4 mr-2" />{trml("newTranslation")}</Link></Button>
+          <Button variant="outline" asChild><Link href="/dashboard/history"><History className="w-4 h-4 mr-2" />{trml("fullHistory")}</Link></Button>
+          <Button asChild><Link href="/dashboard/translate"><Upload className="w-4 h-4 mr-2" />{trml("newTranslation")}</Link></Button>
         </div>
       </div>
 
@@ -498,8 +492,8 @@ export default function DashboardPage() {
           return (
             <SlideUp key={stat.label} delay={i * 0.1}>
               <Link href={href} className="block h-full group">
-                <div id={elementId} className="h-full"> 
-                  <Card 
+                <div id={elementId} className="h-full">
+                  <Card
                     className="bg-secondary cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5 h-full relative"
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -526,47 +520,47 @@ export default function DashboardPage() {
 
       <div className="space-y-6 max-w-full">
         <Card
-          id="upload-zone" 
+          id="upload-zone"
           className="w-full border-2 border-dashed border-border bg-muted/50"
         >
           <CardHeader>
             <CardTitle>{trml("quickUpload")}</CardTitle>
           </CardHeader>
           <CardContent>
-             <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait">
               {files.length === 0 ? (
                 <div {...getRootProps()} className={cn("w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px] bg-card border border-border shadow-sm hover:border-primary/50", isDragActive && "border-primary")}>
-                    <input {...getInputProps()} />
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
-                    <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
-                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
+                  <input {...getInputProps()} />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
+                  <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
+                  <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
                 </div>
               ) : (
                 <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">
-                    {files.map((file, index) => (
-                        <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
-                    ))}
-                    <div className="flex justify-center pt-4 gap-4">
-                        {files.length < 5 && (
-                          <div {...getRootProps()}>
-                            <input {...getInputProps()} />
-                            <Button variant="outline" size="lg" className="min-w-[150px]">
-                              {trml('addMoreFiles') || "Add More Files"}
-                            </Button>
-                          </div>
-                        )}
-                        <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
-                          {isUploadingFiles ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
-                            </>
-                          ) : (
-                            <>
-                                {trml('continue')} <ArrowRight className="w-4 h-4" />
-                            </>
-                          )}
+                  {files.map((file, index) => (
+                    <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
+                  ))}
+                  <div className="flex justify-center pt-4 gap-4">
+                    {files.length < 5 && (
+                      <div {...getRootProps()}>
+                        <input {...getInputProps()} />
+                        <Button variant="outline" size="lg" className="min-w-[150px]">
+                          {trml('addMoreFiles') || "Add More Files"}
                         </Button>
-                    </div>
+                      </div>
+                    )}
+                    <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
+                      {isUploadingFiles ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
+                        </>
+                      ) : (
+                        <>
+                          {trml('continue')} <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -602,10 +596,10 @@ export default function DashboardPage() {
               width: 400,
             },
             spotlight: {
-                borderRadius: '12px',
+              borderRadius: '12px',
             },
             tooltip: {
-              borderRadius: '16px', 
+              borderRadius: '16px',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
               padding: 0,
             },
