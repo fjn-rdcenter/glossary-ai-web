@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -31,6 +32,9 @@ export function ReleaseNotesDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-xl">{title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Danh sách các thay đổi và cập nhật mới nhất của ứng dụng
+          </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-8">

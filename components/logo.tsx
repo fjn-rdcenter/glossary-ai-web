@@ -34,6 +34,8 @@ export function Logo({ className, imageClassName, size = "lg", variant = "icon" 
         )}
         alt="GlossaryAI Logo"
         aria-hidden
+        loading="eager"
+        priority
       />
 
       {variant === "icon" && (

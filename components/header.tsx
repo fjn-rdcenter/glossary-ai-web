@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { usePathname } from "@/i18n/routing"
-import { Search, LogOut, BookOpen, History, PlayCircle, Sparkles } from "lucide-react"
+import { Search, LogOut, BookOpen, History, PlayCircle, BellRing } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -55,7 +55,7 @@ export function Header() {
       releaseNotesService.getReleaseNotes().then(data => {
         setReleases(data.releases);
         setLatestRead(data.latest_read_release);
-        
+
         if (data.releases.length > 0 && data.releases[0].version !== data.latest_read_release) {
           setHasNewRelease(true);
         }
@@ -78,7 +78,7 @@ export function Header() {
     { href: "/dashboard/glossaries", label: "Glossaries", icon: BookOpen },
     { href: "/dashboard/history", label: "History", icon: History },
     { href: "/user-guidance", label: "User Guidance", icon: PlayCircle },
-    { href: "/release-notes", label: "Release Notes", icon: Sparkles },
+    { href: "/release-notes", label: "Release Notes", icon: BellRing },
   ];
 
   return (
@@ -99,9 +99,9 @@ export function Header() {
               if (item.href === "/release-notes") {
                 return (
                   <Tooltip key={item.href}>
-                    <ReleaseNotesDialog 
-                      title={trml(item.label) ?? item.label} 
-                      releases={releases} 
+                    <ReleaseNotesDialog
+                      title={trml(item.label) ?? item.label}
+                      releases={releases}
                       onOpen={handleReleaseNotesOpened}
                     >
                       <TooltipTrigger asChild>
