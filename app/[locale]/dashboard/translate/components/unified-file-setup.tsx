@@ -31,13 +31,7 @@ import { GlossaryResponse } from "@/lib/types";
 import { GlossaryService } from "@/api/services";
 import { CreateGlossaryDialog } from "@/components/glossary/create-glossary-dialog";
 import { EditGlossaryDialog } from "@/components/glossary/edit-glossary-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { GlossaryPreviewDialog } from "@/components/glossary/glossary-preview-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -107,7 +101,7 @@ export function UnifiedFileSetup({
   } | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
 
-  const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [editingGlossaryId, setEditingGlossaryId] = useState<string | null>(null);
 
   // Local search input state (committed on Enter or button click)
@@ -401,10 +395,10 @@ export function UnifiedFileSetup({
       className="h-full flex flex-col"
     >
       {/* Setup Content */}
-      <div className="flex-1 space-y-4 pb-6">
+      <div className="flex-1 space-y-4">
 
         {/* CARD 1: TRANSLATION OPTIONS (Languages + Image toggle side by side) */}
-        <div className="rounded-xl border border-border bg-secondary/10 p-4 space-y-3">
+        <div className="space-y-3">
           <div className="flex items-center gap-2 text-foreground font-semibold">
             <Globe className="w-4 h-4 text-primary" />
             <h3 className="text-sm">Translation Options</h3>
@@ -421,7 +415,7 @@ export function UnifiedFileSetup({
                     value={editingFile.sourceLanguage}
                     onValueChange={(val) => onUpdateFile({ sourceLanguage: val })}
                   >
-                    <SelectTrigger className="h-9 bg-background text-sm" aria-label="Source Language">
+                    <SelectTrigger className="h-9 bg-card text-sm" aria-label="Source Language">
                       <SelectValue placeholder="From" />
                     </SelectTrigger>
                     <SelectContent>
@@ -460,7 +454,7 @@ export function UnifiedFileSetup({
                     value={editingFile.targetLanguage}
                     onValueChange={(val) => onUpdateFile({ targetLanguage: val })}
                   >
-                    <SelectTrigger className="h-9 bg-background text-sm" aria-label="Target Language">
+                    <SelectTrigger className="h-9 bg-card text-sm" aria-label="Target Language">
                       <SelectValue placeholder="To" />
                     </SelectTrigger>
                     <SelectContent>
@@ -504,7 +498,7 @@ export function UnifiedFileSetup({
         </div>
 
         {/* CARD 2: SELECT GLOSSARY */}
-        <div className="rounded-xl border border-border bg-secondary/10 p-4 space-y-3">
+        <div className="space-y-3">
           <div className="flex items-center gap-2 text-foreground font-semibold">
             <Book className="w-4 h-4 text-primary" />
             <h3 className="text-sm">{trmlGlossarySelection("selectGlossary")}</h3>
@@ -512,7 +506,7 @@ export function UnifiedFileSetup({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
             {/* Left Column: Selected Glossaries */}
-            <div className="space-y-3 bg-background rounded-xl border border-border/80 p-4 flex flex-col h-full min-h-[380px] shadow-sm">
+            <div className="space-y-3 bg-card rounded-xl border border-border/80 p-4 flex flex-col h-full min-h-[380px] shadow-sm">
               <div className="flex items-center justify-between border-b pb-2">
                 <div className="flex items-center gap-2 text-foreground font-semibold">
                   <Check className="w-4 h-4 text-primary" />
@@ -560,7 +554,7 @@ export function UnifiedFileSetup({
                     return (
                       <div
                         key={glossary.id}
-                        className="px-3.5 py-2.5 rounded-xl border border-primary/20 bg-primary/5/20 hover:bg-primary/5/30 transition flex items-center justify-between gap-3 relative group"
+                        className="px-3.5 py-2.5 rounded-xl border border-primary/50 bg-secondary/50 hover:bg-primary/5/30 transition flex items-center justify-between gap-3 relative group"
                       >
                         <div className="flex-1 min-w-0 pl-1">
                           <p className="font-semibold text-xs text-foreground truncate">
@@ -585,7 +579,7 @@ export function UnifiedFileSetup({
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setViewingGlossaryId(glossary.id);
-                                setPreviewSheetOpen(true);
+                                setPreviewDialogOpen(true);
                               }}
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -685,14 +679,16 @@ export function UnifiedFileSetup({
                                 <div
                                   onDoubleClick={(e) => {
                                     e.stopPropagation();
-                                    if (!isValidating)
-                                      setEditingGlossaryId(glossary.id);
+                                    if (!isValidating) {
+                                      setViewingGlossaryId(glossary.id);
+                                      setPreviewDialogOpen(true);
+                                    }
                                   }}
                                   className={cn(
                                     "px-4 py-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between gap-4 relative select-none group",
                                     isSelected
-                                      ? "bg-primary/5 border-primary ring-1 ring-primary/25 shadow-sm"
-                                      : "bg-card border-border hover:border-primary/45 hover:bg-slate-50/50",
+                                      ? "bg-primary/5 border-primary/50"
+                                      : "bg-card border-primary/20 hover:border-primary/45 hover:bg-slate-50/50",
                                     isValidating && "opacity-70 pointer-events-none"
                                   )}
                                 >
@@ -719,7 +715,7 @@ export function UnifiedFileSetup({
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setViewingGlossaryId(glossary.id);
-                                        setPreviewSheetOpen(true);
+                                        setPreviewDialogOpen(true);
                                       }}
                                     >
                                       <Eye className="w-3.5 h-3.5" />
@@ -881,64 +877,11 @@ export function UnifiedFileSetup({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Sheet open={previewSheetOpen} onOpenChange={setPreviewSheetOpen}>
-        <SheetContent side="right" className="w-[450px] sm:w-[540px] max-w-full flex flex-col h-full p-6">
-          {viewingGlossaryId && (
-            <>
-              <SheetHeader className="pb-3 border-b shrink-0">
-                <SheetTitle className="text-lg font-semibold">
-                  {headerData?.name || trmlGlossarySelection("termsPreview")}
-                </SheetTitle>
-                <SheetDescription className="text-sm text-muted-foreground">
-                  {trmlCommon(headerData?.sourceLanguage || "")} → {trmlCommon(headerData?.targetLanguage || "")} • {filteredTerms.length} terms
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="relative my-3 shrink-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  type="search"
-                  name="drawer-term-search"
-                  autoComplete="off"
-                  value={termQuery}
-                  onChange={(e) => setTermQuery(e.target.value)}
-                  placeholder={trmlGlossarySelection("termsSearchPlaceholder")}
-                  className="h-8 w-full rounded-md border border-border bg-muted/20 pl-10 pr-3 text-base focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div className="flex-1 overflow-y-auto min-h-0 bg-slate-50/50 rounded-lg border p-4">
-                {loadingDetails.has(viewingGlossaryId) ? (
-                  <div className="h-full flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : filteredTerms.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-muted-foreground italic">
-                    {trmlGlossarySelection("noTermsDisplay")}
-                  </div>
-                ) : (
-                  <div className="border rounded-md overflow-hidden bg-white shadow-sm">
-                    <div className="grid grid-cols-[1fr_24px_1fr] gap-4 px-4 py-2 bg-muted/30 border-b text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      <div>{trmlCommon("source")}</div>
-                      <div></div>
-                      <div>{trmlCommon("target")}</div>
-                    </div>
-                    <div className="divide-y divide-border text-xs">
-                      {filteredTerms.map((term, idx) => (
-                        <div key={idx} className="grid grid-cols-[1fr_24px_1fr] gap-4 px-4 py-2.5 items-center hover:bg-muted/10">
-                          <div className="font-medium text-foreground">{term.source}</div>
-                          <MoveRight className="w-3 h-3 text-muted-foreground/30" />
-                          <div className="text-primary font-medium">{term.target}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <GlossaryPreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        glossaryId={viewingGlossaryId}
+      />
     </motion.div>
   );
 }

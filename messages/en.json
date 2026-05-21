@@ -155,7 +155,11 @@
         "imagesTranslated": "Images included",
         "glossaryUsed": "{count, plural, one {# glossary} other {# glossaries}}",
         "configTranslation": "Config Translation",
-        "clickToConfig": "Click to file to config"
+        "clickToConfig": "Click to file to config",
+        "noFileSelected": "No File Selected",
+        "selectFileInstruction": "Select a file from the list on the left to start configuring its settings.",
+        "noFilesYet": "No files added yet",
+        "addFilesToStart": "Add files to start configuring translation"
     },
     "DocumentSetup": {
         "documentTitle": "Document Setup",

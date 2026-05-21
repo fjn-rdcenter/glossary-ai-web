@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageTransition, SlideUp } from "@/components/ui/page-transition";
 import { UnifiedFileSetup } from "./components/unified-file-setup";
@@ -39,13 +39,38 @@ function TranslatePageContent() {
   const trmlTranslationExecution = useTranslations("TranslationExecution");
 
   // Stores
-  const { pendingFiles } = usePendingUploadStore();
+  const { pendingFiles, clearPendingFiles } = usePendingUploadStore();
 
   // Application State
   const [appState, setAppState] = useState<"loading" | "overview" | "setup" | "translating">("loading");
 
   const [fileConfigs, setFileConfigs] = useState<FileConfigState[]>([]);
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [displayFileId, setDisplayFileId] = useState<string | null>(null);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    if (!editingFileId) {
+      setDisplayFileId(null);
+      setIsFading(false);
+      return;
+    }
+
+    if (editingFileId === displayFileId) return;
+
+    if (!displayFileId) {
+      setDisplayFileId(editingFileId);
+      return;
+    }
+
+    setIsFading(true);
+    const timer = setTimeout(() => {
+      setDisplayFileId(editingFileId);
+      setIsFading(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [editingFileId, displayFileId]);
 
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -74,7 +99,6 @@ function TranslatePageContent() {
         translateImages: false,
         glossaryOption: "none",
         selectedGlossaries: [],
-        configStatus: index === 0 ? "configured" : "pending",
         translationStatus: "idle",
         jobId: null,
         progress: 0,
@@ -87,9 +111,9 @@ function TranslatePageContent() {
         setAppState("overview");
       }
     } else if (appState === "loading") {
-      router.push("/dashboard");
+      setAppState("overview");
     }
-  }, [pendingFiles, appState, router]);
+  }, [pendingFiles, appState]);
 
   // Fetch Glossaries when needed
   const fetchGlossaries = useCallback(async () => {
@@ -177,72 +201,23 @@ function TranslatePageContent() {
   const handleSetupFile = (id: string) => {
     setEditingFileId(id);
     setAppState("setup");
-    setFileConfigs(prev => prev.map(f => f.id === id ? { ...f, configStatus: "configured" } : f));
+    setFileConfigs(prev => prev.map(f => f.id === id ? { ...f } : f));
   };
 
   const handleUpdateEditingFile = (updates: Partial<FileConfigState>) => {
-    setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates, configStatus: "configured" } : f));
+    setFileConfigs(prev => prev.map(f => f.id === editingFileId ? { ...f, ...updates } : f));
   };
 
   const editingFile = fileConfigs.find(f => f.id === editingFileId);
-
-  const handleSaveConfig = (applyToAll: boolean = false) => {
-    const currentEditingFile = fileConfigs.find(f => f.id === editingFileId);
-    if (!currentEditingFile) return;
-
-    let updatedConfigs: FileConfigState[] = [];
-    if (applyToAll) {
-      updatedConfigs = fileConfigs.map(f => ({
-        ...f,
-        sourceLanguage: currentEditingFile.sourceLanguage,
-        targetLanguage: currentEditingFile.targetLanguage,
-        translateImages: currentEditingFile.translateImages,
-        glossaryOption: currentEditingFile.glossaryOption,
-        selectedGlossaries: currentEditingFile.selectedGlossaries,
-        configStatus: "configured"
-      }));
-    } else {
-      updatedConfigs = fileConfigs.map(f => f.id === editingFileId ? { ...f, configStatus: "configured" } : f);
-    }
-    setFileConfigs(updatedConfigs);
-
-    // Auto-advance logic: Find the next file that is still pending configuration
-    let nextUnconfiguredId: string | null = null;
-    if (!applyToAll) {
-      const currentIndex = fileConfigs.findIndex(f => f.id === editingFileId);
-      // Look for next pending files starting after the current index
-      const nextPending = fileConfigs.slice(currentIndex + 1).find(f => f.configStatus === "pending");
-      if (nextPending) {
-        nextUnconfiguredId = nextPending.id;
-      } else {
-        // Wrap around to find any pending file from the start
-        const prevPending = fileConfigs.slice(0, currentIndex).find(f => f.configStatus === "pending");
-        if (prevPending) {
-          nextUnconfiguredId = prevPending.id;
-        }
-      }
-    }
-
-    if (nextUnconfiguredId) {
-      setEditingFileId(nextUnconfiguredId);
-      setAppState("setup");
-    }
-  };
+  const displayFile = fileConfigs.find(f => f.id === displayFileId);
 
   const handleStartAll = async () => {
     setAppState("translating");
+    for (const file of fileConfigs) {
+      console.log(`Starting translation for ${file.metadata.name} with document ID ${file.documentId}`);
+    };
 
-    // Start translation for all configured and idle files
-    const filesToStart = fileConfigs.filter(f => f.configStatus === "configured" && f.translationStatus === "idle");
-
-    // Optimistically set to translating
-    setFileConfigs(prev => prev.map(f =>
-      filesToStart.find(fs => fs.id === f.id)
-        ? { ...f, translationStatus: "translating", progress: 0 }
-        : f
-    ));
-
-    for (const file of filesToStart) {
+    for (const file of fileConfigs) {
       try {
         const job = await TranslationService.startTranslation({
           sourceLanguage: file.sourceLanguage,
@@ -280,7 +255,6 @@ function TranslatePageContent() {
       translateImages: false,
       glossaryOption: "none",
       selectedGlossaries: [],
-      configStatus: index === 0 ? "configured" : "pending",
       translationStatus: "idle",
       jobId: null,
       progress: 0,
@@ -365,6 +339,13 @@ function TranslatePageContent() {
     }
   };
 
+  const handleNewTranslation = () => {
+    clearPendingFiles();
+    setFileConfigs([]);
+    setEditingFileId(null);
+    setAppState("overview");
+  };
+
   if (appState === "loading") {
     return <div className="container mx-auto px-6 py-8">Loading...</div>;
   }
@@ -398,15 +379,18 @@ function TranslatePageContent() {
                 }}
                 onAddFiles={handleAddFiles}
                 onStartAll={handleStartAll}
-                isAllConfigured={fileConfigs.length > 0 && fileConfigs.every(f => f.configStatus === "configured")}
               />
             </div>
 
             {/* Right Detail: Setup Wizard */}
             <div className="lg:col-span-8 flex flex-col h-full border rounded-lg bg-background p-6 shadow-md relative">
               {editingFile ? (
-                <>
-                  <div className="mb-6 shrink-0 flex items-center justify-between pb-4 gap-4 border-b flex-wrap">
+                <motion.div
+                  animate={{ opacity: isFading ? 0 : 1 }}
+                  transition={{ duration: 0.15, ease: "easeInOut" }}
+                  className="flex-1 flex flex-col min-h-0"
+                >
+                  <div className="mb-4 shrink-0 flex items-center justify-between pb-4 gap-2 border-b flex-wrap">
                     <div>
                       <h2 className="text-xl font-bold text-foreground">
                         {trmlTranslate("fileConfiguration") || "File Configuration"}
@@ -414,40 +398,31 @@ function TranslatePageContent() {
                       <div className="flex items-center gap-2 mt-2">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs">
                           <FileText className="w-3.5 h-3.5 text-primary/80" />
-                          <span className="max-w-[240px] sm:max-w-[400px] truncate font-mono" title={editingFile.metadata.name}>
-                            {editingFile.metadata.name}
+                          <span className="max-w-[240px] sm:max-w-[400px] truncate font-mono" title={displayFile?.metadata.name || editingFile.metadata.name}>
+                            {displayFile?.metadata.name || editingFile.metadata.name}
                           </span>
                         </span>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        disabled={!editingFile.targetLanguage}
-                        onClick={() => handleSaveConfig(true)}
-                        className="h-10 px-4 rounded-lg group gap-1.5 shadow-sm"
-                      >
-                        {trmlTranslationExecution("applyToAllFiles") || "Apply to all files"}
-                        <Check className="w-4 h-4 transition-transform group-hover:scale-110" />
-                      </Button>
-                    </div>
                   </div>
 
                   <div className="flex-1 min-h-0 flex flex-col">
-                    <UnifiedFileSetup
-                      editingFile={editingFile}
-                      onUpdateFile={handleUpdateEditingFile}
-                      glossaries={glossaries}
-                      searchQuery={searchQuery}
-                      setSearchQuery={setSearchQuery}
-                      termQuery={termQuery}
-                      setTermQuery={setTermQuery}
-                      isCreatingOpen={isCreatingGlossaryOpen}
-                      onCreatingOpenChange={setIsCreatingGlossaryOpen}
-                      onRefreshGlossaries={fetchGlossaries}
-                    />
+                    {displayFile && (
+                      <UnifiedFileSetup
+                        editingFile={displayFile}
+                        onUpdateFile={handleUpdateEditingFile}
+                        glossaries={glossaries}
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        termQuery={termQuery}
+                        setTermQuery={setTermQuery}
+                        isCreatingOpen={isCreatingGlossaryOpen}
+                        onCreatingOpenChange={setIsCreatingGlossaryOpen}
+                        onRefreshGlossaries={fetchGlossaries}
+                      />
+                    )}
                   </div>
-                </>
+                </motion.div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -476,7 +451,7 @@ function TranslatePageContent() {
               onRetry={handleRetry}
               onCancelAll={handleCancelAll}
               onCancel={handleCancelFile}
-              onNewTranslation={() => router.push("/dashboard")}
+              onNewTranslation={handleNewTranslation}
             />
           </motion.div>
         )}
