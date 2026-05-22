@@ -116,6 +116,7 @@ export interface GlossaryUpdate {
 export interface GlossaryResponse extends GlossaryBase {
   id: string;
   termCount: number;
+  matchedTermCount?: number;
   createdAt: string; // datetime
   updatedAt: string; // datetime
   terms?: GlossaryTermPaginatedResponse;

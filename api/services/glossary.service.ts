@@ -2,6 +2,7 @@ import apiClient from "../client";
 import { API_CONFIG } from "../config";
 import {
   GlossaryResponse,
+  GlossaryDetailResponse,
   CreateGlossaryRequest,
   UpdateGlossaryRequest,
   TermResponse,
@@ -146,10 +147,10 @@ export class GlossaryService {
    */
   static async getGlossaryById(
     id: string,
-    params?: { size?: number; page?: number }
-  ): Promise<GlossaryResponse> {
+    params?: { size?: number; page?: number; sort?: string; search?: string }
+  ): Promise<GlossaryDetailResponse> {
     try {
-      const response = await apiClient.get<GlossaryResponse>(
+      const response = await apiClient.get<GlossaryDetailResponse>(
         API_CONFIG.ENDPOINTS.GLOSSARIES.BY_ID(id),
         { params }
       );

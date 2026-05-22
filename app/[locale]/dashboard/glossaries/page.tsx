@@ -27,6 +27,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUser } from "@/components/contexts/user-context";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -660,6 +666,19 @@ export default function GlossariesPage() {
                         </span>{" "}
                         {trmlGlossaries("terms")}
                       </span>
+                      {glossary.matchedTermCount !== undefined && glossary.matchedTermCount > 0 && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-border" />
+                          <div className="relative inline-flex items-center pt-2" onClick={(e) => e.stopPropagation()}>
+                            {/* The Chrome-like bubble */}
+                            <div className="bg-[#ffd000] text-black text-[11px] font-bold px-2 py-0.5 rounded border border-yellow-500/20 shadow-sm leading-tight select-none">
+                              {trmlGlossaries("termMatched", { count: glossary.matchedTermCount })}
+                            </div>
+                            {/* The arrow pointing up */}
+                            <div className="absolute top-1.5 left-4 w-1.5 h-1.5 bg-[#ffd000] rotate-45 border-l border-t border-yellow-500/20" />
+                          </div>
+                        </>
+                      )}
                       <span className="w-1 h-1 rounded-full bg-border" />
                       <span>
                         {trmlCommon(glossary.sourceLanguage)} → {trmlCommon(glossary.targetLanguage)}
