@@ -1,6 +1,7 @@
 {
     "Common": {
         "configured": "設定済み",
+        "search": "検索",
         "en": "英語",
         "vn": "ベトナム語",
         "vi": "ベトナム語",
@@ -114,7 +115,7 @@
         "quickUploadDescription": "ドキュメントをここにドラッグ＆ドロップして、すぐに翻訳を開始できます。",
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大5ファイル / 各最大 {maxSize}MB",
         "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
         "continue": "次へ",
         "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
@@ -150,7 +151,7 @@
         "documentTitle": "ドキュメント設定",
         "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
         "dragAndDrop": "ドキュメントをここにドラッグ＆ドロップしてください",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大5ファイル / 各最大 {maxSize}MB",
         "uploadDocument": "ドキュメントをアップロード",
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
@@ -317,6 +318,7 @@
         "marketplace": "公開",
         "sharedWithMe": "共有アイテム",
         "showing": "全 {total} {total, plural, one {用語集} other {用語集}}中 {start}～{end} 件を表示",
+        "termMatched": "{count, plural, one {# 件の用語が一致} other {# 件の用語が一致}}",
         "share": "共有",
         "shareDescription": "この用語集を閲覧または複製できるユーザーを管理します。",
         "userPrincipal": "ユーザー",

@@ -1,6 +1,7 @@
 {
     "Common": {
         "configured": "Đã cấu hình",
+        "search": "Tìm kiếm",
         "en": "Tiếng Anh",
         "vn": "Tiếng Việt",
         "vi": "Tiếng Việt",
@@ -112,7 +113,7 @@
         "quickUploadDescription": "Kéo và thả tài liệu vào đây để bắt đầu dịch.",
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
         "continue": "Tiếp tục",
         "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
@@ -148,7 +149,7 @@
         "documentTitle": "Thiết lập tài liệu",
         "documentDescription": "Tải tài liệu của bạn lên và chọn ngôn ngữ dịch",
         "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "uploadDocument": "Tải lên tài liệu",
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
@@ -315,6 +316,7 @@
         "marketplace": "Công khai",
         "sharedWithMe": "Được chia sẻ với tôi",
         "showing": "Hiển thị {start}-{end} trên {total} {total, plural, one {bộ thuật ngữ} other {bộ thuật ngữ}}",
+        "termMatched": "{count, plural, one {# thuật ngữ khớp} other {# thuật ngữ khớp}}",
         "share": "Chia sẻ",
         "shareDescription": "Quản lý ai có thể xem hoặc sao chép bộ thuật ngữ này.",
         "userPrincipal": "Người dùng",

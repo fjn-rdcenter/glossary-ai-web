@@ -80,6 +80,7 @@ export interface GlossaryResponse {
   sourceLanguage: string;
   targetLanguage: string;
   termCount: number;
+  matchedTermCount?: number;
   createdAt?: string;
   updatedAt?: string;
   terms?: {

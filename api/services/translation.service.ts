@@ -123,10 +123,26 @@ export class TranslationService {
 
   static async getTranslationHistory(): Promise<TranslationHistoryResponse[]>;
   static async getTranslationHistory(
-    params: { page?: number; size?: number }
+    params: {
+      page?: number;
+      size?: number;
+      sort?: string;
+      search?: string;
+      startedFrom?: string;
+      startedTo?: string;
+      status?: string;
+    }
   ): Promise<PaginatedResponse<TranslationHistoryResponse>>;
   static async getTranslationHistory(
-    params?: { page?: number; size?: number }
+    params?: {
+      page?: number;
+      size?: number;
+      sort?: string;
+      search?: string;
+      startedFrom?: string;
+      startedTo?: string;
+      status?: string;
+    }
   ): Promise<TranslationHistoryResponse[] | PaginatedResponse<TranslationHistoryResponse>> {
     try {
       const isPaginationRequest = !!params;
