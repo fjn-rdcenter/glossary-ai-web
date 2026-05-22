@@ -159,7 +159,8 @@
         "noFileSelected": "No File Selected",
         "selectFileInstruction": "Select a file from the list on the left to start configuring its settings.",
         "noFilesYet": "No files added yet",
-        "addFilesToStart": "Add files to start configuring translation"
+        "addFilesToStart": "Add files to start configuring translation",
+        "translateImages": "Translate Images"
     },
     "DocumentSetup": {
         "documentTitle": "Document Setup",

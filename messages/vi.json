@@ -2,6 +2,8 @@
     "Common": {
         "configured": "Đã cấu hình",
         "search": "Tìm kiếm",
+        "selected": "Đã chọn",
+        "browseFiles": "chọn tệp",
         "en": "Tiếng Anh",
         "vn": "Tiếng Việt",
         "vi": "Tiếng Việt",
@@ -63,6 +65,8 @@
     "Header": {
         "welcome": "Chào mừng",
         "searchPlaceholder": "Tìm tài liệu, bộ thuật ngữ...",
+        "Dashboard": "Dashboard",
+        "Translate": "Dịch thuật",
         "Glossaries": "Thuật ngữ",
         "History": "Lịch sử",
         "User Guidance": "Hướng dẫn sử dụng",
@@ -127,6 +131,14 @@
     "Translate": {
         "fileConfiguration": "Cấu hình tệp",
         "error": "Lỗi",
+        "addMoreFiles": "Thêm tệp",
+        "filesRemaining": "Có thể thêm tối đa {remaining} tệp nữa.",
+        "uploadNew": "Tải lên mới",
+        "browseExisting": "Chọn tệp sẵn có",
+        "addFiles": "Thêm tệp",
+        "addSelected": "Thêm tệp đã chọn ({count})",
+        "maxFilesReached": "Bạn đã đạt số lượng tệp tối đa.",
+        "noDocuments": "Không tìm thấy tài liệu nào",
         "sessionExpired": "Phiên làm việc đã hết hạn",
         "noDocumentUploaded": "Chưa có tài liệu nào được tải lên.",
         "documentSessionLost": "Phiên xử lý tài liệu đã bị mất. Vui lòng tải lại tệp.",
@@ -143,7 +155,12 @@
         "imagesTranslated": "Bao gồm hình ảnh",
         "glossaryUsed": "{count, plural, one {# thuật ngữ} other {# thuật ngữ}}",
         "configTranslation": "Cấu hình dịch",
-        "clickToConfig": "Nhấp vào tệp để cấu hình"
+        "clickToConfig": "Nhấp vào tệp để cấu hình",
+        "noFileSelected": "Chưa chọn tệp nào",
+        "selectFileInstruction": "Chọn một tệp từ danh sách bên trái để bắt đầu cấu hình.",
+        "noFilesYet": "Chưa có tệp nào được thêm",
+        "addFilesToStart": "Thêm tệp để bắt đầu cấu hình dịch",
+        "translateImages": "Dịch hình ảnh"
     },
     "DocumentSetup": {
         "documentTitle": "Thiết lập tài liệu",

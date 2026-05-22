@@ -713,6 +713,7 @@ export function GlossaryForm({
           name={name}
           sourceLanguage={sourceLanguage}
           targetLanguage={targetLanguage}
+          description={description}
           termCount={validTerms.length}
           isValid={isValid}
           isSaving={isSaving}

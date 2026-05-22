@@ -28,7 +28,6 @@ import {
   ArrowUpDown,
   Search,
   Filter,
-  RefreshCw,
   X,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -37,6 +36,7 @@ import { DocumentService } from "@/api/services";
 import { toast } from "sonner";
 import { SourceDocumentResponse, SourceDocumentSortField } from "@/lib/types";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -184,22 +184,14 @@ export function SourceDocumentTable() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {t("title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("description")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            {tCommon("refresh") || "Refresh"}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("title")}
+        subtitle={t("description")}
+        backUrl="/dashboard"
+        onRefresh={() => fetchData()}
+        refreshLoading={loading}
+        refreshLabel={tCommon("refresh") || "Refresh"}
+      />
 
       {/* Search Bar matching HistoryPage Style */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm w-full">

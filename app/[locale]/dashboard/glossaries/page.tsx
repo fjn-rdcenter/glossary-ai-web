@@ -12,20 +12,20 @@ import {
   Eye,
   Calendar,
   ArrowRight,
-  ArrowLeft,
-  RefreshCw,
   AlertTriangle,
   Lightbulb,
   Share2,
   Copy,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUser } from "@/components/contexts/user-context";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Tooltip,
   TooltipContent,
@@ -231,13 +231,6 @@ export default function GlossariesPage() {
     setBackendSearchQuery(searchQuery);
     setPage(1);
   }, [searchQuery]);
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSearch();
-    }
-  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
@@ -458,52 +451,35 @@ export default function GlossariesPage() {
       <PageTransition className="container mx-auto px-6">
         {/* Header */}
         <SlideUp>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            <div className="flex items-start gap-3">
+          <PageHeader
+            title={trmlGlossaries("glossariesTitle")}
+            subtitle={trmlGlossaries("glossariesSubtitle")}
+            backUrl="/dashboard"
+            onRefresh={() => fetchGlossaries()}
+            refreshLoading={loading}
+            refreshLabel={trmlGlossaries("refresh")}
+          >
+            {isMyGlossariesTab && selectedGlossaries.size > 0 && (
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/dashboard")}
-                className="mt-1 shrink-0"
+                variant="destructive"
+                onClick={() => setShowDeleteDialog(true)}
               >
-                <ArrowLeft className="w-5 h-5" />
+                <Trash2 className="mr-2 w-4 h-4" />
+                {trmlGlossaries("delete")}{" "}{selectedGlossaries.size}
               </Button>
-              <div>
-                <h1 className="text-3xl font-serif font-semibold text-foreground">
-                  {trmlGlossaries("glossariesTitle")}
-                </h1>
-                <p className="mt-1 text-muted-foreground">
-                  {trmlGlossaries("glossariesSubtitle")}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => fetchGlossaries()} disabled={loading} className="mr-2">
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                {trmlGlossaries("refresh")}
+            )}
+            {isMyGlossariesTab && (
+              <Button
+                id="create-glossary-btn" // [TOUR] Added ID
+                onClick={() => router.push("/dashboard/glossaries/new")}
+                className="group"
+              >
+                <Plus className="mr-2 w-4 h-4" />
+                {trmlGlossaries("createGlossary")}
+                <ArrowRight className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
               </Button>
-              {isMyGlossariesTab && selectedGlossaries.size > 0 && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 className="mr-2 w-4 h-4" />
-                  {trmlGlossaries("delete")}{" "}{selectedGlossaries.size}
-                </Button>
-              )}
-              {isMyGlossariesTab && (
-                <Button
-                  id="create-glossary-btn" // [TOUR] Added ID
-                  onClick={() => router.push("/dashboard/glossaries/new")}
-                  className="group"
-                >
-                  <Plus className="mr-2 w-4 h-4" />
-                  {trmlGlossaries("createGlossary")}
-                  <ArrowRight className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </Button>
-              )}
-            </div>
-          </div>
+            )}
+          </PageHeader>
         </SlideUp>
 
         <SlideUp delay={0.05}>
@@ -527,9 +503,13 @@ export default function GlossariesPage() {
         {/* Search and Select All */}
         <SlideUp delay={0.1}>
           <div className="flex items-center gap-4 mb-4">
-            <div
+            <form
               id="search-glossaries" // [TOUR] Added ID
-              className="relative flex-1 max-w-md flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+              }}
+              className="flex items-center gap-2 flex-1 max-w-md"
             >
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -537,11 +517,27 @@ export default function GlossariesPage() {
                   placeholder={trmlGlossaries("searchGlossaries")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  className="pl-10 h-12 bg-card"
+                  className="pl-10 pr-10 h-12 bg-card w-full"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setBackendSearchQuery("");
+                      setPage(1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                    title={trmlCommon("clear")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-            </div>
+              <Button type="submit" variant="default" className="shrink-0 h-12">
+                {trmlCommon("search")}
+              </Button>
+            </form>
             {isMyGlossariesTab && filteredGlossaries.length > 0 && (
               <div className="flex items-center gap-2">
                 <Checkbox

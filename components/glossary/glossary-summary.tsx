@@ -12,6 +12,7 @@ interface GlossarySummaryProps {
   name: string;
   sourceLanguage: string;
   targetLanguage: string;
+  description?: string;
   termCount: number;
   isValid: boolean;
   isSaving: boolean;
@@ -25,6 +26,7 @@ export function GlossarySummary({
   name,
   sourceLanguage,
   targetLanguage,
+  description,
   termCount,
   isValid,
   isSaving,
@@ -40,14 +42,14 @@ export function GlossarySummary({
   const targetLangName = trmlCommon(targetLanguage) ?? targetLanguage
 
   return (
-    <Card id="glossary-summary" className={cn("sticky top-24 border-none shadow-md bg-secondary/30", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-           <Book className="w-5 h-5 text-primary" />
-           Summary
+    <Card id="glossary-summary" className={cn("sticky top-24 border border-border shadow-sm bg-card overflow-hidden", className)}>
+      <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
+        <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+           <Book className="w-4 h-4 text-primary" />
+           {trmlGlossaries("basicInfo")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5 pt-5">
         {/* Status Indicator */}
         <div className={cn(
             "p-3 rounded-lg border flex items-start gap-3 transition-colors",
@@ -78,35 +80,58 @@ export function GlossarySummary({
         </div>
 
         {/* Details Grid */}
-        <div className="space-y-4">
+        <div className="space-y-5">
              {/* Name Preview */}
-             <div>
-                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">{trmlGlossaries("name")}</p>
-                 <p className="font-medium text-sm truncate pl-1 border-l-2 border-primary/50">
-                     {name || <span className="text-muted-foreground italic">{trmlGlossaries("untitled")}</span>}
-                 </p>
+             <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {trmlGlossaries("name")}
+                  </span>
+                  <span className="text-sm font-medium text-foreground leading-snug truncate">
+                    {name || <span className="text-muted-foreground italic">{trmlGlossaries("untitled")}</span>}
+                  </span>
              </div>
 
              {/* Language Pair */}
-             <div>
-                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                     <Languages className="w-3 h-3" />
-                     {trmlGlossaries("languagePair")}
-                 </p>
-                 <div className="flex items-center gap-2 text-sm pl-1 border-l-2 border-primary/50">
-                     <span className="font-medium">{sourceLangName || "?"}</span>
-                     <span className="text-muted-foreground">→</span>
-                     <span className="font-medium">{targetLangName || "?"}</span>
-                 </div>
+             <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                    <Languages className="w-3.5 h-3.5" />
+                    {trmlGlossaries("languagePair")}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/40 rounded-md border border-border/50 shadow-sm text-sm font-medium text-foreground">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      {sourceLangName || "?"}
+                    </div>
+                    <span className="text-muted-foreground/60">→</span>
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/40 rounded-md border border-border/50 shadow-sm text-sm font-medium text-foreground">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      {targetLangName || "?"}
+                    </div>
+                  </div>
+             </div>
+
+             {/* Description */}
+             <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {trmlGlossaries("description")}
+                  </span>
+                  <div className="text-sm text-muted-foreground leading-relaxed">
+                    {description ? (
+                      <span className="line-clamp-3">{description}</span>
+                    ) : (
+                      <span className="italic opacity-50">{trmlGlossaries("noDescription") || "No description"}</span>
+                    )}
+                  </div>
              </div>
 
              {/* Stats */}
-             <div>
-                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">{trmlGlossaries("statistics")}</p>
-                 <div className="flex items-center justify-between p-2 rounded-md bg-background/50 border border-border/50">
-                     <span className="text-sm">{trmlGlossaries("totalTerms")}</span>
-                     <span className="font-bold font-mono text-primary">{termCount}</span>
-                 </div>
+             <div className="pt-4 mt-2 border-t border-border/40">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">{trmlGlossaries("totalTerms")}</span>
+                    <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1 rounded-md text-primary">
+                      <span className="text-sm font-bold font-mono">{termCount}</span>
+                    </div>
+                  </div>
              </div>
         </div>
 

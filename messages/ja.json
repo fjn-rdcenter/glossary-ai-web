@@ -2,6 +2,8 @@
     "Common": {
         "configured": "設定済み",
         "search": "検索",
+        "selected": "選択済み",
+        "browseFiles": "ファイルを参照",
         "en": "英語",
         "vn": "ベトナム語",
         "vi": "ベトナム語",
@@ -129,6 +131,14 @@
     "Translate": {
         "fileConfiguration": "ファイル設定",
         "error": "エラー",
+        "addMoreFiles": "ファイルを追加",
+        "filesRemaining": "あと {remaining} 個のファイルを追加できます。",
+        "uploadNew": "新規アップロード",
+        "browseExisting": "既存のファイルを参照",
+        "addFiles": "ファイルを追加",
+        "addSelected": "選択したファイルを追加 ({count})",
+        "maxFilesReached": "ファイルの最大数に達しました。",
+        "noDocuments": "ドキュメントが見つかりません",
         "sessionExpired": "セッションの有効期限が切れました",
         "noDocumentUploaded": "ドキュメントがアップロードされていません。",
         "documentSessionLost": "ドキュメントセッションが失われました。ファイルを再アップロードしてください。",
@@ -145,7 +155,12 @@
         "imagesTranslated": "画像を含む",
         "glossaryUsed": "{count, plural, one {用語集 # 件} other {用語集 # 件}}",
         "configTranslation": "翻訳設定",
-        "clickToConfig": "クリックしてファイルを設定"
+        "clickToConfig": "クリックしてファイルを設定",
+        "noFileSelected": "ファイルが選択されていません",
+        "selectFileInstruction": "左側のリストからファイルを選択して、設定を開始してください。",
+        "noFilesYet": "ファイルがまだ追加されていません",
+        "addFilesToStart": "翻訳設定を開始するにはファイルを追加してください",
+        "translateImages": "画像を翻訳"
     },
     "DocumentSetup": {
         "documentTitle": "ドキュメント設定",

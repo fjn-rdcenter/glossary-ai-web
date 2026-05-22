@@ -14,7 +14,6 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
   Check,
   X,
   Clock,
@@ -48,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
 import { TranslationService } from "@/api/services";
 import { TranslationJobResponse, TranslationHistoryResponse, StatusEnum } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
@@ -233,22 +233,14 @@ export default function HistoryPage() {
 
   return (
     <PageTransition className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {trmlHistory("historyTitle")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {trmlHistory("historySubtitle")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            {trmlHistory("refresh")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={trmlHistory("historyTitle")}
+        subtitle={trmlHistory("historySubtitle")}
+        backUrl="/dashboard"
+        onRefresh={fetchJobs}
+        refreshLoading={loading}
+        refreshLabel={trmlHistory("refresh")}
+      />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm w-full">
         <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:w-[800px]">
