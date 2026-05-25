@@ -117,7 +117,7 @@
         "quickUploadDescription": "Drag and drop documents here to start a new translation immediately.",
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag a file to upload",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Max 5 files, Up to {maxSize}MB each file",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Images • Max 5 files, Up to {maxSize}MB each file",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
         "continue": "Continue",
         "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
@@ -166,7 +166,7 @@
         "documentTitle": "Document Setup",
         "documentDescription": "Upload your document and choose translation languages",
         "dragAndDrop": "Drag and drop your document here",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Max 5 files, Up to {maxSize}MB each file",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Images • Max 5 files, Up to {maxSize}MB each file",
         "uploadDocument": "Upload Document",
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
@@ -537,5 +537,17 @@
         "addTermDescription": "Click this button to add a new term entry row. You can add as many terms as you like.",
         "saveTitle": "Summary & Save",
         "saveDescription": "Review the summary information. When everything looks good, click <b>Save</b> to finish."
+    },
+    "UploadTour": {
+        "fileListTitle": "Your File Queue",
+        "fileListDescription": "<b>Click on a file</b> to configure its translation settings.<br></br><br></br>Each file can have its own language pair, glossary, and image translation settings.",
+        "languageTitle": "Choose Languages",
+        "languageDescription": "Select the <b>source</b> and <b>target</b> languages for this file.<br></br><br></br>Use the <b>swap button</b> in the middle to quickly reverse the direction.",
+        "translateImagesTitle": "Translate Images",
+        "translateImagesDescription": "Toggle this to <b>extract and translate text</b> from images embedded in your document.<br></br><br></br>This is useful for scanned documents or presentations with text in images.",
+        "glossaryTitle": "Select Glossaries",
+        "glossaryDescription": "Choose one or more <b>glossaries</b> to ensure specialized terms are translated accurately.<br></br><br></br>You can also <b>create a new glossary</b> right here without leaving this page.",
+        "actionTitle": "Add Files or Start",
+        "actionDescription": "Use <b>Add More Files</b> to include additional documents (up to 5 total).<br></br><br></br>When you're ready, click <b>Start Translating</b> to begin the process for all files."
     }
 }

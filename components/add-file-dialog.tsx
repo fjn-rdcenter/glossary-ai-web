@@ -27,6 +27,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  FileImage,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DocumentService, TranslationService } from "@/api/services";
@@ -59,6 +60,7 @@ function getFileIcon(type: string) {
     type.includes("csv")
   )
     return FileSpreadsheet;
+  if (type.includes("image")) return FileImage;
   return File;
 }
 
@@ -214,6 +216,14 @@ export function AddFileDialog({
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/gif': ['.gif'],
+      'image/bmp': ['.bmp'],
+      'image/tiff': ['.tiff', '.tif'],
+      'image/heic': ['.heic'],
+      'image/heif': ['.heif'],
     },
   });
 

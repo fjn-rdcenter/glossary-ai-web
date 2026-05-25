@@ -1,7 +1,7 @@
 import { FileConfigState } from "../types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Settings, Trash2, FileText, FileSpreadsheet, File, ArrowRight, Plus, BookOpen, X, Upload } from "lucide-react";
+import { Check, Settings, Trash2, FileText, FileSpreadsheet, File, ArrowRight, Plus, BookOpen, X, Upload, FileImage } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -32,12 +32,31 @@ function getFileIcon(type: string) {
     type.includes("csv")
   )
     return FileSpreadsheet;
+  if (type.includes("image")) return FileImage;
   return File;
 }
 
 function getFileExtension(name: string): string {
   const parts = name.split(".");
   return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : "FILE";
+}
+
+function truncateMiddle(name: string, maxLength = 30): string {
+  if (!name || name.length <= maxLength) return name;
+  const dotIndex = name.lastIndexOf(".");
+  if (dotIndex === -1 || dotIndex === 0) {
+    return name.substring(0, maxLength - 3) + "...";
+  }
+  const ext = name.substring(dotIndex);
+  const baseName = name.substring(0, dotIndex);
+  const availableLength = maxLength - ext.length - 3;
+  if (availableLength <= 3) {
+    const half = Math.floor((maxLength - 3) / 2);
+    return name.substring(0, half) + "..." + name.substring(name.length - half);
+  }
+  const startLength = Math.ceil(availableLength / 2);
+  const endLength = Math.floor(availableLength / 2);
+  return baseName.substring(0, startLength) + "..." + baseName.substring(baseName.length - endLength) + ext;
 }
 
 export function MultiFileOverview({
@@ -84,7 +103,7 @@ export function MultiFileOverview({
             </Button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+          <div id="tour-file-list" className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
             {files.map((file) => {
               const Icon = getFileIcon(file.metadata.type);
               const extension = getFileExtension(file.metadata.name);
@@ -128,13 +147,16 @@ export function MultiFileOverview({
 
                       {/* File Info & Configuration summary */}
                       <div className="flex-1 min-w-0 flex flex-col">
-                        <p className={cn(
-                          "text-sm truncate leading-tight transition-colors",
-                          isActive
-                            ? "text-primary"
-                            : "font-medium text-foreground group-hover:text-primary"
-                        )}>
-                          {file.metadata.name}
+                        <p
+                          className={cn(
+                            "text-sm leading-tight transition-colors",
+                            isActive
+                              ? "text-primary"
+                              : "font-medium text-foreground group-hover:text-primary"
+                          )}
+                          title={file.metadata.name}
+                        >
+                          {truncateMiddle(file.metadata.name, 40)}
                         </p>
                         <span className="text-xs text-muted-foreground mt-0.5">
                           {formatFileSize(file.metadata.size)}
@@ -204,7 +226,7 @@ export function MultiFileOverview({
 
         {/* Start Button anchored at the bottom */}
         {files.length > 0 && (
-          <div className="pt-3 border-t mt-4 shrink-0 space-y-2">
+          <div id="tour-action-buttons" className="pt-3 border-t mt-4 shrink-0 space-y-2">
             {files.length < 5 && (
               <Button
                 onClick={() => setAddFileDialogOpen(true)}

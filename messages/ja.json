@@ -117,7 +117,7 @@
         "quickUploadDescription": "ドキュメントをここにドラッグ＆ドロップして、すぐに翻訳を開始できます。",
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大5ファイル / 各最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
         "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
         "continue": "次へ",
         "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
@@ -166,7 +166,7 @@
         "documentTitle": "ドキュメント設定",
         "documentDescription": "ドキュメントをアップロードし、翻訳言語を選択してください",
         "dragAndDrop": "ドキュメントをここにドラッグ＆ドロップしてください",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • 最大5ファイル / 各最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
         "uploadDocument": "ドキュメントをアップロード",
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
@@ -537,5 +537,17 @@
         "addTermDescription": "このボタンをクリックして、新しい用語の入力行を追加します。用語はいくつでも追加できます。",
         "saveTitle": "概要と保存",
         "saveDescription": "概要情報を確認します。すべて問題なければ、<b>保存</b>をクリックして完了します。"
+    },
+    "UploadTour": {
+        "fileListTitle": "ファイル一覧",
+        "fileListDescription": "<b>ファイルをクリック</b>して翻訳設定を行います。<br></br><br></br>各ファイルに個別の言語ペア、用語集、画像翻訳設定を設定できます。",
+        "languageTitle": "言語を選択",
+        "languageDescription": "このファイルの<b>ソース言語</b>と<b>ターゲット言語</b>を選択してください。<br></br><br></br>中央の<b>入れ替えボタン</b>で方向を素早く切り替えられます。",
+        "translateImagesTitle": "画像の翻訳",
+        "translateImagesDescription": "文書内の画像から<b>テキストを抽出して翻訳</b>する場合はオンにしてください。<br></br><br></br>スキャンした文書や画像内のテキストを含むプレゼンテーションに便利です。",
+        "glossaryTitle": "用語集を選択",
+        "glossaryDescription": "一つ以上の<b>用語集</b>を選択して、専門用語が正確に翻訳されるようにしましょう。<br></br><br></br>このページから直接<b>新しい用語集を作成</b>することもできます。",
+        "actionTitle": "ファイル追加または開始",
+        "actionDescription": "<b>ファイルを追加</b>で追加の文書を含めることができます（最大5つ）。<br></br><br></br>準備ができたら<b>翻訳を開始</b>をクリックして、すべてのファイルの処理を開始します。"
     }
 }

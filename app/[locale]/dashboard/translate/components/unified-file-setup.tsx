@@ -83,6 +83,12 @@ export function UnifiedFileSetup({
   const trmlGlossarySelection = useTranslations("GlossarySelection");
   const trmlTranslationExecution = useTranslations("TranslationExecution");
 
+  const isImage = useMemo(() => {
+    return editingFile.metadata.type?.includes("image") ||
+      /\.(jpg|jpeg|png|gif|bmp|webp|heic|heif|tiff|tif)$/i.test(editingFile.metadata.name);
+  }, [editingFile.metadata.type, editingFile.metadata.name]);
+
+
   // Local state for dialogs and preview drawer
   const [errorDialog, setErrorDialog] = useState<{ open: boolean; message: string }>({
     open: false,
@@ -406,7 +412,7 @@ export function UnifiedFileSetup({
 
           <div className="flex items-stretch gap-4">
             {/* Language selectors */}
-            <div className="flex-1 bg-background rounded-lg border border-border p-3 flex flex-col justify-center">
+            <div id="tour-language-options" className="flex-1 bg-background rounded-lg border border-border p-3 flex flex-col justify-center">
               <div className="flex items-center gap-3">
                 {/* Source language */}
                 <div className="flex-1 space-y-1">
@@ -472,33 +478,35 @@ export function UnifiedFileSetup({
             </div>
 
             {/* Translate Images toggle */}
-            <div className="shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3 w-[240px]">
-              <div className="space-y-1 flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <Label
-                    htmlFor="translate-images"
-                    className="text-xs font-semibold cursor-pointer leading-none"
-                  >
-                    {trmlDocumentSetup("translateImages")}
-                  </Label>
+            {!isImage && (
+              <div id="tour-translate-images" className="shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3 w-[240px]">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 shrink-0 text-primary" />
+                    <Label
+                      htmlFor="translate-images"
+                      className="text-xs font-semibold leading-none cursor-pointer"
+                    >
+                      {trmlDocumentSetup("translateImages")}
+                    </Label>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-tight whitespace-normal break-words">
+                    {trmlDocumentSetup("translateImagesDescription")}
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-tight whitespace-normal break-words">
-                  {trmlDocumentSetup("translateImagesDescription")}
-                </p>
+                <Switch
+                  id="translate-images"
+                  checked={editingFile.translateImages}
+                  onCheckedChange={(checked) => onUpdateFile({ translateImages: checked })}
+                  className="shrink-0"
+                />
               </div>
-              <Switch
-                id="translate-images"
-                checked={editingFile.translateImages}
-                onCheckedChange={(checked) => onUpdateFile({ translateImages: checked })}
-                className="shrink-0"
-              />
-            </div>
+            )}
           </div>
         </div>
 
         {/* CARD 2: SELECT GLOSSARY */}
-        <div className="space-y-3">
+        <div id="tour-glossary-section" className="space-y-3">
           <div className="flex items-center gap-2 text-foreground font-semibold">
             <Book className="w-4 h-4 text-primary" />
             <h3 className="text-sm">{trmlGlossarySelection("selectGlossary")}</h3>

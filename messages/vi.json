@@ -117,7 +117,7 @@
         "quickUploadDescription": "Kéo và thả tài liệu vào đây để bắt đầu dịch.",
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
         "continue": "Tiếp tục",
         "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
@@ -166,7 +166,7 @@
         "documentTitle": "Thiết lập tài liệu",
         "documentDescription": "Tải tài liệu của bạn lên và chọn ngôn ngữ dịch",
         "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "uploadDocument": "Tải lên tài liệu",
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
@@ -537,5 +537,17 @@
         "addTermDescription": "Bấm nút này để thêm dòng nhập từ mới. Bạn có thể thêm bao nhiêu từ tùy thích.",
         "saveTitle": "Tóm tắt & Lưu",
         "saveDescription": "Kiểm tra lại thông tin tổng quan. Khi mọi thứ đã đủ, bấm <b>Save</b> để hoàn tất."
+    },
+    "UploadTour": {
+        "fileListTitle": "Danh sách file",
+        "fileListDescription": "<b>Nhấn vào file</b> để cài đặt dịch cho file đó.<br></br><br></br>Mỗi file có thể có cặp ngôn ngữ, bộ thuật ngữ và cài đặt dịch ảnh riêng.",
+        "languageTitle": "Chọn ngôn ngữ",
+        "languageDescription": "Chọn ngôn ngữ <b>nguồn</b> và ngôn ngữ <b>đích</b> cho file này.<br></br><br></br>Sử dụng <b>nút hoán đổi</b> ở giữa để đảo ngược nhanh.",
+        "translateImagesTitle": "Dịch ảnh",
+        "translateImagesDescription": "Bật tính năng này để <b>trích xuất và dịch văn bản</b> từ ảnh trong tài liệu.<br></br><br></br>Hữu ích cho tài liệu scan hoặc bài thuyết trình có chữ trong ảnh.",
+        "glossaryTitle": "Chọn bộ thuật ngữ",
+        "glossaryDescription": "Chọn một hoặc nhiều <b>bộ thuật ngữ</b> để đảm bảo các thuật ngữ chuyên ngành được dịch chính xác.<br></br><br></br>Bạn cũng có thể <b>tạo bộ thuật ngữ mới</b> ngay tại đây.",
+        "actionTitle": "Thêm file hoặc bắt đầu",
+        "actionDescription": "Nhấn <b>Thêm file</b> để thêm tài liệu (tối đa 5 file).<br></br><br></br>Khi sẵn sàng, nhấn <b>Bắt đầu dịch</b> để dịch tất cả các file."
     }
 }

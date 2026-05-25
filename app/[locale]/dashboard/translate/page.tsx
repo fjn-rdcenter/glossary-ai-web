@@ -25,10 +25,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Lightbulb, Settings, FileText, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Joyride, { CallBackProps, EVENTS, ACTIONS, STATUS, Step, TooltipRenderProps } from "react-joyride";
 
 export const dynamic = "force-dynamic";
-
 function TranslatePageContent() {
   const router = useRouter();
   const trmlCommon = useTranslations("Common");
@@ -37,7 +42,186 @@ function TranslatePageContent() {
   const trmlDocumentSetup = useTranslations("DocumentSetup");
   const trmlGlossarySelection = useTranslations("GlossarySelection");
   const trmlTranslationExecution = useTranslations("TranslationExecution");
+  const trmlUploadTour = useTranslations("UploadTour");
 
+  // Tour State
+  const [runTour, setRunTour] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const { user, loading: userLoading, refreshUser } = useUser();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+
+
+  const CustomTooltip = ({
+    index,
+    step,
+    backProps,
+    primaryProps,
+    skipProps,
+    tooltipProps,
+    size,
+    isLastStep
+  }: TooltipRenderProps) => {
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          primaryProps.onClick(e as any);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [primaryProps]);
+
+    return (
+      <div
+        {...tooltipProps}
+        className="bg-background text-foreground rounded-xl shadow-2xl p-0 max-w-[400px] border border-border overflow-hidden flex flex-col"
+      >
+        <div className="p-5 flex flex-col gap-3">
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <span>{trmlCommon("stepIndicator", { current: index + 1, total: size })}</span>
+          </div>
+          <div className="text-sm">
+            {step.content}
+          </div>
+        </div>
+        <div className="p-4 bg-muted/30 border-t border-border flex justify-between items-center">
+          <button
+            {...skipProps}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+          >
+            {trmlOnboarding("skipTour")}
+          </button>
+          <div className="flex gap-2">
+            {index > 0 && (
+              <Button
+                {...backProps}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+              >
+                {trmlOnboarding("back")}
+              </Button>
+            )}
+            <Button
+              {...primaryProps}
+              size="sm"
+              className="h-8 text-xs bg-primary text-primary-foreground"
+            >
+              {isLastStep ? trmlOnboarding("finish") : trmlOnboarding("next")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const tourSteps: Step[] = [
+    {
+      target: '#tour-file-list',
+      content: (
+        <div>
+          <h3 className="font-bold text-base mb-1">{trmlUploadTour("fileListTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlUploadTour.rich("fileListDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
+        </div>
+      ),
+      placement: 'right' as const,
+      disableBeacon: true,
+    },
+    {
+      target: '#tour-language-options',
+      content: (
+        <div>
+          <h3 className="font-bold text-base mb-1">{trmlUploadTour("languageTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlUploadTour.rich("languageDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
+        </div>
+      ),
+      placement: 'bottom' as const,
+    },
+    {
+      target: '#tour-translate-images',
+      content: (
+        <div>
+          <h3 className="font-bold text-base mb-1">{trmlUploadTour("translateImagesTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlUploadTour.rich("translateImagesDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
+        </div>
+      ),
+      placement: 'bottom' as const,
+    },
+    {
+      target: '#tour-glossary-section',
+      content: (
+        <div>
+          <h3 className="font-bold text-base mb-1">{trmlUploadTour("glossaryTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlUploadTour.rich("glossaryDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
+        </div>
+      ),
+      placement: 'top' as const,
+    },
+    {
+      target: '#tour-action-buttons',
+      content: (
+        <div>
+          <h3 className="font-bold text-base mb-1">{trmlUploadTour("actionTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trmlUploadTour.rich("actionDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
+        </div>
+      ),
+      placement: 'top' as const,
+      spotlightClicks: false,
+    },
+  ];
+
+  const handleJoyrideCallback = async (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      setRunTour(false);
+
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
+      try {
+        await AuthService.updateUserProfile({
+          walkthrough_status: { upload_tour: true }
+        });
+        await refreshUser();
+        localStorage.removeItem("uploadTourCompleted");
+      } catch (error) {
+        console.warn("Failed to sync upload tour completion to backend:", error);
+        localStorage.setItem("uploadTourCompleted", "true");
+      }
+    }
+  };
   // Stores
   const { pendingFiles, clearPendingFiles } = usePendingUploadStore();
 
@@ -48,6 +232,25 @@ function TranslatePageContent() {
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const [displayFileId, setDisplayFileId] = useState<string | null>(null);
   const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    const hasSeenTour =
+      user?.walkthrough_status?.upload_tour ||
+      localStorage.getItem("uploadTourCompleted") === "true";
+
+    if (
+      !userLoading &&
+      !hasSeenTour &&
+      isMounted &&
+      appState === "setup" &&
+      fileConfigs.length > 0
+    ) {
+      const timer = setTimeout(() => {
+        setRunTour(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, userLoading, isMounted, appState, fileConfigs.length]);
 
   useEffect(() => {
     if (!editingFileId) {
@@ -396,9 +599,9 @@ function TranslatePageContent() {
                         {trmlTranslate("fileConfiguration") || "File Configuration"}
                       </h2>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs">
-                          <FileText className="w-3.5 h-3.5 text-primary/80" />
-                          <span className="max-w-[240px] sm:max-w-[400px] truncate font-mono" title={displayFile?.metadata.name || editingFile.metadata.name}>
+                        <span className="inline-flex items-start gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs max-w-full">
+                          <FileText className="w-3.5 h-3.5 text-primary/80 shrink-0 mt-0.5" />
+                          <span className="font-mono break-all whitespace-normal" title={displayFile?.metadata.name || editingFile.metadata.name}>
                             {displayFile?.metadata.name || editingFile.metadata.name}
                           </span>
                         </span>
@@ -474,6 +677,69 @@ function TranslatePageContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isMounted && (
+        <Joyride
+          key={runTour ? 'tour-active' : 'tour-idle'}
+          steps={tourSteps}
+          run={runTour}
+          continuous={true}
+          scrollToFirstStep={true}
+          disableScrolling={false}
+          showProgress={true}
+          showSkipButton={true}
+          hideCloseButton
+          disableOverlayClose
+          tooltipComponent={CustomTooltip}
+          callback={handleJoyrideCallback}
+          floaterProps={{ disableAnimation: true, hideArrow: false }}
+          styles={{
+            options: {
+              backgroundColor: '#ffffff',
+              textColor: '#334155',
+              overlayColor: "rgba(0, 0, 0, 0.65)",
+              zIndex: 10000,
+              primaryColor: "#3b82f6",
+              width: 400,
+            },
+            spotlight: { borderRadius: '12px' },
+            tooltip: {
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              padding: 0,
+            },
+            buttonNext: { borderRadius: '8px', fontWeight: 600, outline: 'none' }
+          }}
+          locale={{
+            skip: trmlOnboarding("skipTour"),
+            next: trmlOnboarding("next"),
+            back: trmlOnboarding("back"),
+            last: trmlOnboarding("finish"),
+          }}
+        />
+      )}
+
+      {appState === "setup" && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="fixed bottom-6 left-6 z-[100]">
+                <motion.button
+                  onClick={() => setRunTour(true)}
+                  className="p-3 rounded-full bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-all border border-border"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Lightbulb className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{trmlOnboarding("onboardingHelp")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </PageTransition>
   );
 }
