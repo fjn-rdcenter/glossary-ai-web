@@ -1,7 +1,7 @@
 import { FileConfigState } from "../types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Check, AlertCircle, FileText, Download, RotateCcw, Ban, Loader2 } from "lucide-react";
+import { Check, AlertCircle, FileText, Download, RotateCcw, Ban, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
@@ -97,11 +97,11 @@ export function MultiTranslationProgress({
                       <div className="flex items-center gap-2">
                         {file.translationStatus === "idle" ? (
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary/70" /> {trmlTranslationExecution("pending") || "Queued..."}
+                            <LoaderCircle className="w-4 h-4 animate-spin text-primary/70" /> {trmlTranslationExecution("pending") || "Queued..."}
                           </div>
                         ) : (
                           <div className="text-sm font-medium text-primary flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <LoaderCircle className="w-4 h-4 animate-spin text-primary" />
                             {Math.round(file.progress)}%
                           </div>
                         )}

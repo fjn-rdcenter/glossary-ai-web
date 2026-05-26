@@ -226,7 +226,8 @@
         "saveConfig": "Save Settings",
         "applyToThisFile": "Apply to this file",
         "applyToAllFiles": "Apply to all files",
-        "cancelAll": "Cancel All Translations"
+        "cancelAll": "Cancel All Translations",
+        "pending": "Queued..."
     },
     "Glossaries": {
         "termDuplicatedTitle": "Duplicate Term",

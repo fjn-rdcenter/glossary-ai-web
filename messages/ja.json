@@ -226,7 +226,8 @@
         "saveConfig": "設定を保存",
         "applyToThisFile": "このファイルに適用",
         "applyToAllFiles": "すべてのファイルに適用",
-        "cancelAll": "すべての翻訳をキャンセル"
+        "cancelAll": "すべての翻訳をキャンセル",
+        "pending": "キューに追加..."
     },
     "Glossaries": {
         "termDuplicatedTitle": "重複する用語",

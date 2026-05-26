@@ -226,7 +226,8 @@
         "saveConfig": "Lưu cấu hình",
         "applyToThisFile": "Áp dụng cho tệp này",
         "applyToAllFiles": "Áp dụng cho tất cả các tệp",
-        "cancelAll": "Hủy tất cả các bản dịch"
+        "cancelAll": "Hủy tất cả các bản dịch",
+        "pending": "Đang chờ..."
     },
     "Glossaries": {
         "termDuplicatedTitle": "Thuật ngữ trùng",
