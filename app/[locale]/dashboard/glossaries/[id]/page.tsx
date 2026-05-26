@@ -293,14 +293,14 @@ export default function GlossaryDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="border border-border rounded-lg overflow-hidden">
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="font-medium">
+                        <TableHead className="w-1/2 font-medium whitespace-normal">
                           {trmlCommon(glossary.sourceLanguage) ?? glossary.sourceLanguage}
                         </TableHead>
                         <TableHead className="w-12"></TableHead>
-                        <TableHead className="font-medium">
+                        <TableHead className="w-1/2 font-medium whitespace-normal">
                           {trmlCommon(glossary.targetLanguage) ?? glossary.targetLanguage}
                         </TableHead>
                       </TableRow>
@@ -314,13 +314,15 @@ export default function GlossaryDetailPage() {
                           transition={{ delay: index * 0.03 }}
                           className="border-b border-border last:border-0 transition-all duration-300 hover:bg-primary/5 hover:shadow-[inset_3px_0_0_0_hsl(var(--primary))] group cursor-default"
                         >
-                          <TableCell className="font-medium transition-colors duration-300 group-hover:text-primary">
+                          <TableCell className="font-medium transition-colors duration-300 group-hover:text-primary whitespace-normal [overflow-wrap:anywhere]">
                             {term.source}
                           </TableCell>
                           <TableCell>
                             <ArrowRight className="w-4 h-4 text-muted-foreground transition-all duration-300 group-hover:translate-x-2 group-hover:text-primary" />
                           </TableCell>
-                          <TableCell className="transition-colors duration-300 group-hover:text-primary">{term.target}</TableCell>
+                          <TableCell className="transition-colors duration-300 group-hover:text-primary whitespace-normal [overflow-wrap:anywhere]">
+                            {term.target}
+                          </TableCell>
                         </motion.tr>
                       ))}
                       {loading && (
