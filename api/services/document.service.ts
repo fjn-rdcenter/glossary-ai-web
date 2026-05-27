@@ -17,8 +17,8 @@ export class DocumentService {
     sortBy: SourceDocumentSortField = "uploadedAt",
     sortOrder: "asc" | "desc" = "desc",
     search?: string,
-    fromDate?: string,
-    toDate?: string
+    uploadedFrom?: string,
+    uploadedTo?: string
   ): Promise<SourceDocumentPaginatedResponse> {
     try {
       const response = await apiClient.get<SourceDocumentPaginatedResponse>(
@@ -29,8 +29,8 @@ export class DocumentService {
             size,
             sort: `${sortBy}:${sortOrder}`,
             search,
-            fromDate,
-            toDate,
+            uploadedFrom,
+            uploadedTo,
           },
         }
       );

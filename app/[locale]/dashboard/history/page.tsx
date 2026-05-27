@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import {
@@ -14,7 +14,6 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
   Check,
   X,
   Clock,
@@ -48,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageTransition } from "@/components/ui/page-transition";
+import { PageHeader } from "@/components/ui/page-header";
 import { TranslationService } from "@/api/services";
 import { TranslationJobResponse, TranslationHistoryResponse, StatusEnum } from "@/lib/types";
 import { getLanguageName, formatDate } from "@/lib/utils";
@@ -57,6 +57,7 @@ import { useTranslations } from 'next-intl';
 
 export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState<TranslationJobResponse | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -77,17 +78,59 @@ export default function HistoryPage() {
     totalPages: 0,
   });
 
+  const lastFiltersRef = useRef({ search: searchQuery, status: statusFilter, dateRange });
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchTerm);
+  };
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response = await TranslationService.getTranslationHistory();
-      // Client-side pagination since API is currently non-paginated array
-      setJobs(response);
-      setPagination({
-        ...pagination,
-        total: response.length,
-        totalPages: Math.ceil(response.length / pagination.size),
+      let startedFrom: string | undefined = undefined;
+      let startedTo: string | undefined = undefined;
+
+      if (dateRange?.from) {
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        startedFrom = fromDate.toISOString();
+      }
+      if (dateRange?.to) {
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        startedTo = toDate.toISOString();
+      }
+
+      const getApiSortField = (field: "name" | "status" | "date") => {
+        switch (field) {
+          case "name":
+            return "sourceDocumentName";
+          case "status":
+            return "status";
+          case "date":
+            return "startedAt";
+        }
+      };
+
+      const apiSort = `${getApiSortField(sortField)}:${sortOrder}`;
+
+      const response = await TranslationService.getTranslationHistory({
+        page: pagination.page,
+        size: pagination.size,
+        sort: apiSort,
+        search: searchQuery || undefined,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        startedFrom,
+        startedTo,
       });
+
+      setJobs(response.items || []);
+      setPagination((prev) => ({
+        ...prev,
+        total: response.total || 0,
+        totalPages: response.pages || 1,
+      }));
     } catch (error) {
       console.error("Failed to fetch jobs", error);
     } finally {
@@ -96,12 +139,22 @@ export default function HistoryPage() {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    const filtersChanged =
+      lastFiltersRef.current.search !== searchQuery ||
+      lastFiltersRef.current.status !== statusFilter ||
+      lastFiltersRef.current.dateRange?.from !== dateRange?.from ||
+      lastFiltersRef.current.dateRange?.to !== dateRange?.to;
 
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, [searchTerm, statusFilter, dateRange]);
+    if (filtersChanged) {
+      lastFiltersRef.current = { search: searchQuery, status: statusFilter, dateRange };
+      if (pagination.page !== 1) {
+        setPagination((prev) => ({ ...prev, page: 1 }));
+        return;
+      }
+    }
+
+    fetchJobs();
+  }, [pagination.page, pagination.size, sortField, sortOrder, searchQuery, statusFilter, dateRange]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= pagination.totalPages) {
@@ -155,68 +208,13 @@ export default function HistoryPage() {
   const handleSort = (field: "name" | "status" | "date") => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      setPagination((prev) => ({ ...prev, page: 1 }));
     } else {
       setSortField(field);
       setSortOrder("asc");
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }
   };
-
-  // Client-side filtering and pagination
-  const filteredHistory = jobs
-    .filter((job) => {
-      const matchesStatus =
-        statusFilter === "all" || job.status === statusFilter;
-      // Add search logic if needed
-      const matchesSearch =
-        searchTerm === "" ||
-        (job.sourceDocumentName || job.sourceDocument)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-      
-      let matchesDate = true;
-      if (dateRange?.from) {
-        const jobDate = new Date(job.startedAt);
-        const fromDate = new Date(dateRange.from);
-        fromDate.setHours(0, 0, 0, 0);
-        
-        matchesDate = matchesDate && jobDate >= fromDate;
-        
-        if (dateRange.to) {
-          const toDate = new Date(dateRange.to);
-          toDate.setHours(23, 59, 59, 999);
-          matchesDate = matchesDate && jobDate <= toDate;
-        }
-      }
-
-      return matchesStatus && matchesSearch && matchesDate;
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-      switch (sortField) {
-        case "name":
-          const nameA = a.sourceDocumentName || a.sourceDocument;
-          const nameB = b.sourceDocumentName || b.sourceDocument;
-          comparison = nameA.localeCompare(nameB);
-          break;
-        case "status":
-          comparison = a.status.localeCompare(b.status);
-          break;
-        case "date":
-          const dateA = new Date(a.startedAt).getTime();
-          const dateB = new Date(b.startedAt).getTime();
-          comparison = dateA - dateB;
-          break;
-      }
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
-
-  const paginatedHistory = filteredHistory.slice(
-      (pagination.page - 1) * pagination.size,
-      pagination.page * pagination.size
-  );
-
-  const filteredTotal = filteredHistory.length;
-  const filteredTotalPages = Math.ceil(filteredTotal / pagination.size);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -235,33 +233,43 @@ export default function HistoryPage() {
 
   return (
     <PageTransition className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {trmlHistory("historyTitle")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {trmlHistory("historySubtitle")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchJobs} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            {trmlHistory("refresh")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={trmlHistory("historyTitle")}
+        subtitle={trmlHistory("historySubtitle")}
+        backUrl="/dashboard"
+        onRefresh={fetchJobs}
+        refreshLoading={loading}
+        refreshLabel={trmlHistory("refresh")}
+      />
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <div className="relative w-full sm:w-[800px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={trmlHistory("searchDocuments")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700"
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm w-full">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:w-[800px]">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={trmlHistory("searchDocuments")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 w-full"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSearchQuery("");
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                title={trmlCommon("clear")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <Button type="submit" variant="default" className="shrink-0">
+            {trmlCommon("search")}
+          </Button>
+        </form>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           {dateRange && (
@@ -332,18 +340,18 @@ export default function HistoryPage() {
           <TableBody>
             {loading ? (
                <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   {trmlHistory("loading")}
                 </TableCell>
               </TableRow>
-            ) : paginatedHistory.length === 0 ? (
+            ) : jobs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   {trmlHistory("noHistory")}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedHistory.map((job) => (
+              jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -416,31 +424,36 @@ export default function HistoryPage() {
       </div>
 
        {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-xs text-muted-foreground">
             {trmlHistory("showing", {
-              start: filteredTotal > 0 ? (pagination.page - 1) * pagination.size + 1 : 0,
-              end: Math.min(pagination.page * pagination.size, filteredTotal),
-              total: filteredTotal,
+              start: pagination.total > 0 ? (pagination.page - 1) * pagination.size + 1 : 0,
+              end: Math.min(pagination.page * pagination.size, pagination.total),
+              total: pagination.total,
             })}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page <= 1}
+            disabled={pagination.page <= 1 || loading}
+            aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
-            {trmlHistory("prev")}
           </Button>
+          <span className="text-xs font-medium min-w-[48px] text-center">
+            {pagination.page} / {pagination.totalPages}
+          </span>
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page >= filteredTotalPages}
+            disabled={pagination.page >= pagination.totalPages || loading}
+            aria-label="Next page"
           >
-            {trmlHistory("next")}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

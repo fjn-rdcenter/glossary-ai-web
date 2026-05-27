@@ -151,11 +151,20 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background text-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
     color: #1C4D8D; /* User specified Heading Color */
+  }
+}
+
+@supports not (scrollbar-gutter: stable) {
+  html {
+    overflow-y: scroll;
   }
 }
 
@@ -274,4 +283,48 @@
   to {
     width: 0%;
   }
+}
+
+/* Custom scrollbar utility */
+.custom-scrollbar {
+  --scrollbar-thumb: rgba(28, 77, 141, 0.35); /* Primary color with opacity */
+  --scrollbar-track: transparent;
+  
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(28, 77, 141, 0.55);
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: var(--scrollbar-track);
+}
+
+/* Ensure active switch has dark blue background and inactive switch has gray background */
+[data-slot="switch"][data-state="checked"] {
+  background-color: #1C4D8D !important;
+}
+
+[data-slot="switch"][data-state="unchecked"] {
+  background-color: #CBD5E1 !important; /* Neutral slate-300 gray */
+}
+
+/* Dark mode overrides if needed */
+.dark [data-slot="switch"][data-state="checked"] {
+  background-color: #4988C4 !important;
+}
+.dark [data-slot="switch"][data-state="unchecked"] {
+  background-color: #334155 !important;
 }

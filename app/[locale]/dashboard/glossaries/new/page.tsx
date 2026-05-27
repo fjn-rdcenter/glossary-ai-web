@@ -16,8 +16,9 @@ import { motion } from "framer-motion";
 export default function NewGlossaryPage() {
   const router = useRouter();
   const trmlOnboarding = useTranslations("Onboarding");
+  const trmlGlossary = useTranslations("Glossaries")
   const trml = useTranslations("GlossaryCreateTour");
-  
+
   const [runTour, setRunTour] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -26,7 +27,7 @@ export default function NewGlossaryPage() {
   }, []);
 
   const handleSuccess = (createdGlossary: GlossaryResponse) => {
-      router.push(`/dashboard/glossaries/${createdGlossary.id}`);
+    router.push(`/dashboard/glossaries/${createdGlossary.id}`);
   };
 
   const CustomTooltip = ({
@@ -40,16 +41,16 @@ export default function NewGlossaryPage() {
     isLastStep
   }: TooltipRenderProps) => {
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            primaryProps.onClick(e as any);
-          }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-      }, [primaryProps]);
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          primaryProps.onClick(e as any);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [primaryProps]);
 
     return (
       <div
@@ -57,12 +58,12 @@ export default function NewGlossaryPage() {
         className="bg-background text-foreground rounded-xl shadow-2xl p-0 max-w-[400px] border border-border overflow-hidden flex flex-col"
       >
         <div className="p-5 flex flex-col gap-3">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
-                <span>Bước {index + 1} / {size}</span>
-            </div>
-            <div className="text-sm">
-                {step.content}
-            </div>
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex justify-between">
+            <span>Bước {index + 1} / {size}</span>
+          </div>
+          <div className="text-sm">
+            {step.content}
+          </div>
         </div>
         <div className="p-4 bg-muted/30 border-t border-border flex justify-between items-center">
           <button
@@ -92,10 +93,10 @@ export default function NewGlossaryPage() {
       placement: 'center',
       content: (
         <div className="text-center py-2 px-1">
-           <h3 className="text-lg font-bold mb-2">{trml("welcomeTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed text-left">
-             {trml("welcomeDescription")}
-           </p>
+          <h3 className="text-lg font-bold mb-2">{trml("welcomeTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed text-left">
+            {trml("welcomeDescription")}
+          </p>
         </div>
       ),
       disableBeacon: true,
@@ -104,12 +105,12 @@ export default function NewGlossaryPage() {
       target: '#glossary-name-field',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("nameTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml.rich("nameDescription", {
-               b: (chunks: any) => <b>{chunks}</b>
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("nameTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml.rich("nameDescription", {
+              b: (chunks: any) => <b>{chunks}</b>
+            })}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -119,12 +120,12 @@ export default function NewGlossaryPage() {
       target: '#glossary-languages',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("langTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml.rich("langDescription", {
-               b: (chunks: any) => <b>{chunks}</b>
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("langTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml.rich("langDescription", {
+              b: (chunks: any) => <b>{chunks}</b>
+            })}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -133,10 +134,10 @@ export default function NewGlossaryPage() {
       target: '#glossary-description-field',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("descTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml("descDescription")}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("descTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml("descDescription")}
+          </p>
         </div>
       ),
       placement: 'bottom',
@@ -145,13 +146,13 @@ export default function NewGlossaryPage() {
       target: '#glossary-tabs',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("tabsTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml.rich("tabsDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br/>
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("tabsTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml.rich("tabsDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'top',
@@ -160,13 +161,13 @@ export default function NewGlossaryPage() {
       target: '#glossary-term-table',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("tableTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml.rich("tableDescription", {
-               b: (chunks: any) => <b>{chunks}</b>,
-               br: () => <br/>
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("tableTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml.rich("tableDescription", {
+              b: (chunks: any) => <b>{chunks}</b>,
+              br: () => <br />
+            })}
+          </p>
         </div>
       ),
       placement: 'top',
@@ -175,10 +176,10 @@ export default function NewGlossaryPage() {
       target: '#add-term-btn',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("addTermTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml("addTermDescription")}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("addTermTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml("addTermDescription")}
+          </p>
         </div>
       ),
       placement: 'top',
@@ -187,12 +188,12 @@ export default function NewGlossaryPage() {
       target: '#glossary-summary',
       content: (
         <div>
-           <h3 className="font-bold text-base mb-1">{trml("saveTitle")}</h3>
-           <p className="text-muted-foreground leading-relaxed">
-             {trml.rich("saveDescription", {
-               b: (chunks: any) => <b>{chunks}</b>
-             })}
-           </p>
+          <h3 className="font-bold text-base mb-1">{trml("saveTitle")}</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            {trml.rich("saveDescription", {
+              b: (chunks: any) => <b>{chunks}</b>
+            })}
+          </p>
         </div>
       ),
       placement: 'left',
@@ -203,7 +204,7 @@ export default function NewGlossaryPage() {
     const { status } = data;
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
       setRunTour(false);
-      
+
       // Remove focus from any element to prevent accidental restarts via Enter
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
@@ -211,8 +212,8 @@ export default function NewGlossaryPage() {
 
       // Try to sync with backend
       try {
-        await AuthService.updateUserProfile({ 
-          walkthrough_status: { glossary_tour: true } 
+        await AuthService.updateUserProfile({
+          walkthrough_status: { glossary_tour: true }
         });
         // Remove localStorage after successful backend sync
         localStorage.removeItem("createGlossaryTourCompleted");
@@ -233,18 +234,18 @@ export default function NewGlossaryPage() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-serif font-semibold text-foreground">Create Glossary</h1>
+            <h1 className="text-3xl font-serif font-semibold text-foreground">{trmlGlossary("createGlossary")}</h1>
             <p className="mt-1 text-muted-foreground">
-              Define custom terminology for translations
+              {trmlGlossary("createGlossaryDescription")}
             </p>
           </div>
         </div>
       </SlideUp>
 
-      <GlossaryForm 
-          mode="create"
-          onSuccess={handleSuccess}
-          onCancel={() => router.push("/dashboard/glossaries")}
+      <GlossaryForm
+        mode="create"
+        onSuccess={handleSuccess}
+        onCancel={() => router.push("/dashboard/glossaries")}
       />
 
       {/* Tour Component */}
@@ -299,7 +300,7 @@ export default function NewGlossaryPage() {
           }}
         />
       )}
-      
+
       {/* Help Button to restart tour */}
       <div className="fixed bottom-6 left-6 z-[100]">
         <motion.button

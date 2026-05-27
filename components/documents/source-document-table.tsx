@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Table,
@@ -28,7 +28,6 @@ import {
   ArrowUpDown,
   Search,
   Filter,
-  RefreshCw,
   X,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -37,6 +36,7 @@ import { DocumentService } from "@/api/services";
 import { toast } from "sonner";
 import { SourceDocumentResponse, SourceDocumentSortField } from "@/lib/types";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -53,10 +53,10 @@ import { formatBytes, cn } from "@/lib/utils";
 export function SourceDocumentTable() {
   const t = useTranslations("Documents");
   const tCommon = useTranslations("Common");
-  
+
   // State for all data and display data
   const [allData, setAllData] = useState<SourceDocumentResponse[]>([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -64,48 +64,56 @@ export function SourceDocumentTable() {
     total: 0,
     totalPages: 0,
   });
-  
+
   // Pagination / Filter / Sort State
   const [sortField, setSortField] = useState<SourceDocumentSortField>("uploadedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchDocument, setSearchDocument] = useState("");
-  const [debouncedSearchDocument, setDebouncedSearchDocument] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
 
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchDocument(searchDocument);
-    }, 500);
+  const lastFiltersRef = useRef({ search: searchQuery, dateRange });
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [searchDocument]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, [debouncedSearchDocument, dateRange]);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchDocument);
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch all documents (simulated with large size) for client-side filtering
+
+      let uploadedFrom: string | undefined = undefined;
+      let uploadedTo: string | undefined = undefined;
+
+      if (dateRange?.from) {
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        uploadedFrom = fromDate.toISOString();
+      }
+      if (dateRange?.to) {
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        uploadedTo = toDate.toISOString();
+      }
+
       const result = await DocumentService.getSourceDocuments(
-        1,
-        100, // Large size to fetch "all" (Limit to 100 to avoid backend validation error)
-        "uploadedAt",
-        "desc"
+        pagination.page,
+        pagination.size,
+        sortField,
+        sortOrder,
+        searchQuery || undefined,
+        uploadedFrom,
+        uploadedTo
       );
-      setAllData(result.items);
+
+      setAllData(result.items || []);
       setPagination((prev) => ({
         ...prev,
-        total: result.items.length,
-        totalPages: Math.ceil(result.items.length / prev.size),
+        total: result.total || 0,
+        totalPages: result.pages || 1,
       }));
     } catch (error) {
       console.error(error);
@@ -116,58 +124,21 @@ export function SourceDocumentTable() {
   };
 
   useEffect(() => {
-    // Initial fetch
-    fetchData();
-  }, []);
+    const filtersChanged =
+      lastFiltersRef.current.search !== searchQuery ||
+      lastFiltersRef.current.dateRange?.from !== dateRange?.from ||
+      lastFiltersRef.current.dateRange?.to !== dateRange?.to;
 
-  // Client-side Filtering, Sorting, and Pagination
-  const filteredData = allData.filter((doc) => {
-    const matchesSearch = 
-      debouncedSearchDocument === "" ||
-      doc.name.toLowerCase().includes(debouncedSearchDocument.toLowerCase());
-
-    let matchesDate = true;
-    if (dateRange?.from) {
-      const docDate = new Date(doc.uploadedAt);
-      const fromDate = new Date(dateRange.from);
-      fromDate.setHours(0, 0, 0, 0);
-      matchesDate = matchesDate && docDate >= fromDate;
-
-      if (dateRange.to) {
-        const toDate = new Date(dateRange.to);
-        toDate.setHours(23, 59, 59, 999);
-        matchesDate = matchesDate && docDate <= toDate;
+    if (filtersChanged) {
+      lastFiltersRef.current = { search: searchQuery, dateRange };
+      if (pagination.page !== 1) {
+        setPagination((prev) => ({ ...prev, page: 1 }));
+        return;
       }
     }
 
-    return matchesSearch && matchesDate;
-  });
-
-  const sortedData = [...filteredData].sort((a, b) => {
-    let comparison = 0;
-    switch (sortField) {
-      case "name":
-        comparison = a.name.localeCompare(b.name);
-        break;
-      case "uploadedAt":
-        comparison = new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
-        break;
-      case "size":
-        comparison = a.size - b.size;
-        break;
-      case "usageCount":
-        comparison = (a.usageCount || 0) - (b.usageCount || 0);
-        break;
-    }
-    return sortOrder === "asc" ? comparison : -comparison;
-  });
-
-  const filteredTotal = sortedData.length;
-  const filteredTotalPages = Math.ceil(filteredTotal / pagination.size);
-  const paginatedData = sortedData.slice(
-    (pagination.page - 1) * pagination.size,
-    pagination.page * pagination.size
-  );
+    fetchData();
+  }, [pagination.page, pagination.size, sortField, sortOrder, searchQuery, dateRange]);
 
   const handleSort = (field: SourceDocumentSortField) => {
     if (sortField === field) {
@@ -213,35 +184,45 @@ export function SourceDocumentTable() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {t("title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("description")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            {tCommon("refresh") || "Refresh"}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("title")}
+        subtitle={t("description")}
+        backUrl="/dashboard"
+        onRefresh={() => fetchData()}
+        refreshLoading={loading}
+        refreshLabel={tCommon("refresh") || "Refresh"}
+      />
 
       {/* Search Bar matching HistoryPage Style */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <div className="relative w-full sm:w-[800px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t("searchDocuments")}
-            value={searchDocument}
-            onChange={(e) => setSearchDocument(e.target.value)}
-            className="pl-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700"
-            aria-label={t("searchDocuments")}
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm w-full">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:w-[800px]">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t("searchDocuments")}
+              value={searchDocument}
+              onChange={(e) => setSearchDocument(e.target.value)}
+              className="pl-9 pr-9 bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 w-full"
+              aria-label={t("searchDocuments")}
+            />
+            {searchDocument && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchDocument("");
+                  setSearchQuery("");
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                title={tCommon("clear")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <Button type="submit" variant="default" className="shrink-0">
+            {tCommon("search")}
+          </Button>
+        </form>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           {dateRange && (
@@ -312,14 +293,14 @@ export function SourceDocumentTable() {
                   {tCommon("loading")}...
                 </TableCell>
               </TableRow>
-            ) : paginatedData.length === 0 ? (
+            ) : allData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
                   {t("noDocuments")}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((doc) => (
+              allData.map((doc) => (
                 <TableRow key={doc.id} className="transition-opacity">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
@@ -378,11 +359,11 @@ export function SourceDocumentTable() {
 
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
-             {t("showing", {
-                  start: filteredTotal === 0 ? 0 : (pagination.page - 1) * pagination.size + 1,
-                  end: Math.min(pagination.page * pagination.size, filteredTotal),
-                  total: filteredTotal,
-              }) || tCommon("pageOf", { current: pagination.page, total: Math.max(filteredTotalPages, 1) })}
+          {t("showing", {
+            start: pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.size + 1,
+            end: Math.min(pagination.page * pagination.size, pagination.total),
+            total: pagination.total,
+          }) || tCommon("pageOf", { current: pagination.page, total: Math.max(pagination.totalPages, 1) })}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -398,7 +379,7 @@ export function SourceDocumentTable() {
             variant="outline"
             size="sm"
             onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-            disabled={pagination.page >= filteredTotalPages || loading}
+            disabled={pagination.page >= pagination.totalPages || loading}
           >
             {tCommon("next")}
             <ChevronRight className="h-4 w-4" />

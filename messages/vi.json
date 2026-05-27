@@ -1,5 +1,9 @@
 {
     "Common": {
+        "configured": "Đã cấu hình",
+        "search": "Tìm kiếm",
+        "selected": "Đã chọn",
+        "browseFiles": "chọn tệp",
         "en": "Tiếng Anh",
         "vn": "Tiếng Việt",
         "vi": "Tiếng Việt",
@@ -29,7 +33,14 @@
         "yes": "Có",
         "no": "Không",
         "swapLanguages": "Hoán đổi ngôn ngữ",
-        "clear": "Xóa bộ lọc"
+        "clear": "Xóa bộ lọc",
+        "apply": "Áp dụng",
+        "translating": "Đang dịch...",
+        "completed": "Hoàn thành",
+        "success": "Thành công",
+        "cancelled": "Đã hủy",
+        "of": "trên",
+        "stepIndicator": "Bước {current} trên {total}"
     },
     "Documents": {
         "title": "Tài liệu đã tải lên",
@@ -53,7 +64,14 @@
     },
     "Header": {
         "welcome": "Chào mừng",
-        "searchPlaceholder": "Tìm tài liệu, bộ thuật ngữ..."
+        "searchPlaceholder": "Tìm tài liệu, bộ thuật ngữ...",
+        "Dashboard": "Dashboard",
+        "Translate": "Dịch thuật",
+        "Glossaries": "Thuật ngữ",
+        "History": "Lịch sử",
+        "User Guidance": "Hướng dẫn sử dụng",
+        "signOut": "Đăng xuất",
+        "Release Notes": "Nhật ký thay đổi"
     },
     "Footer": {
         "contact": "Liên hệ",
@@ -61,14 +79,6 @@
         "phone": "Số nội bộ: 5903",
         "email": "Email: aiic-support@fujinet.net",
         "mainPages": "Trang chính"
-    },
-    "Sidebar": {
-        "Dashboard": "Dashboard",
-        "Translate": "Dịch",
-        "Glossaries": "Thuật ngữ",
-        "History": "Lịch sử",
-        "User Guidance": "Hướng dẫn sử dụng",
-        "signOut": "Đăng xuất"
     },
     "StepIndicator": {
         "Document": "Tài liệu",
@@ -85,6 +95,7 @@
         "rememberMe": "Ghi nhớ đăng nhập",
         "forgotPassword": "Quên mật khẩu?",
         "signIn": "Đăng nhập",
+        "signOut": "Đăng xuất",
         "requestAccess": "Yêu cầu quyền truy cập",
         "noAccount": "Chưa có tài khoản?",
         "footer": "Phát triển bởi AI Innovation Center",
@@ -106,26 +117,56 @@
         "quickUploadDescription": "Kéo và thả tài liệu vào đây để bắt đầu dịch.",
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
         "continue": "Tiếp tục",
         "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
         "fileTooLargeTitle": "Tệp quá lớn",
-        "fileTooLargeDescription": "Tệp bạn đang cố tải lên vượt quá giới hạn kích thước tối đa {maxSize}MB. Vui lòng chọn một tệp nhỏ hơn."
+        "fileTooLargeDescription": "Tệp bạn đang cố tải lên vượt quá giới hạn kích thước tối đa {maxSize}MB. Vui lòng chọn một tệp nhỏ hơn.",
+        "uploading": "Đang tải lên...",
+        "uploadFailed": "Uploaded Failed",
+        "addMoreFiles": "Thêm tệp",
+        "maxFilesWarning": "Bạn đã đạt đến số lượng tệp tối đa được phép dịch. Vui lòng tiếp tục với các tệp hiện tại hoặc xóa bớt để thêm tệp mới."
     },
     "Translate": {
+        "fileConfiguration": "Cấu hình tệp",
         "error": "Lỗi",
+        "addMoreFiles": "Thêm tệp",
+        "filesRemaining": "Có thể thêm tối đa {remaining} tệp nữa.",
+        "uploadNew": "Tải lên mới",
+        "browseExisting": "Chọn tệp sẵn có",
+        "addFiles": "Thêm tệp",
+        "addSelected": "Thêm tệp đã chọn ({count})",
+        "maxFilesReached": "Bạn đã đạt số lượng tệp tối đa.",
+        "noDocuments": "Không tìm thấy tài liệu nào",
         "sessionExpired": "Phiên làm việc đã hết hạn",
         "noDocumentUploaded": "Chưa có tài liệu nào được tải lên.",
         "documentSessionLost": "Phiên xử lý tài liệu đã bị mất. Vui lòng tải lại tệp.",
         "failedToStartTranslation": "Không thể bắt đầu quá trình dịch.",
-        "downloadFailed": "Tải xuống không thành công."
+        "downloadFailed": "Tải xuống không thành công.",
+        "translationQueue": "Hàng đợi dịch",
+        "filesUploaded": "tệp đã sẵn sàng để cấu hình.",
+        "batchApply": "Áp dụng cài đặt hàng loạt",
+        "startAll": "Bắt đầu dịch tất cả",
+        "pendingConfig": "Đang chờ cấu hình",
+        "editSettings": "Chỉnh sửa cài đặt",
+        "batchApplyDesc": "Các cài đặt này sẽ được áp dụng cho tất cả các tệp đang chờ cấu hình trong hàng đợi. Những tệp đã được cấu hình trước đó sẽ bị ghi đè.",
+        "setup": "Thiết lập",
+        "imagesTranslated": "Bao gồm hình ảnh",
+        "glossaryUsed": "{count, plural, one {# thuật ngữ} other {# thuật ngữ}}",
+        "configTranslation": "Cấu hình dịch",
+        "clickToConfig": "Nhấp vào tệp để cấu hình",
+        "noFileSelected": "Chưa chọn tệp nào",
+        "selectFileInstruction": "Chọn một tệp từ danh sách bên trái để bắt đầu cấu hình.",
+        "noFilesYet": "Chưa có tệp nào được thêm",
+        "addFilesToStart": "Thêm tệp để bắt đầu cấu hình dịch",
+        "translateImages": "Dịch hình ảnh"
     },
     "DocumentSetup": {
         "documentTitle": "Thiết lập tài liệu",
         "documentDescription": "Tải tài liệu của bạn lên và chọn ngôn ngữ dịch",
         "dragAndDrop": "Kéo và thả tài liệu của bạn vào đây",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "uploadDocument": "Tải lên tài liệu",
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
@@ -133,6 +174,7 @@
         "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB."
     },
     "GlossarySelection": {
+        "noGlossary": "Không dùng bộ thuật ngữ",
         "selectGlossary": "Chọn bộ thuật ngữ",
         "newGlossary": "Tạo mới",
         "searchGlossary": "Tìm kiếm bộ thuật ngữ",
@@ -170,7 +212,7 @@
         "translating": "Đang dịch...",
         "processing": "Đang xử lý tài liệu",
         "complete": "Hoàn tất",
-        "cancel": "Hủy dịch",
+        "cancel": "Hủy",
         "successTitle": "Dịch thành công!",
         "successDesc": "Tài liệu của bạn đã được dịch thành công",
         "download": "Tải tệp",
@@ -180,7 +222,12 @@
         "tryAgain": "Thử lại",
         "startOver": "Bắt đầu lại",
         "cancelledTitle": "Đã hủy dịch",
-        "cancelledDesc": "Quá trình dịch đã bị dừng."
+        "cancelledDesc": "Quá trình dịch đã bị dừng.",
+        "saveConfig": "Lưu cấu hình",
+        "applyToThisFile": "Áp dụng cho tệp này",
+        "applyToAllFiles": "Áp dụng cho tất cả các tệp",
+        "cancelAll": "Hủy tất cả các bản dịch",
+        "pending": "Đang chờ..."
     },
     "Glossaries": {
         "termDuplicatedTitle": "Thuật ngữ trùng",
@@ -202,10 +249,6 @@
         "backToManualEntry": "Quay lại nhập thủ công",
         "previewTerms": "Xem trước thuật ngữ",
         "searchTermsPlaceholder": "Tìm kiếm thuật ngữ đã thêm...",
-        "termsUpload": "Nhấp để tải lên tệp .txt hoặc .csv",
-        "termsUploadFormat": "Tệp phải đúng định dạng:",
-        "termsUploadExample": "thuật ngữ nguồn, thuật ngữ đích",
-        "termsUploadMaxSize": "Dung lượng tối đa: 5MB",
         "dropToUpload": "Kéo thả hoặc nhấp để tải lên tệp .txt hoặc .csv",
         "clickToUpload": "Kéo thả hoặc nhấp để tải lên tệp .txt hoặc .csv",
         "uploadFormatLabel": "Mỗi dòng là một cặp thuật ngữ và phải theo định dạng:",
@@ -214,6 +257,7 @@
         "supportedFormats": "Hỗ trợ .txt, .csv",
         "noTermsAdded": "Chưa có thuật ngữ nào",
         "createGlossary": "Tạo bộ thuật ngữ",
+        "createGlossaryDescription": "Định nghĩa thuật ngữ tùy chỉnh cho bản dịch",
         "error": "Lỗi",
         "failedToLoadGlossary": "Không thể tải bộ thuật ngữ",
         "editTitle": "Chỉnh sửa bộ thuật ngữ",
@@ -286,7 +330,44 @@
         "searchEmptyHint": "Thử từ khóa khác",
         "createFirst": "Tạo bộ thuật ngữ đầu tiên để bắt đầu",
         "create": "Tạo",
-        "showing": "Hiển thị {start}-{end} trên {total} {total, plural, one {bộ thuật ngữ} other {bộ thuật ngữ}}"
+        "myGlossaries": "Thuật ngữ của tôi",
+        "marketplace": "Công khai",
+        "sharedWithMe": "Được chia sẻ với tôi",
+        "showing": "Hiển thị {start}-{end} trên {total} {total, plural, one {bộ thuật ngữ} other {bộ thuật ngữ}}",
+        "termMatched": "{count, plural, one {# thuật ngữ khớp} other {# thuật ngữ khớp}}",
+        "share": "Chia sẻ",
+        "shareDescription": "Quản lý ai có thể xem hoặc sao chép bộ thuật ngữ này.",
+        "userPrincipal": "Người dùng",
+        "publicPrincipal": "Công khai",
+        "userPlaceholder": "Tên người dùng",
+        "everyonePlaceholder": "Mọi người",
+        "expiresOptional": "Hết hạn vào (không bắt buộc)",
+        "setExpiration": "Đặt ngày hết hạn",
+        "expires": "Hết hạn",
+        "peopleWithAccess": "Người có quyền truy cập",
+        "loadingPermissions": "Đang tải quyền truy cập...",
+        "owner": "Chủ sở hữu",
+        "anyoneWithAccess": "Mọi người có quyền truy cập",
+        "noAdditionalPermissions": "Không có quyền nào được cấp.",
+        "userRequired": "Vui lòng nhập tên người dùng",
+        "existingPermission": "Người dùng hoặc quyền truy cập công khai này đã tồn tại. Vui lòng cập nhật hoặc thu hồi quyền hiện có trước.",
+        "shareSuccess": {
+            "title": "Đã cấp quyền truy cập",
+            "success": "Đã chia sẻ thành công với {target}",
+            "anyone": "mọi người"
+        },
+        "permissionUpdated": "Quyền đã được cập nhật",
+        "accessRemoved": "Đã xóa quyền truy cập",
+        "getGlossary": "Lấy bộ thuật ngữ này",
+        "cloneGlossary": "Sao chép bộ thuật ngữ",
+        "cloneGlossaryDescription": "Tạo một bản sao của bộ thuật ngữ này. Hãy đảm bảo sử dụng một tên duy nhất.",
+        "clone": "Sao chép",
+        "cloning": "Đang sao chép...",
+        "cloneSuccess": {
+            "title": "Thành công",
+            "description": "Sao chép bộ thuật ngữ thành công"
+        },
+        "alreadyOwner": "Bạn đã có bộ thuật ngữ này rồi."
     },
     "History": {
         "historyTitle": "Lịch sử dịch",
@@ -425,17 +506,20 @@
         "step5Description": "Trước khi bắt đầu dịch, hãy xem lại tất cả các cài đặt của bạn để đảm bảo mọi thứ đều chính xác.",
         "step6Title": "Bắt đầu dịch",
         "step6Description": "Khi bạn đã sẵn sàng, hãy nhấp vào nút này để bắt đầu quá trình dịch. Bạn có thể theo dõi tiến trình trong thời gian thực.",
-        "onboardingHelp": "Xem lại hướng dẫn sử dụng"
+        "onboardingHelp": "Xem lại hướng dẫn sử dụng",
+        "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB."
     },
     "GlossaryListTour": {
         "welcomeTitle": "Quản lý Bộ Thuật Ngữ (Glossary)",
         "welcomeDescription": "Đây là nơi bạn thiết lập các thuật ngữ chuyên ngành để hệ thống dịch đúng theo quy ước thuật ngữ.<br></br><br></br>Sử dụng Glossary giúp bản dịch <b>nhất quán</b> và <b>chính xác</b> hơn.",
         "createTitle": "Tạo mới dễ dàng",
         "createDescription": "Bạn có thể tạo bộ thuật ngữ rỗng và nhập tay từng từ, hoặc <b>Import</b> nhanh từ file Excel/CSV có sẵn.",
+        "tabsTitle": "Khám phá bộ thuật ngữ",
+        "tabsDescription": "Chuyển qua lại giữa <b>My Glossaries</b>, tìm kiếm trên <b>Marketplace</b>, hoặc xem các bộ từ được <b>Shared</b> (chia sẻ) với bạn.",
         "searchTitle": "Tìm kiếm & Lọc",
         "searchDescription": "Khi số lượng bộ từ điển nhiều lên, hãy dùng công cụ này để tìm nhanh theo tên hoặc mô tả.",
         "detailTitle": "Chi tiết bộ từ điển",
-        "detailDescription": "Mỗi thẻ hiển thị ngôn ngữ nguồn/đích và số lượng từ.<br></br><br></br>Bấm vào thẻ để xem danh sách từ, hoặc dùng menu <b>(...)</b> để Chỉnh sửa/Xóa."
+        "detailDescription": "Mỗi thẻ hiển thị ngôn ngữ nguồn/đích và số lượng từ.<br></br><br></br>Bấm vào thẻ để xem danh sách từ, hoặc dùng menu <b>(...)</b> để Chỉnh sửa/Xóa, hoặc bấm vào nút <b>Share</b> để chia sẻ bộ từ điển này với người khác."
     },
     "GlossaryCreateTour": {
         "welcomeTitle": "Tạo Bộ Thuật Ngữ Mới",
@@ -454,5 +538,17 @@
         "addTermDescription": "Bấm nút này để thêm dòng nhập từ mới. Bạn có thể thêm bao nhiêu từ tùy thích.",
         "saveTitle": "Tóm tắt & Lưu",
         "saveDescription": "Kiểm tra lại thông tin tổng quan. Khi mọi thứ đã đủ, bấm <b>Save</b> để hoàn tất."
+    },
+    "UploadTour": {
+        "fileListTitle": "Danh sách file",
+        "fileListDescription": "<b>Nhấn vào file</b> để cài đặt dịch cho file đó.<br></br><br></br>Mỗi file có thể có cặp ngôn ngữ, bộ thuật ngữ và cài đặt dịch ảnh riêng.",
+        "languageTitle": "Chọn ngôn ngữ",
+        "languageDescription": "Chọn ngôn ngữ <b>nguồn</b> và ngôn ngữ <b>đích</b> cho file này.<br></br><br></br>Sử dụng <b>nút hoán đổi</b> ở giữa để đảo ngược nhanh.",
+        "translateImagesTitle": "Dịch ảnh",
+        "translateImagesDescription": "Bật tính năng này để <b>trích xuất và dịch văn bản</b> từ ảnh trong tài liệu.<br></br><br></br>Hữu ích cho tài liệu scan hoặc bài thuyết trình có chữ trong ảnh.",
+        "glossaryTitle": "Chọn bộ thuật ngữ",
+        "glossaryDescription": "Chọn một hoặc nhiều <b>bộ thuật ngữ</b> để đảm bảo các thuật ngữ chuyên ngành được dịch chính xác.<br></br><br></br>Bạn cũng có thể <b>tạo bộ thuật ngữ mới</b> ngay tại đây.",
+        "actionTitle": "Thêm file hoặc bắt đầu",
+        "actionDescription": "Nhấn <b>Thêm file</b> để thêm tài liệu (tối đa 5 file).<br></br><br></br>Khi sẵn sàng, nhấn <b>Bắt đầu dịch</b> để dịch tất cả các file."
     }
 }
