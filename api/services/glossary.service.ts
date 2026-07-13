@@ -371,5 +371,18 @@ export class GlossaryService {
       throw error;
     }
   }
+  /**
+   * Recommend glossary for a file
+   */
+  static async recommendGlossary(fileId: string): Promise<{ terms: { source: string; target: string }[] }> {
+    try {
+      const response = await apiClient.post<{ terms: { source: string; target: string }[] }>(
+        API_CONFIG.ENDPOINTS.GLOSSARIES.RECOMMEND,
+        { fileId }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
-

@@ -60,6 +60,7 @@ interface CreateGlossaryDialogProps {
   onSuccess: (glossary: GlossaryDetailResponse) => void;
   defaultSourceLanguage?: string;
   defaultTargetLanguage?: string;
+  initialTerms?: { source: string; target: string }[];
 }
 
 type TempTerm = {
@@ -74,6 +75,7 @@ export function CreateGlossaryDialog({
   onSuccess,
   defaultSourceLanguage = "jp",
   defaultTargetLanguage = "vn",
+  initialTerms = [],
 }: CreateGlossaryDialogProps) {
   const { toast } = useToast();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,13 @@ export function CreateGlossaryDialog({
   const [description, setDescription] = useState("");
   const [sourceLanguage, setSourceLanguage] = useState(defaultSourceLanguage);
   const [targetLanguage, setTargetLanguage] = useState(defaultTargetLanguage);
-  const [terms, setTerms] = useState<TempTerm[]>([]);
+  const [terms, setTerms] = useState<TempTerm[]>(
+    initialTerms.map((t, i) => ({
+      id: `initial-${Date.now()}-${i}`,
+      source: t.source,
+      target: t.target,
+    }))
+  );
 
   // UI State
   const [entryMode, setEntryMode] = useState<"manual" | "import">("manual");
@@ -121,14 +129,20 @@ export function CreateGlossaryDialog({
       setDescription("");
       setSourceLanguage(defaultSourceLanguage);
       setTargetLanguage(defaultTargetLanguage);
-      setTerms([]);
+      setTerms(
+        initialTerms.map((t, i) => ({
+          id: `initial-${Date.now()}-${i}`,
+          source: t.source,
+          target: t.target,
+        }))
+      );
       setEntryMode("manual");
       setSearchQuery("");
       setNewTermSource("");
       setNewTermTarget("");
       setIsTargetEdited(false);
     }
-  }, [open, defaultSourceLanguage, defaultTargetLanguage]);
+  }, [open, defaultSourceLanguage, defaultTargetLanguage, initialTerms]);
 
   // Clear highlight
   useEffect(() => {

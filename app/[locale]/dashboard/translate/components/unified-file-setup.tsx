@@ -14,7 +14,9 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  Lightbulb,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -82,6 +84,7 @@ export function UnifiedFileSetup({
   const trmlDocumentSetup = useTranslations("DocumentSetup");
   const trmlGlossarySelection = useTranslations("GlossarySelection");
   const trmlTranslationExecution = useTranslations("TranslationExecution");
+  const { toast } = useToast();
 
   const isImage = useMemo(() => {
     return editingFile.metadata.type?.includes("image") ||
@@ -109,6 +112,9 @@ export function UnifiedFileSetup({
 
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [editingGlossaryId, setEditingGlossaryId] = useState<string | null>(null);
+  
+  const [isRecommending, setIsRecommending] = useState(false);
+  const [suggestedTerms, setSuggestedTerms] = useState<{source: string, target: string}[]>([]);
 
   // Local search input state (committed on Enter or button click)
   const [localSearchInput, setLocalSearchInput] = useState(searchQuery);
@@ -381,14 +387,46 @@ export function UnifiedFileSetup({
     setConflictData(null);
   };
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = (newGlossary?: GlossaryResponse) => {
     onRefreshGlossaries();
     fetchPagedGlossaries(currentPage, searchQuery);
+    setSuggestedTerms([]);
+    
+    if (newGlossary && newGlossary.id) {
+      onUpdateFile({
+        selectedGlossaries: [...editingFile.selectedGlossaries, newGlossary.id],
+        glossaryOption: "existing"
+      });
+    }
   };
 
   const handleEditSuccess = () => {
     onRefreshGlossaries();
     fetchPagedGlossaries(currentPage, searchQuery);
+  };
+
+  const handleRecommendGlossary = async () => {
+    setIsRecommending(true);
+    try {
+      const response = await GlossaryService.recommendGlossary(editingFile.documentId);
+      if (response.terms && response.terms.length > 0) {
+        setSuggestedTerms(response.terms);
+        onCreatingOpenChange(true);
+      } else {
+        toast({
+          title: "No suggestions",
+          description: "No terms were suggested for this document.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to recommend glossary", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsRecommending(false);
+    }
   };
 
   return (
@@ -549,10 +587,28 @@ export function UnifiedFileSetup({
                       <p className="text-sm font-semibold text-foreground">
                         No Glossaries Selected
                       </p>
-                      <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1 leading-normal">
+                      <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1 leading-normal mb-4">
                         Select glossaries from the list on the right to apply them to this document.
                       </p>
                     </div>
+                    <Button
+                      variant="outline"
+                      className="shimmer-button border-primary/50 text-primary hover:bg-primary/5 shadow-sm"
+                      onClick={handleRecommendGlossary}
+                      disabled={isRecommending}
+                    >
+                      {isRecommending ? (
+                        <>
+                          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                          Suggesting...
+                        </>
+                      ) : (
+                        <>
+                          <Lightbulb className="w-4 h-4 mr-2" />
+                          Suggest Glossary
+                        </>
+                      )}
+                    </Button>
                   </div>
                 ) : (
                   selectedGlossariesList.map((glossary) => {
@@ -815,10 +871,14 @@ export function UnifiedFileSetup({
       {/* DIALOGS & SHEET PREVIEWS */}
       <CreateGlossaryDialog
         open={isCreatingOpen}
-        onOpenChange={onCreatingOpenChange}
+        onOpenChange={(open) => {
+          onCreatingOpenChange(open);
+          if (!open) setSuggestedTerms([]);
+        }}
         onSuccess={handleCreateSuccess}
         defaultSourceLanguage={editingFile.sourceLanguage}
         defaultTargetLanguage={editingFile.targetLanguage}
+        initialTerms={suggestedTerms}
       />
 
       <EditGlossaryDialog
