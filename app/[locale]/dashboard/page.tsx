@@ -407,7 +407,7 @@ export default function DashboardPage() {
     window.location.hostname.includes("translatesphere.fujinet.net");
   const maxSizeMB = isPublicDomain ? 20 : 50;
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     maxSize: maxSizeMB * 1024 * 1024,
     accept: {
@@ -424,7 +424,8 @@ export default function DashboardPage() {
       'image/heic': ['.heic'],
       'image/heif': ['.heif'],
     },
-    multiple: true
+    multiple: true,
+    noClick: true
   });
 
   const handleContinue = async () => {
@@ -536,41 +537,45 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <AnimatePresence mode="wait">
-              {files.length === 0 ? (
-                <div {...getRootProps()} className={cn("w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px] bg-card border border-border shadow-sm hover:border-primary/50", isDragActive && "border-primary")}>
-                  <input {...getInputProps()} />
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2"><Upload className="w-8 h-8 text-primary" /></div>
-                  <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
-                  <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
-                </div>
-              ) : (
-                <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">
-                  {files.map((file, index) => (
-                    <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
-                  ))}
-                  <div className="flex justify-center pt-4 gap-4">
-                    {files.length < 5 && (
-                      <div {...getRootProps()}>
-                        <input {...getInputProps()} />
-                        <Button variant="outline" size="lg" className="min-w-[150px]">
+              <div {...getRootProps()}>
+                <input {...getInputProps()} />
+                {files.length === 0 ? (
+                  <div
+                    className={cn("w-full rounded-xl p-10 cursor-pointer flex flex-col items-center justify-center text-center gap-4 min-h-[200px] bg-card border border-border shadow-sm hover:border-primary/50", isDragActive && "border-primary")}
+                    onClick={open}
+                  >
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                      <Upload className="w-8 h-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium">{isDragActive ? trml("dropFile") : trml("clickOrDrag")}</p>
+                    <p className="text-sm text-muted-foreground font-normal">{trml("supportedFiles", { maxSize: maxSizeMB })}</p>
+                  </div>
+                ) : (
+                  <motion.div key="files" className="space-y-4 max-w-2xl mx-auto">
+                    {files.map((file, index) => (
+                      <FileCard key={index} name={file.name} size={file.size} type={file.type} status="success" onRemove={() => setFiles((prev) => prev.filter((_, i) => i !== index))} />
+                    ))}
+                    <div className="flex justify-center pt-4 gap-4">
+                      {files.length < 5 && (
+                        <Button variant="outline" size="lg" className="min-w-[150px]" onClick={open}>
                           {trml('addMoreFiles') || "Add More Files"}
                         </Button>
-                      </div>
-                    )}
-                    <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
-                      {isUploadingFiles ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
-                        </>
-                      ) : (
-                        <>
-                          {trml('continue')} <ArrowRight className="w-4 h-4" />
-                        </>
                       )}
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
+                      <Button onClick={handleContinue} disabled={isUploadingFiles} size="lg" className="min-w-[220px] gap-2">
+                        {isUploadingFiles ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" /> {trml('uploading') || "Uploading..."}
+                          </>
+                        ) : (
+                          <>
+                            {trml('continue')} <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </AnimatePresence>
           </CardContent>
         </Card>
