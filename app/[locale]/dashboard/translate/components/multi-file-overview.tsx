@@ -59,6 +59,16 @@ function truncateMiddle(name: string, maxLength = 30): string {
   return baseName.substring(0, startLength) + "..." + baseName.substring(baseName.length - endLength) + ext;
 }
 
+type Language = "JA" | "VI" | "EN";
+
+export function normalizeLanguage(lang?: string | null): Language {
+  const code = lang?.trim().toLowerCase() ?? "";
+
+  if (code === "ja" || code === "jp") return "JA";
+  if (code === "vi" || code === "vn") return "VI";
+  return "EN";
+}
+
 export function MultiFileOverview({
   files,
   activeFileId,
@@ -116,9 +126,7 @@ export function MultiFileOverview({
                     "mt-4 p-3 rounded-xl border cursor-pointer select-none group relative overflow-hidden",
                     "transition-all duration-200 ease-out",
                     "hover:-translate-y-0.5 hover:shadow-md",
-                    isActive
-                      ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/30 font-bold"
-                      : "bg-background border-border hover:border-primary/40 hover:bg-muted/30"
+                    isActive ? "bg-background ml-4" : "bg-card",
                   )}
                   onClick={() => onSetupFile(file.id)}
                 >
@@ -138,7 +146,7 @@ export function MultiFileOverview({
                         <div className={cn(
                           "absolute -bottom-1.5 -right-1.5 px-1 py-0.2 rounded-md text-[8px] shadow-sm border transition-colors",
                           isActive
-                            ? "bg-foreground text-background border-primary"
+                            ? "bg-card text-primary border-primary font-bold"
                             : "bg-primary text-primary-foreground border-background"
                         )}>
                           {extension}
@@ -146,13 +154,13 @@ export function MultiFileOverview({
                       </div>
 
                       {/* File Info & Configuration summary */}
-                      <div className="flex-1 min-w-0 flex flex-col">
+                      <div className={cn("flex-1 min-w-0 flex flex-col", isActive ? "font-bold" : "font-medium")}>
                         <p
                           className={cn(
                             "text-sm leading-tight transition-colors",
                             isActive
-                              ? "text-primary"
-                              : "font-medium text-foreground group-hover:text-primary"
+                              ? "font-bold text-foreground group-hover:text-primary"
+                              : "font-medium text-foreground/80 group-hover:text-primary"
                           )}
                           title={file.metadata.name}
                         >
@@ -166,30 +174,23 @@ export function MultiFileOverview({
 
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[11px]">
                           {/* 1. Languages */}
-                          <span className="px-1.5 py-0.5 rounded border tracking-wider transition-colors bg-background/20 border-primary/20">
-                            {trmlCommon(file.sourceLanguage) || file.sourceLanguage} ➔ {trmlCommon(file.targetLanguage) || file.targetLanguage}
+                          <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border bg-background border-primary/20">
+                            {normalizeLanguage(file.sourceLanguage)} 
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" /> 
+                            {normalizeLanguage(file.targetLanguage)}
                           </span>
 
                           {/* 2. Selected glossaries */}
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded border tracking-wider transition-colors flex items-center gap-1",
-                            file.selectedGlossaries.length > 0
-                              ? "bg-background/20 border-primary/20 text-foreground"
-                              : "bg-background/80 border-slate-200 text-muted-foreground"
-                          )}>
-                            <BookOpen className="w-3 h-3 flex-shrink-0" />
-                            <span>
-                              {trmlTranslate("glossaryUsed", { count: file.selectedGlossaries.length }) || `Glossary: ${file.selectedGlossaries.length}`}
-                            </span>
+                          <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border bg-background border-primary/20">
+                            <BookOpen className="w-3 h-3 flex-shrink-0" /> 
+                            {trmlTranslate("glossaryUsed", { count: file.selectedGlossaries.length }) || `Glossary: ${file.selectedGlossaries.length}`}
                           </span>
 
                           {/* 3. Translate image */}
                           {file.translateImages && (
-                            <span className="px-1.5 py-0.5 rounded border border-primary/20 tracking-wider transition-colors flex items-center gap-1.5">
-                              <div className="flex items-center gap-1">
-                                <span>{trmlTranslate("translateImages") || "Images"}</span>
-                              </div>
+                            <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border bg-background border-primary/20">
                               <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                              {trmlTranslate("translateImages") || "Images"}
                             </span>
                           )}
                         </div>

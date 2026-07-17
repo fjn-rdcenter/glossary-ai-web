@@ -516,7 +516,6 @@ function TranslatePageContent() {
     const file = fileConfigs.find(f => f.id === fileId);
     if (!file) return;
 
-    setFileConfigs(prev => prev.map(f => f.id === fileId ? { ...f, translationStatus: "translating", progress: 0 } : f));
     try {
       const job = await TranslationService.startTranslation({
         sourceLanguage: file.sourceLanguage,

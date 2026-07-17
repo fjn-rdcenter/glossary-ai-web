@@ -95,6 +95,7 @@ export function MultiTranslationProgress({
                   <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                     {["idle", "translating"].includes(file.translationStatus) && (
                       <div className="flex items-center gap-2">
+                        {/* Loader + progress percentage */}
                         {file.translationStatus === "idle" ? (
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             <LoaderCircle className="w-4 h-4 animate-spin text-primary/70" /> {trmlTranslationExecution("pending") || "Queued..."}
@@ -105,6 +106,7 @@ export function MultiTranslationProgress({
                             {Math.round(file.progress)}%
                           </div>
                         )}
+                        {/* Cancel button */}
                         {onCancel && (
                           <>
                             <Button size="sm" variant="outline" className="hidden sm:inline-flex border-border/70 text-destructive hover:bg-destructive/10" onClick={() => onCancel(file.id)}>
