@@ -14,7 +14,9 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -81,7 +83,7 @@ export function UnifiedFileSetup({
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
   const trmlGlossarySelection = useTranslations("GlossarySelection");
-  const trmlTranslationExecution = useTranslations("TranslationExecution");
+  const { toast } = useToast();
 
   const isImage = useMemo(() => {
     return editingFile.metadata.type?.includes("image") ||
@@ -109,6 +111,9 @@ export function UnifiedFileSetup({
 
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [editingGlossaryId, setEditingGlossaryId] = useState<string | null>(null);
+  
+  const [isRecommending, setIsRecommending] = useState(false);
+  const [suggestedTerms, setSuggestedTerms] = useState<{source: string, target: string}[]>([]);
 
   // Local search input state (committed on Enter or button click)
   const [localSearchInput, setLocalSearchInput] = useState(searchQuery);
@@ -381,14 +386,46 @@ export function UnifiedFileSetup({
     setConflictData(null);
   };
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = (newGlossary?: GlossaryResponse) => {
     onRefreshGlossaries();
     fetchPagedGlossaries(currentPage, searchQuery);
+    setSuggestedTerms([]);
+    
+    if (newGlossary && newGlossary.id) {
+      onUpdateFile({
+        selectedGlossaries: [...editingFile.selectedGlossaries, newGlossary.id],
+        glossaryOption: "existing"
+      });
+    }
   };
 
   const handleEditSuccess = () => {
     onRefreshGlossaries();
     fetchPagedGlossaries(currentPage, searchQuery);
+  };
+
+  const handleRecommendGlossary = async () => {
+    setIsRecommending(true);
+    try {
+      const response = await GlossaryService.recommendGlossary(editingFile.documentId);
+      if (response.terms && response.terms.length > 0) {
+        setSuggestedTerms(response.terms);
+        onCreatingOpenChange(true);
+      } else {
+        toast({
+          title: "No suggestions",
+          description: "No terms were suggested for this document.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to recommend glossary", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsRecommending(false);
+    }
   };
 
   return (
@@ -407,7 +444,7 @@ export function UnifiedFileSetup({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-foreground font-semibold">
             <Globe className="w-4 h-4 text-primary" />
-            <h3 className="text-sm">Translation Options</h3>
+            <h3 className="text-sm">{trmlDocumentSetup("translationOptions")}</h3>
           </div>
 
           <div className="flex items-stretch gap-4">
@@ -515,11 +552,11 @@ export function UnifiedFileSetup({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
             {/* Left Column: Selected Glossaries */}
             <div className="space-y-3 bg-card rounded-xl border border-border/80 p-4 flex flex-col h-full min-h-[380px] shadow-sm">
-              <div className="flex items-center justify-between border-b pb-2">
+              <div className="h-7 flex items-center justify-between border-b pb-2">
                 <div className="flex items-center gap-2 text-foreground font-semibold">
                   <Check className="w-4 h-4 text-primary" />
                   <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
-                    Selected ({selectedGlossariesList.length})
+                    {trmlCommon("selected")} ({selectedGlossariesList.length})
                   </span>
                 </div>
                 {selectedGlossariesList.length > 0 && (
@@ -534,82 +571,120 @@ export function UnifiedFileSetup({
                       });
                     }}
                   >
-                    Clear All
+                    {trmlDocumentSetup("clearAll")}
                   </Button>
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto max-h-[365px] pr-1 space-y-2">
+              <div className="flex-1 overflow-y-auto max-h-[365px] pr-1 space-y-2 flex flex-col">
                 {selectedGlossariesList.length === 0 ? (
-                  <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center space-y-2.5 p-4">
+                  <div className="flex flex-col items-center justify-center text-center space-y-2.5 p-4">
                     <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center">
                       <Book className="w-6 h-6 text-primary/40" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        No Glossaries Selected
+                        {trmlDocumentSetup("noGlossarySelected")}
                       </p>
-                      <p className="text-xs text-muted-foreground max-w-[200px] mx-auto mt-1 leading-normal">
-                        Select glossaries from the list on the right to apply them to this document.
+                      <p className="text-xs text-muted-foreground max-w-[300px] mx-auto mt-1 leading-normal mb-4">
+                        {trmlDocumentSetup("noGlossarySelectedDetail")}
                       </p>
                     </div>
+                    <Button
+                      variant="outline"
+                      className="shimmer-button border-primary/50 text-primary hover:bg-primary/5 shadow-sm"
+                      onClick={handleRecommendGlossary}
+                      disabled={isRecommending}
+                    >
+                      {isRecommending ? (
+                        <>
+                          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                          {trmlDocumentSetup("generating")}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          {trmlDocumentSetup("recommendGlossary")}
+                        </>
+                      )}
+                    </Button>
                   </div>
                 ) : (
-                  selectedGlossariesList.map((glossary) => {
-                    const isPlaceholder = glossary.name === "Loading...";
-                    const displayTermCount = glossaryDetails[glossary.id]?.termCount ?? glossary.termCount;
-
-                    return (
-                      <div
-                        key={glossary.id}
-                        className="px-3.5 py-2.5 rounded-xl border border-primary/50 bg-secondary/50 hover:bg-primary/5/30 transition flex items-center justify-between gap-3 relative group"
-                      >
-                        <div className="flex-1 min-w-0 pl-1">
-                          <p className="font-semibold text-xs text-foreground truncate">
-                            {glossary.name}
-                          </p>
-                          {!isPlaceholder && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              {trmlCommon(glossary.sourceLanguage)} →{" "}
-                              {trmlCommon(glossary.targetLanguage)} •{" "}
-                              {displayTermCount} terms
+                  <>
+                    {selectedGlossariesList.map((glossary) => {
+                      const isPlaceholder = glossary.name === "Loading...";
+                      const displayTermCount = glossaryDetails[glossary.id]?.termCount ?? glossary.termCount;
+                      return (
+                        <div
+                          key={glossary.id}
+                          className="px-3.5 py-2.5 rounded-xl border border-primary/50 bg-secondary/50 hover:bg-primary/5/30 transition flex items-center justify-between gap-3 relative group"
+                        >
+                          <div className="flex-1 min-w-0 pl-1">
+                            <p className="font-semibold text-xs text-foreground truncate">
+                              {glossary.name}
                             </p>
-                          )}
-                        </div>
+                            {!isPlaceholder && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {trmlCommon(glossary.sourceLanguage)} →{" "}
+                                {trmlCommon(glossary.targetLanguage)} •{" "}
+                                {trmlDocumentSetup("termsCount", { count: displayTermCount })}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {/* Preview Button */}
+                            {!isPlaceholder && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewingGlossaryId(glossary.id);
+                                  setPreviewDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Preview Button */}
-                          {!isPlaceholder && (
+                            {/* Remove Button */}
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setViewingGlossaryId(glossary.id);
-                                setPreviewDialogOpen(true);
+                                handleToggleGlossary(glossary.id, false);
                               }}
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <Plus className="w-3.5 h-3.5 rotate-45" />
                             </Button>
-                          )}
-
-                          {/* Remove Button */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleGlossary(glossary.id, false);
-                            }}
-                          >
-                            <Plus className="w-3.5 h-3.5 rotate-45" />
-                          </Button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                    <div className="flex flex-col items-center justify-center text-center p-4 flex-1">
+                      <Button
+                        variant="outline"
+                        className="shimmer-button border-primary/50 text-primary hover:bg-primary/5 shadow-sm"
+                        onClick={handleRecommendGlossary}
+                        disabled={isRecommending}
+                      >
+                        {isRecommending ? (
+                          <>
+                            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                            {trmlDocumentSetup("generating")}
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            {trmlDocumentSetup("recommendGlossary")}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -710,7 +785,7 @@ export function UnifiedFileSetup({
                                     <p className="text-[10px] text-muted-foreground mt-0.5">
                                       {trmlCommon(glossary.sourceLanguage)} →{" "}
                                       {trmlCommon(glossary.targetLanguage)} •{" "}
-                                      {displayTermCount} terms
+                                      {trmlDocumentSetup("termsCount", { count: displayTermCount })}
                                     </p>
                                   </div>
 
@@ -815,10 +890,14 @@ export function UnifiedFileSetup({
       {/* DIALOGS & SHEET PREVIEWS */}
       <CreateGlossaryDialog
         open={isCreatingOpen}
-        onOpenChange={onCreatingOpenChange}
+        onOpenChange={(open) => {
+          onCreatingOpenChange(open);
+          if (!open) setSuggestedTerms([]);
+        }}
         onSuccess={handleCreateSuccess}
         defaultSourceLanguage={editingFile.sourceLanguage}
         defaultTargetLanguage={editingFile.targetLanguage}
+        initialTerms={suggestedTerms}
       />
 
       <EditGlossaryDialog

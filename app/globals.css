@@ -243,6 +243,27 @@
   }
 }
 
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-180%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(420%) skewX(-20deg);
+  }
+}
+
+@keyframes button-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(28, 77, 141, 0.0), 0 4px 10px rgba(28, 77, 141, 0.08);
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(28, 77, 141, 0.08), 0 8px 18px rgba(28, 77, 141, 0.16);
+    transform: translateZ(0) scale(1.015);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -257,6 +278,32 @@
 
 .animate-pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.shimmer-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: button-pulse 2.6s ease-in-out infinite;
+}
+
+.shimmer-button::after {
+  content: "";
+  position: absolute;
+  inset: -35% auto -35% -50%;
+  width: 34%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.06) 60%,
+    transparent 100%
+  );
+  filter: blur(1px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: shimmer-sweep 2.8s ease-in-out infinite;
 }
 
 /* Staggered animation delays */

@@ -58,6 +58,7 @@ export const API_CONFIG = {
       PERMISSION_BY_ID: (id: string, permissionId: string) =>
         `/api/v2/glossaries/${id}/permissions/${permissionId}`,
       CLONE: (id: string) => `/api/v2/glossaries/${id}/clone`,
+      RECOMMEND: "/api/v2/glossaries/recommend",
     },
 
     // Documents
