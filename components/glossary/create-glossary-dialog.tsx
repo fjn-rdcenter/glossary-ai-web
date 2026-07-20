@@ -60,6 +60,7 @@ interface CreateGlossaryDialogProps {
   onSuccess: (glossary: GlossaryDetailResponse) => void;
   defaultSourceLanguage?: string;
   defaultTargetLanguage?: string;
+  initialTerms?: { source: string; target: string }[];
 }
 
 type TempTerm = {
@@ -74,6 +75,7 @@ export function CreateGlossaryDialog({
   onSuccess,
   defaultSourceLanguage = "jp",
   defaultTargetLanguage = "vn",
+  initialTerms = [],
 }: CreateGlossaryDialogProps) {
   const { toast } = useToast();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,13 @@ export function CreateGlossaryDialog({
   const [description, setDescription] = useState("");
   const [sourceLanguage, setSourceLanguage] = useState(defaultSourceLanguage);
   const [targetLanguage, setTargetLanguage] = useState(defaultTargetLanguage);
-  const [terms, setTerms] = useState<TempTerm[]>([]);
+  const [terms, setTerms] = useState<TempTerm[]>(
+    initialTerms.map((t, i) => ({
+      id: `initial-${Date.now()}-${i}`,
+      source: t.source,
+      target: t.target,
+    }))
+  );
 
   // UI State
   const [entryMode, setEntryMode] = useState<"manual" | "import">("manual");
@@ -121,14 +129,20 @@ export function CreateGlossaryDialog({
       setDescription("");
       setSourceLanguage(defaultSourceLanguage);
       setTargetLanguage(defaultTargetLanguage);
-      setTerms([]);
+      setTerms(
+        initialTerms.map((t, i) => ({
+          id: `initial-${Date.now()}-${i}`,
+          source: t.source,
+          target: t.target,
+        }))
+      );
       setEntryMode("manual");
       setSearchQuery("");
       setNewTermSource("");
       setNewTermTarget("");
       setIsTargetEdited(false);
     }
-  }, [open, defaultSourceLanguage, defaultTargetLanguage]);
+  }, [open, defaultSourceLanguage, defaultTargetLanguage, initialTerms]);
 
   // Clear highlight
   useEffect(() => {
@@ -606,13 +620,13 @@ export function CreateGlossaryDialog({
                   onFileSelect={(file) => {
                     // Synthesize event to match existing handler signature
                     const syntheticEvent = {
-                                target: { files: [file], value: '' }
+                      target: { files: [file], value: '' }
                     } as unknown as React.ChangeEvent<HTMLInputElement>;
                     handleFileUpload(syntheticEvent);
                   }}
                   accept={{
-                             'text/plain': ['.txt'],
-                             'text/csv': ['.csv']
+                    'text/plain': ['.txt'],
+                    'text/csv': ['.csv']
                   }}
                   instructionMessage={
                     <div className="flex flex-col items-center gap-2">
@@ -629,11 +643,10 @@ export function CreateGlossaryDialog({
                 {/* Import Message */}
                 {importMessage && (
                   <div
-                    className={`mt-4 p-3 rounded-md text-sm font-medium italic text-center animate-in fade-in slide-in-from-top-1 max-w-lg w-full ${
-                      importMessage.type === "error"
-                        ? "bg-red-50 text-red-700 border border-red-200"
-                        : "bg-green-50 text-green-700 border border-green-200"
-                    }`}
+                    className={`mt-4 p-3 rounded-md text-sm font-medium italic text-center animate-in fade-in slide-in-from-top-1 max-w-lg w-full ${importMessage.type === "error"
+                      ? "bg-red-50 text-red-700 border border-red-200"
+                      : "bg-green-50 text-green-700 border border-green-200"
+                      }`}
                   >
                     {importMessage.text}
                   </div>
@@ -671,7 +684,7 @@ export function CreateGlossaryDialog({
                           className={cn(
                             "grid grid-cols-[1fr_24px_1fr_auto] gap-4 items-center p-3 rounded-lg border bg-white transition-all duration-500",
                             isNewlyAdded &&
-                              "ring-2 ring-green-500/50 bg-green-50",
+                            "ring-2 ring-green-500/50 bg-green-50",
                             isDuplicate
                               ? "bg-red-50 border-red-200 ring-1 ring-red-200"
                               : !isNewlyAdded && "hover:border-primary/30"

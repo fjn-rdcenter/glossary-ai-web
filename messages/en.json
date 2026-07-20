@@ -1,5 +1,9 @@
 {
     "Common": {
+        "configured": "Configured",
+        "search": "Search",
+        "selected": "Selected",
+        "browseFiles": "browse files",
         "en": "English",
         "vn": "Vietnamese",
         "vi": "Vietnamese",
@@ -29,7 +33,14 @@
         "yes": "Yes",
         "no": "No",
         "swapLanguages": "Swap languages",
-        "clear": "Clear"
+        "clear": "Clear",
+        "apply": "Apply",
+        "translating": "Translating...",
+        "completed": "Completed",
+        "success": "Success",
+        "cancelled": "Cancelled",
+        "of": "of",
+        "stepIndicator": "Step {current} of {total}"
     },
     "Documents": {
         "title": "Uploaded Documents",
@@ -52,8 +63,15 @@
         "showing": "Showing {start} to {end} of {total} {total, plural, one {document} other {documents}}"
     },
     "Header": {
-        "welcome": "Welcome back",
-        "searchPlaceholder": "Search documents, glossaries..."
+        "welcome": "Welcome",
+        "searchPlaceholder": "Search for documents, glossaries...",
+        "Dashboard": "Dashboard",
+        "Translate": "Translate",
+        "Glossaries": "Glossaries",
+        "History": "History",
+        "User Guidance": "User Guidance",
+        "signOut": "Log Out",
+        "Release Notes": "Release Notes"
     },
     "Footer": {
         "contact": "Contact",
@@ -61,14 +79,6 @@
         "phone": "Internal Ext: 5903",
         "email": "Email: aiic-support@fujinet.net",
         "mainPages": "Main Pages"
-    },
-    "Sidebar": {
-        "Dashboard": "Dashboard",
-        "Translate": "Translate",
-        "Glossaries": "Glossaries",
-        "History": "History",
-        "User Guidance": "User Guidance",
-        "signOut": "Sign out"
     },
     "StepIndicator": {
         "Document": "Document",
@@ -85,6 +95,7 @@
         "rememberMe": "Remember me",
         "forgotPassword": "Forgot password?",
         "signIn": "Sign in",
+        "signOut": "Sign out",
         "requestAccess": "Request access",
         "noAccount": "Don't have an account?",
         "footer": "Developed by AI Innovation Center",
@@ -106,26 +117,56 @@
         "quickUploadDescription": "Drag and drop documents here to start a new translation immediately.",
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag a file to upload",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Images • Max 5 files, Up to {maxSize}MB each file",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
         "continue": "Continue",
         "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",
         "fileTooLargeTitle": "File Too Large",
-        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file."
+        "fileTooLargeDescription": "The file you are trying to upload exceeds the {maxSize}MB maximum size limit. Please choose a smaller file.",
+        "uploading": "Uploading...",
+        "uploadFailed": "Uploaded Failed",
+        "addMoreFiles": "Add more files",
+        "maxFilesWarning": "You have reached the maximum number of files allowed for translation. Please proceed with the current files or remove some to add new ones."
     },
     "Translate": {
+        "fileConfiguration": "File Settings",
         "error": "Error",
+        "addMoreFiles": "Add more files",
+        "filesRemaining": "{remaining} more file(s) can be added.",
+        "uploadNew": "Upload New",
+        "browseExisting": "Browse Existing",
+        "addFiles": "Add Files",
+        "addSelected": "Add Selected ({count})",
+        "maxFilesReached": "You have reached the maximum number of files.",
+        "noDocuments": "No documents found",
         "sessionExpired": "Session Expired",
         "noDocumentUploaded": "No document uploaded.",
         "documentSessionLost": "Document session lost. Please re-upload your file.",
         "failedToStartTranslation": "Failed to start translation.",
-        "downloadFailed": "Download failed."
+        "downloadFailed": "Download failed.",
+        "translationQueue": "Translation Queue",
+        "filesUploaded": "files ready for setting.",
+        "batchApply": "Batch Apply Settings",
+        "startAll": "Start Translation",
+        "pendingConfig": "Pending setting",
+        "editSettings": "Edit Settings",
+        "batchApplyDesc": "These settings will be applied to all pending files in the queue. Existing configured files will be overwritten.",
+        "setup": "Setup",
+        "imagesTranslated": "Images included",
+        "glossaryUsed": "{count, plural, one {# glossary} other {# glossaries}}",
+        "configTranslation": "Setting Translation",
+        "clickToConfig": "Click file to setting",
+        "noFileSelected": "No File Selected",
+        "selectFileInstruction": "Select a file from the list on the left to start setting.",
+        "noFilesYet": "No files added yet",
+        "addFilesToStart": "Add files to start setting translation",
+        "translateImages": "Translate Images"
     },
     "DocumentSetup": {
         "documentTitle": "Document Setup",
         "documentDescription": "Upload your document and choose translation languages",
         "dragAndDrop": "Drag and drop your document here",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX • Up to {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Images • Max 5 files, Up to {maxSize}MB each file",
         "uploadDocument": "Upload Document",
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
@@ -133,6 +174,7 @@
         "fileTooLarge": "The file size cannot exceed {maxSize}MB."
     },
     "GlossarySelection": {
+        "noGlossary": "No Glossary",
         "selectGlossary": "Select Glossary",
         "newGlossary": "Create New",
         "searchGlossary": "Search Glossaries",
@@ -170,7 +212,7 @@
         "translating": "Translating...",
         "processing": "Processing your document",
         "complete": "complete",
-        "cancel": "Cancel Translation",
+        "cancel": "Cancel",
         "successTitle": "Translation Complete!",
         "successDesc": "Your document has been successfully translated",
         "download": "Download File",
@@ -180,14 +222,19 @@
         "tryAgain": "Try Again",
         "startOver": "Start Over",
         "cancelledTitle": "Translation Cancelled",
-        "cancelledDesc": "The translation process was stopped."
+        "cancelledDesc": "The translation process was stopped.",
+        "saveConfig": "Save Settings",
+        "applyToThisFile": "Apply to this file",
+        "applyToAllFiles": "Apply to all files",
+        "cancelAll": "Cancel All Translations",
+        "pending": "Queued..."
     },
     "Glossaries": {
         "termDuplicatedTitle": "Duplicate Term",
         "termDuplicatedMessage": "The term \"{term}\" already exists in this glossary!",
         "allTermExistMessage": "All {count} terms already exist in the glossary.",
         "createTitle": "Create New Glossary",
-        "createDescription": "Configure your glossary settings and add initial terms.",
+        "createDescription": "Setting your glossary and add initial terms.",
         "settings": "Glossary Settings",
         "name": "Name",
         "namePlaceholder": "e.g. Finance Terminology",
@@ -210,6 +257,7 @@
         "supportedFormats": "Supports .txt, .csv",
         "noTermsAdded": "No terms added yet",
         "createGlossary": "Create Glossary",
+        "createGlossaryDescription": "Define custom terminology for translations",
         "error": "Error",
         "failedToLoadGlossary": "Failed to load glossary",
         "editTitle": "Edit Glossary",
@@ -282,7 +330,44 @@
         "searchEmptyHint": "Try a different search term",
         "createFirst": "Create your first glossary to get started",
         "create": "Create",
-        "showing": "Showing {start} to {end} of {total} {total, plural, one {glossary} other {glossaries}}"
+        "myGlossaries": "My Glossaries",
+        "marketplace": "Marketplace",
+        "sharedWithMe": "Shared with Me",
+        "showing": "Showing {start} to {end} of {total} {total, plural, one {glossary} other {glossaries}}",
+        "termMatched": "{count, plural, one {# term matched} other {# terms matched}}",
+        "share": "Share",
+        "shareDescription": "Manage who can view or clone this glossary.",
+        "userPrincipal": "User",
+        "publicPrincipal": "Public",
+        "userPlaceholder": "Username",
+        "everyonePlaceholder": "Everyone",
+        "expiresOptional": "Expires (Optional):",
+        "setExpiration": "Set expiration",
+        "expires": "Expires",
+        "peopleWithAccess": "People with access",
+        "loadingPermissions": "Loading permissions...",
+        "owner": "Owner",
+        "anyoneWithAccess": "Anyone with access",
+        "noAdditionalPermissions": "No additional permissions granted.",
+        "userRequired": "Please enter a username",
+        "existingPermission": "This user/public access already exists. Please update or revoke the existing permission first.",
+        "shareSuccess": {
+            "title": "Access granted",
+            "success": "Successfully shared with {target}",
+            "anyone": "anyone"
+        },
+        "permissionUpdated": "Permission updated",
+        "accessRemoved": "Access removed",
+        "getGlossary": "Get This",
+        "cloneGlossary": "Clone Glossary",
+        "cloneGlossaryDescription": "Create a copy of this glossary. Make sure to use a unique name.",
+        "clone": "Clone",
+        "cloning": "Cloning...",
+        "cloneSuccess": {
+            "title": "Success",
+            "description": "Glossary cloned successfully"
+        },
+        "alreadyOwner": "You are already the owner of this glossary."
     },
     "History": {
         "historyTitle": "Translation History",
@@ -426,13 +511,15 @@
     },
     "GlossaryListTour": {
         "welcomeTitle": "Manage Glossaries",
-        "welcomeDescription": "This is where you \"teach\" AI how to translate your company's specialized terms correctly.<br/>Using Glossaries makes translations more <b>consistent</b> and <b>accurate</b>.",
+        "welcomeDescription": "This is where you \"teach\" AI how to translate your company's specialized terms correctly.<br></br>Using Glossaries makes translations more <b>consistent</b> and <b>accurate</b>.",
         "createTitle": "Easy Creation",
         "createDescription": "You can create an empty glossary and enter terms manually, or <b>Import</b> quickly from an existing Excel/CSV file.",
+        "tabsTitle": "Explore Glossaries",
+        "tabsDescription": "Switch between <b>My Glossaries</b>, explore the <b>Marketplace</b>, or view glossaries <b>Shared</b> with you.",
         "searchTitle": "Search & Filter",
         "searchDescription": "When you have many dictionaries, use this tool to quickly find them by name or description.",
         "detailTitle": "Glossary Details",
-        "detailDescription": "Each card shows source/target languages and term count.<br/>Click on the card to view terms, or use the <b>(...)</b> menu to Edit/Delete."
+        "detailDescription": "Each card shows source/target languages and term count.<br></br>Click on the card to view terms, or use the <b>(...)</b> menu to Edit/Delete, or click the <b>Share</b> button to share this glossary with others."
     },
     "GlossaryCreateTour": {
         "welcomeTitle": "Create New Glossary",
@@ -444,12 +531,24 @@
         "descTitle": "Description (Optional)",
         "descDescription": "Add notes about the purpose of this glossary to help the team understand.",
         "tabsTitle": "2 Input Methods",
-        "tabsDescription": "<b>Manual Entry</b>: Type each term.<br/><b>Import File</b>: Upload CSV/TXT for bulk import.",
+        "tabsDescription": "<b>Manual Entry</b>: Type each term.<br></br><b>Import File</b>: Upload CSV/TXT for bulk import.",
         "tableTitle": "Terms Table",
-        "tableDescription": "Enter <b>Source</b> (original term) and <b>Target</b> (desired translation).<br/>The system auto-suggests Target = Source if left empty.",
+        "tableDescription": "Enter <b>Source</b> (original term) and <b>Target</b> (desired translation).<br></br>The system auto-suggests Target = Source if left empty.",
         "addTermTitle": "Add New Term",
         "addTermDescription": "Click this button to add a new term entry row. You can add as many terms as you like.",
         "saveTitle": "Summary & Save",
         "saveDescription": "Review the summary information. When everything looks good, click <b>Save</b> to finish."
+    },
+    "UploadTour": {
+        "fileListTitle": "Your File Queue",
+        "fileListDescription": "<b>Click on a file</b> to configure its translation settings.<br></br><br></br>Each file can have its own language pair, glossary, and image translation settings.",
+        "languageTitle": "Choose Languages",
+        "languageDescription": "Select the <b>source</b> and <b>target</b> languages for this file.<br></br><br></br>Use the <b>swap button</b> in the middle to quickly reverse the direction.",
+        "translateImagesTitle": "Translate Images",
+        "translateImagesDescription": "Toggle this to <b>extract and translate text</b> from images embedded in your document.<br></br><br></br>This is useful for scanned documents or presentations with text in images.",
+        "glossaryTitle": "Select Glossaries",
+        "glossaryDescription": "Choose one or more <b>glossaries</b> to ensure specialized terms are translated accurately.<br></br><br></br>You can also <b>create a new glossary</b> right here without leaving this page.",
+        "actionTitle": "Add Files or Start",
+        "actionDescription": "Use <b>Add More Files</b> to include additional documents (up to 5 total).<br></br><br></br>When you're ready, click <b>Start Translating</b> to begin the process for all files."
     }
 }

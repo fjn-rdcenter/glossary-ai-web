@@ -151,11 +151,20 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background text-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
     color: #1C4D8D; /* User specified Heading Color */
+  }
+}
+
+@supports not (scrollbar-gutter: stable) {
+  html {
+    overflow-y: scroll;
   }
 }
 
@@ -234,6 +243,27 @@
   }
 }
 
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-180%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(420%) skewX(-20deg);
+  }
+}
+
+@keyframes button-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(28, 77, 141, 0.0), 0 4px 10px rgba(28, 77, 141, 0.08);
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(28, 77, 141, 0.08), 0 8px 18px rgba(28, 77, 141, 0.16);
+    transform: translateZ(0) scale(1.015);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -248,6 +278,32 @@
 
 .animate-pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.shimmer-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: button-pulse 2.6s ease-in-out infinite;
+}
+
+.shimmer-button::after {
+  content: "";
+  position: absolute;
+  inset: -35% auto -35% -50%;
+  width: 34%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.06) 60%,
+    transparent 100%
+  );
+  filter: blur(1px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: shimmer-sweep 2.8s ease-in-out infinite;
 }
 
 /* Staggered animation delays */
@@ -274,4 +330,48 @@
   to {
     width: 0%;
   }
+}
+
+/* Custom scrollbar utility */
+.custom-scrollbar {
+  --scrollbar-thumb: rgba(28, 77, 141, 0.35); /* Primary color with opacity */
+  --scrollbar-track: transparent;
+  
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(28, 77, 141, 0.55);
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: var(--scrollbar-track);
+}
+
+/* Ensure active switch has dark blue background and inactive switch has gray background */
+[data-slot="switch"][data-state="checked"] {
+  background-color: #1C4D8D !important;
+}
+
+[data-slot="switch"][data-state="unchecked"] {
+  background-color: #CBD5E1 !important; /* Neutral slate-300 gray */
+}
+
+/* Dark mode overrides if needed */
+.dark [data-slot="switch"][data-state="checked"] {
+  background-color: #4988C4 !important;
+}
+.dark [data-slot="switch"][data-state="unchecked"] {
+  background-color: #334155 !important;
 }

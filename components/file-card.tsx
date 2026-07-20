@@ -8,6 +8,7 @@ import {
   X,
   Check,
   Loader2,
+  FileImage,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ function getFileIcon(type: string) {
     type.includes("csv")
   )
     return FileSpreadsheet;
+  if (type.includes("image")) return FileImage;
   return File;
 }
 
