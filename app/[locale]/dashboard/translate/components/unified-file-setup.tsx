@@ -83,7 +83,6 @@ export function UnifiedFileSetup({
   const trmlCommon = useTranslations("Common");
   const trmlDocumentSetup = useTranslations("DocumentSetup");
   const trmlGlossarySelection = useTranslations("GlossarySelection");
-  const trmlTranslationExecution = useTranslations("TranslationExecution");
   const { toast } = useToast();
 
   const isImage = useMemo(() => {

@@ -43,7 +43,7 @@ export function MultiTranslationProgress({
               : (trmlTranslationExecution("translating") || "Translating...")}
           </CardTitle>
           <CardDescription>
-            {files.filter(f => f.translationStatus === "success").length} {trmlCommon("of") || "of"} {files.length} {trmlCommon("completed") || "Completed"}
+            {files.filter(f => f.translationStatus === "success").length} {trmlCommon("of") || "of"} {files.length} {trmlCommon("success") || "Success"}
           </CardDescription>
         </div>
         <div className="flex gap-3 flex-shrink-0">

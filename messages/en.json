@@ -171,7 +171,14 @@
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
         "translateImagesDescription": "Extract and translate text from images in your document",
-        "fileTooLarge": "The file size cannot exceed {maxSize}MB."
+        "fileTooLarge": "The file size cannot exceed {maxSize}MB.",
+        "translationOptions": "Translation Options",
+        "clearAll": "Clear All",
+        "noGlossarySelected": "No Glossaries Selected",
+        "noGlossarySelectedDetail": "Select a glossary from the list on the right, or get GlossaryAI's recommended glossary.",
+        "recommendGlossary": "Recommend a Glossary",
+        "generating": "Generating...",
+        "termsCount": "{count, plural, one {# term} other {# terms}}"
     },
     "GlossarySelection": {
         "noGlossary": "No Glossary",
@@ -180,7 +187,7 @@
         "searchGlossary": "Search Glossaries",
         "listGlossary": "Glossary List",
         "termTooltip": "Double-click to view details",
-        "noGlossaryFound": "No glossary found",
+        "noGlossaryFound": "No Glossaries found",
         "termsPreview": "Terms Preview",
         "termsSummary": "{termCount, plural, one {<bold>#</bold> term} other {<bold>#</bold> terms}} from {glossaryCount, plural, one {<bold>#</bold> glossary} other {<bold>#</bold> glossaries}}",
         "termsSearchPlaceholder": "Search terms...",
@@ -213,7 +220,7 @@
         "processing": "Processing your document",
         "complete": "complete",
         "cancel": "Cancel",
-        "successTitle": "Translation Complete!",
+        "successTitle": "Translation Finished!",
         "successDesc": "Your document has been successfully translated",
         "download": "Download File",
         "newTranslation": "New Translation",

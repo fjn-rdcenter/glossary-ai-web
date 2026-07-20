@@ -171,7 +171,14 @@
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
         "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu",
-        "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB."
+        "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB.",
+        "translationOptions": "Tùy chọn dịch",
+        "clearAll": "Xóa tất cả",
+        "noGlossarySelected": "Không có glossary nào được chọn",
+        "noGlossarySelectedDetail": "Hãy chọn glossary từ danh sách bên phải, hoặc dùng gợi ý của GlossaryAI",
+        "recommendGlossary": "Gợi ý một Glossary",
+        "generating": "Đang tạo...",
+        "termsCount": "{count, plural, one {# thuật ngữ} other {# thuật ngữ}}"
     },
     "GlossarySelection": {
         "noGlossary": "Không dùng bộ thuật ngữ",
@@ -213,7 +220,7 @@
         "processing": "Đang xử lý tài liệu",
         "complete": "Hoàn tất",
         "cancel": "Hủy",
-        "successTitle": "Dịch thành công!",
+        "successTitle": "Dịch hoàn tất!",
         "successDesc": "Tài liệu của bạn đã được dịch thành công",
         "download": "Tải tệp",
         "newTranslation": "Bản dịch mới",

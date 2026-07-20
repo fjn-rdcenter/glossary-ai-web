@@ -171,7 +171,14 @@
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
         "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳",
-        "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。"
+        "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。",
+        "translationOptions": "翻訳オプション",
+        "clearAll": "すべてクリア",
+        "noGlossarySelected": "用語集が選択されていません",
+        "noGlossarySelectedDetail": "右側のリストから用語集を選択するか、GlossaryAIのおすすめ用語集をご利用ください。",
+        "recommendGlossary": "用語集をおすすめ",
+        "generating": "生成中...",
+        "termsCount": "{count, plural, one {# 件の用語} other {# 件の用語}}"
     },
     "GlossarySelection": {
         "noGlossary": "用語集を使用しない",
@@ -213,7 +220,7 @@
         "processing": "ドキュメントを処理しています",
         "complete": "完了",
         "cancel": "キャンセル",
-        "successTitle": "翻訳が完了しました！",
+        "successTitle": "翻訳終了！",
         "successDesc": "ドキュメントの翻訳が成功しました",
         "download": "ファイルをダウンロード",
         "newTranslation": "新しい翻訳",
