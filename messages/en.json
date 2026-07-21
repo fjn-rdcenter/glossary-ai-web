@@ -171,6 +171,8 @@
         "translationLanguages": "Translation Languages",
         "translateImages": "Translate Images",
         "translateImagesDescription": "Extract and translate text from images in your document",
+        "keepSource": "Keep Source Text",
+        "keepSourceDescription": "Keep original source text alongside translation when using glossary",
         "fileTooLarge": "The file size cannot exceed {maxSize}MB.",
         "translationOptions": "Translation Options",
         "clearAll": "Clear All",

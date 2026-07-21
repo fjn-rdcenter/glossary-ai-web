@@ -22,6 +22,7 @@ export type FileConfigState = {
   translateImages: boolean;
   glossaryOption: "none" | "existing" | "new";
   selectedGlossaries: string[];
+  keepSource?: boolean;
   
   // Statuses
   translationStatus: TranslationStatus;

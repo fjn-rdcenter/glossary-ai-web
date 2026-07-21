@@ -177,6 +177,7 @@ export interface TranslationJobCreate {
   sourceLanguage: string;
   targetLanguage: string;
   isTranslateImage?: boolean;
+  keepSource?: boolean;
   glossaries?: string[];
 }
 

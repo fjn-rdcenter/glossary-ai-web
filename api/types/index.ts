@@ -160,6 +160,7 @@ export interface StartTranslationRequest {
   sourceLanguage: string;
   targetLanguage: string;
   isTranslateImage?: boolean;
+  keepSource?: boolean;
   glossaries?: string[];
 }
 

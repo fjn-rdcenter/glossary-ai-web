@@ -171,6 +171,8 @@
         "translationLanguages": "Ngôn ngữ dịch",
         "translateImages": "Dịch hình ảnh",
         "translateImagesDescription": "Trích xuất và dịch văn bản từ hình ảnh trong tài liệu",
+        "keepSource": "Giữ văn bản gốc",
+        "keepSourceDescription": "Giữ lại văn bản gốc bên cạnh bản dịch khi dùng thuật ngữ",
         "fileTooLarge": "Kích thước tệp không được vượt quá {maxSize}MB.",
         "translationOptions": "Tùy chọn dịch",
         "clearAll": "Xóa tất cả",

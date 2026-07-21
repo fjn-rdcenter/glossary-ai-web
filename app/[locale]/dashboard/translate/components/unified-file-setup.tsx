@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,9 @@ export function UnifiedFileSetup({
     return editingFile.metadata.type?.includes("image") ||
       /\.(jpg|jpeg|png|gif|bmp|webp|heic|heif|tiff|tif)$/i.test(editingFile.metadata.name);
   }, [editingFile.metadata.type, editingFile.metadata.name]);
+
+  const isVietnameseSource = editingFile.sourceLanguage === "vn" || editingFile.sourceLanguage === "vi";
+  const currentKeepSource = editingFile.keepSource ?? (isVietnameseSource ? false : true);
 
 
   // Local state for dialogs and preview drawer
@@ -447,16 +451,22 @@ export function UnifiedFileSetup({
             <h3 className="text-sm">{trmlDocumentSetup("translationOptions")}</h3>
           </div>
 
-          <div className="flex items-stretch gap-4">
+          <div className="flex flex-wrap items-stretch gap-3">
             {/* Language selectors */}
-            <div id="tour-language-options" className="flex-1 bg-background rounded-lg border border-border p-3 flex flex-col justify-center">
+            <div id="tour-language-options" className="flex-1 min-w-[280px] bg-background rounded-lg border border-border p-3 flex flex-col justify-center">
               <div className="flex items-center gap-3">
                 {/* Source language */}
                 <div className="flex-1 space-y-1">
                   <Label className="text-xs text-muted-foreground">{trmlCommon("sourceLanguage")}</Label>
                   <Select
                     value={editingFile.sourceLanguage}
-                    onValueChange={(val) => onUpdateFile({ sourceLanguage: val })}
+                    onValueChange={(val) => {
+                      const isVietnamese = val === "vn" || val === "vi";
+                      onUpdateFile({
+                        sourceLanguage: val,
+                        keepSource: isVietnamese ? false : true,
+                      });
+                    }}
                   >
                     <SelectTrigger className="h-9 bg-card text-sm" aria-label="Source Language">
                       <SelectValue placeholder="From" />
@@ -480,9 +490,13 @@ export function UnifiedFileSetup({
                     aria-label={trmlCommon("swapLanguages") || "Swap languages"}
                     onClick={() => {
                       if (!editingFile.sourceLanguage || !editingFile.targetLanguage) return;
+                      const newSource = editingFile.targetLanguage;
+                      const newTarget = editingFile.sourceLanguage;
+                      const isVietnamese = newSource === "vn" || newSource === "vi";
                       onUpdateFile({
-                        sourceLanguage: editingFile.targetLanguage,
-                        targetLanguage: editingFile.sourceLanguage,
+                        sourceLanguage: newSource,
+                        targetLanguage: newTarget,
+                        keepSource: isVietnamese ? false : true,
                       });
                     }}
                   >
@@ -516,7 +530,7 @@ export function UnifiedFileSetup({
 
             {/* Translate Images toggle */}
             {!isImage && (
-              <div id="tour-translate-images" className="shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3 w-[240px]">
+              <div id="tour-translate-images" className="flex-1 md:flex-initial min-w-[200px] md:w-[220px] lg:w-[240px] shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3">
                 <div className="space-y-1 flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 shrink-0 text-primary" />
@@ -535,6 +549,32 @@ export function UnifiedFileSetup({
                   id="translate-images"
                   checked={editingFile.translateImages}
                   onCheckedChange={(checked) => onUpdateFile({ translateImages: checked })}
+                  className="shrink-0"
+                />
+              </div>
+            )}
+
+            {/* Keep Source toggle (shown when at least 1 glossary is selected) */}
+            {editingFile.selectedGlossaries.length > 0 && (
+              <div id="tour-keep-source" className="flex-1 md:flex-initial min-w-[200px] md:w-[220px] lg:w-[240px] shrink-0 flex items-center justify-between gap-3 bg-background rounded-lg border border-border p-3">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 shrink-0 text-primary" />
+                    <Label
+                      htmlFor="keep-source"
+                      className="text-xs font-semibold leading-none cursor-pointer"
+                    >
+                      {trmlDocumentSetup("keepSource")}
+                    </Label>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-tight whitespace-normal break-words">
+                    {trmlDocumentSetup("keepSourceDescription")}
+                  </p>
+                </div>
+                <Switch
+                  id="keep-source"
+                  checked={currentKeepSource}
+                  onCheckedChange={(checked) => onUpdateFile({ keepSource: checked })}
                   className="shrink-0"
                 />
               </div>

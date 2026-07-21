@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TranslateSphere API",
-    "description": "API for TranslateSphere V2 application",
-    "version": "2025.12.4.1"
+    "title": "GlossaryAI API",
+    "description": "API for GlossaryAI application",
+    "version": "2026.07.03.1"
   },
   "paths": {
     "/api/v2/auth/login": {
@@ -80,9 +80,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -1129,6 +1127,52 @@
         }
       }
     },
+    "/api/v2/glossaries/recommend": {
+      "post": {
+        "tags": [
+          "Glossary"
+        ],
+        "summary": "Get Recommended Terms",
+        "operationId": "get_recommended_terms_api_v2_glossaries_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlossaryRecommendedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlossaryRecommendedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v2/glossaries/{glossary_id}/permissions/my-permission": {
       "get": {
         "tags": [
@@ -1798,9 +1842,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -2083,9 +2125,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -2130,9 +2170,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -2162,9 +2200,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -2199,9 +2235,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -2232,9 +2266,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -2696,6 +2728,36 @@
           "permission"
         ],
         "title": "GlossaryPermissionUserResponse"
+      },
+      "GlossaryRecommendedRequest": {
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fileid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fileId"
+        ],
+        "title": "GlossaryRecommendedRequest"
+      },
+      "GlossaryRecommendedResponse": {
+        "properties": {
+          "terms": {
+            "items": {
+              "$ref": "#/components/schemas/GlossaryTermBase"
+            },
+            "type": "array",
+            "title": "Terms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms"
+        ],
+        "title": "GlossaryRecommendedResponse"
       },
       "GlossaryResponse": {
         "properties": {
@@ -3296,6 +3358,11 @@
             "title": "Istranslateimage",
             "default": false
           },
+          "keepSource": {
+            "type": "boolean",
+            "title": "Keepsource",
+            "default": true
+          },
           "glossaries": {
             "anyOf": [
               {
@@ -3400,6 +3467,11 @@
             "type": "boolean",
             "title": "Istranslateimage",
             "default": false
+          },
+          "keepSource": {
+            "type": "boolean",
+            "title": "Keepsource",
+            "default": true
           },
           "status": {
             "$ref": "#/components/schemas/StatusEnum"
@@ -3591,9 +3663,7 @@
         "type": "oauth2",
         "flows": {
           "password": {
-            "scopes": {
-
-            },
+            "scopes": {},
             "tokenUrl": "api/v2/auth/login"
           }
         }

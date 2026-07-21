@@ -171,6 +171,8 @@
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
         "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳",
+        "keepSource": "原文を保持",
+        "keepSourceDescription": "用語集の使用時に翻訳文の横に原文を保持します",
         "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。",
         "translationOptions": "翻訳オプション",
         "clearAll": "すべてクリア",

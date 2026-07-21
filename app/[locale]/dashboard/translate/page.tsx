@@ -427,6 +427,7 @@ function TranslatePageContent() {
           targetLanguage: file.targetLanguage,
           documentId: file.documentId,
           isTranslateImage: file.translateImages,
+          keepSource: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? (file.keepSource ?? (file.sourceLanguage === "vn" || file.sourceLanguage === "vi" ? false : true)) : undefined,
           glossaries: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? file.selectedGlossaries : undefined,
         });
 
@@ -458,6 +459,7 @@ function TranslatePageContent() {
       translateImages: false,
       glossaryOption: "none",
       selectedGlossaries: [],
+      keepSource: true,
       translationStatus: "idle",
       jobId: null,
       progress: 0,
@@ -522,6 +524,7 @@ function TranslatePageContent() {
         targetLanguage: file.targetLanguage,
         documentId: file.documentId,
         isTranslateImage: file.translateImages,
+        keepSource: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? (file.keepSource ?? (file.sourceLanguage === "vn" || file.sourceLanguage === "vi" ? false : true)) : undefined,
         glossaries: file.selectedGlossaries && file.selectedGlossaries.length > 0 ? file.selectedGlossaries : undefined,
       });
 
