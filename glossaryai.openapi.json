@@ -3,7 +3,7 @@
   "info": {
     "title": "GlossaryAI API",
     "description": "API for GlossaryAI application",
-    "version": "2026.07.03.1"
+    "version": "2026.07.22.1"
   },
   "paths": {
     "/api/v2/auth/login": {

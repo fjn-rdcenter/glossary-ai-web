@@ -11,5 +11,5 @@ services:
     container_name: ts-v2-webapp-stage
     ports:
       - "23000:3000" 
-    image: glossary-ai-web-frontend-stage:2026.05.13.1
+    image: glossary-ai-web-frontend-stage:2026.07.22.1
     restart: unless-stopped
