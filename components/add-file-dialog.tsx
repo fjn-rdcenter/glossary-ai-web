@@ -216,6 +216,7 @@ export function AddFileDialog({
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+      'text/html': ['.html'],
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
       'image/webp': ['.webp'],
