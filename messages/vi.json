@@ -117,7 +117,7 @@
         "quickUploadDescription": "Kéo và thả tài liệu vào đây để bắt đầu dịch.",
         "dropFile": "Thả tệp của bạn vào đây",
         "clickOrDrag": "Click vào đây hoặc kéo thả tệp để tải lên",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, Hình ảnh • Tối đa 5 tệp, mỗi tệp tối đa {maxSize}MB",
         "translateFiles_count": "{count, plural, one {Dịch # tệp} other {Dịch # tệp}}",
         "continue": "Tiếp tục",
         "fileTooLarge": "Tệp quá lớn. Kích thước tối đa là {maxSize}MB.",
