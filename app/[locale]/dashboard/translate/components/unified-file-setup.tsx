@@ -461,9 +461,14 @@ export function UnifiedFileSetup({
                   <Select
                     value={editingFile.sourceLanguage}
                     onValueChange={(val) => {
+                      const previousSource = editingFile.sourceLanguage;
+                      const shouldSwap = val === editingFile.targetLanguage;
                       const isVietnamese = val === "vn" || val === "vi";
                       onUpdateFile({
                         sourceLanguage: val,
+                        ...(shouldSwap && previousSource
+                          ? { targetLanguage: previousSource }
+                          : {}),
                         keepSource: isVietnamese ? false : true,
                       });
                     }}
