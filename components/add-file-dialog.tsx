@@ -33,7 +33,7 @@ import { useTranslations } from "next-intl";
 import { DocumentService, TranslationService } from "@/api/services";
 import { SourceDocumentResponse } from "@/lib/types";
 import { getErrorMessage } from "@/lib/error-utils";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AddFileDialogProps {
@@ -463,7 +463,7 @@ export function AddFileDialog({
                         </Button>
                       </div>
 
-                      <div className="relative min-h-[310px] overflow-hidden">
+                      <div className="relative min-h-[360px] overflow-hidden">
                         {browseLoading && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] transition-opacity duration-200">
                             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -519,6 +519,15 @@ export function AddFileDialog({
                                         <p className="text-sm font-medium whitespace-normal break-all leading-snug pr-2">
                                           {doc.name}
                                         </p>
+                                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                          <span>{formatFileSize(doc.size)}</span>
+                                          {doc.uploadedAt && (
+                                            <>
+                                              <span>•</span>
+                                              <span>{formatDate(doc.uploadedAt)}</span>
+                                            </>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   );
