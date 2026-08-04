@@ -117,7 +117,7 @@
         "quickUploadDescription": "ドキュメントをここにドラッグ＆ドロップして、すぐに翻訳を開始できます。",
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, MD, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
         "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
         "continue": "次へ",
         "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
