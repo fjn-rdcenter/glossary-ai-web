@@ -117,7 +117,7 @@
         "quickUploadDescription": "Drag and drop documents here to start a new translation immediately.",
         "dropFile": "Drop your files here",
         "clickOrDrag": "Click or drag a file to upload",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, MD, Images • Max 5 files, Up to {maxSize}MB each file",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, Images • Max 5 files, Up to {maxSize}MB each file",
         "translateFiles_count": "{count, plural, one {Translate # file} other {Translate # files}}",
         "continue": "Continue",
         "fileTooLarge": "File is too large. Maximum size is {maxSize}MB.",

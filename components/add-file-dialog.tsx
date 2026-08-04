@@ -218,6 +218,7 @@ export function AddFileDialog({
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
       'text/html': ['.html'],
       'text/markdown': ['.md'],
+      'text/plain': ['.txt'],
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
       'image/webp': ['.webp'],
