@@ -117,35 +117,10 @@ export function EditGlossaryDialog({
 
   // Load Data
   useEffect(() => {
-    if (open && glossaryId) {
-      setLoading(true);
-      GlossaryService.getGlossaryById(glossaryId, { size: 100 })
-        .then((data) => {
-          setGlossary(data as GlossaryDetailResponse);
-          setName(data.name);
-          setDescription(data.description || "");
-          if (data.terms?.items) {
-            setTerms(
-              data.terms.items.map((t) => ({
-                id: t.id,
-                source: t.source,
-                target: t.target,
-              }))
-            );
-          } else {
-            setTerms([]);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          toast({
-            variant: "destructive",
-            title: trmlGlossaries("error"),
-            description: trmlGlossaries("failedToLoadGlossary"),
-          });
-        })
-        .finally(() => setLoading(false));
-    } else if (!open) {
+    let cancelled = false;
+
+    if (!open || !glossaryId) {
+      setLoading(false);
       setGlossary(null);
       setTerms([]);
       setName("");
@@ -155,7 +130,70 @@ export function EditGlossaryDialog({
       setNewTermTarget("");
       setIsTargetEdited(false);
       setEntryMode("manual");
+
+      return () => {
+        cancelled = true;
+      };
     }
+
+    const loadGlossary = async () => {
+      setLoading(true);
+
+      try {
+        const firstPage = await GlossaryService.getGlossaryById(glossaryId, {
+          page: 1,
+          size: 100,
+        });
+        const totalPages = firstPage.terms?.pages || 1;
+        let allTerms = firstPage.terms?.items || [];
+
+        if (totalPages > 1) {
+          const remainingPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              GlossaryService.getGlossaryById(glossaryId, {
+                page: index + 2,
+                size: 100,
+              })
+            )
+          );
+
+          allTerms = [
+            ...allTerms,
+            ...remainingPages.flatMap((page) => page.terms?.items || []),
+          ];
+        }
+
+        if (cancelled) return;
+
+        setGlossary(firstPage as GlossaryDetailResponse);
+        setName(firstPage.name);
+        setDescription(firstPage.description || "");
+        setTerms(
+          allTerms.map((term) => ({
+            id: term.id,
+            source: term.source,
+            target: term.target,
+          }))
+        );
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error(err);
+        toast({
+          variant: "destructive",
+          title: trmlGlossaries("error"),
+          description: trmlGlossaries("failedToLoadGlossary"),
+        });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadGlossary();
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, glossaryId]);
 
   // Clear highlight
