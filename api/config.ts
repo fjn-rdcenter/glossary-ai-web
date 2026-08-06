@@ -9,7 +9,7 @@ export const getApiBaseUrl = (): string => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (typeof window === "undefined") {
-    return envUrl || "http://172.16.6.10:18000";
+    return envUrl || "https://aiic.fujinet.vn/glossaryai";
   }
 
   const { hostname, host } = window.location;
@@ -26,7 +26,11 @@ export const getApiBaseUrl = (): string => {
     return "http://172.16.6.10:28000";
   }
 
-  return envUrl || "http://172.16.6.10:18000";
+  if (host == "172.16.6.10:13000") {
+    return "http://172.16.6.10:18000";
+  }
+
+  return envUrl || "https://aiic.fujinet.vn/glossaryai";
 };
 
 export const API_CONFIG = {
