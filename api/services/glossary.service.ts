@@ -376,9 +376,10 @@ export class GlossaryService {
    */
   static async recommendGlossary(fileId: string): Promise<{ terms: { source: string; target: string }[] }> {
     try {
-      const response = await apiClient.post<{ terms: { source: string; target: string }[] }>(
+      const response = await apiClient.post(
         API_CONFIG.ENDPOINTS.GLOSSARIES.RECOMMEND,
-        { fileId }
+        { fileId },
+        { timeout: 180000 }
       );
       return response.data;
     } catch (error) {
