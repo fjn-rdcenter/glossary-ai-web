@@ -87,6 +87,7 @@ export default function GlossaryDetailPage() {
   });
 
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTerms, setTotalTerms] = useState(0);
@@ -99,19 +100,37 @@ export default function GlossaryDetailPage() {
       router.replace("/dashboard/glossaries/new");
       return;
     }
+    fetchPermissionData();
+  }, [id]);
+
+  useEffect(() => {
+    if (id === "new") {
+      router.replace("/dashboard/glossaries/new");
+      return;
+    }
     fetchGlossaryData();
-  }, [id, page, pageSize]);
+  }, [id, page, search, pageSize]);
+
+  const fetchPermissionData = async () => {
+    try {
+      const permissionData = await GlossaryService.getMyPermission(id).catch(() => ({ permission: "view" as const }));
+      setMyPermission(permissionData.permission);
+    }
+    catch (error) {
+      console.error("Failed to fetch glossary details", error);
+      setErrorDialog({
+        open: true,
+        message: getErrorMessage(error),
+      });
+    } 
+  }
 
   const fetchGlossaryData = async () => {
     setLoading(true);
     try {
-      const [glossaryData, permissionData] = await Promise.all([
-        GlossaryService.getGlossaryById(id, { page, size: pageSize }),
-        GlossaryService.getMyPermission(id).catch(() => ({ permission: "view" as const }))
-      ]);
+      const glossaryData = await GlossaryService.getGlossaryById(id, { page, size: pageSize, search: search});
 
       setGlossary(glossaryData);
-      setMyPermission(permissionData.permission);
 
       if (glossaryData.terms) {
         setTerms(glossaryData.terms.items);
@@ -142,11 +161,10 @@ export default function GlossaryDetailPage() {
     if (page > 1) setPage(p => p - 1);
   };
 
-  const filteredTerms = terms.filter(
-    (term) =>
-      term.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      term.target.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearch = (searchTerm: string) => {
+    setSearchQuery(searchTerm);
+    setSearch(searchTerm);
+  };
 
   const confirmDeleteGlossary = async () => {
     if (!glossary) return;
@@ -286,7 +304,7 @@ export default function GlossaryDetailPage() {
                   <Input
                     placeholder={trmlGlossaries("searchTerms")}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearch(e.target.value)}
                     className="pl-9 h-10 bg-muted/40 border-border/50 hover:bg-muted/60 focus-visible:bg-background focus-visible:border-primary transition-colors shadow-sm"
                   />
                 </div>
@@ -306,7 +324,7 @@ export default function GlossaryDetailPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTerms.map((term, index) => (
+                      {terms.map((term, index) => (
                         <motion.tr
                           key={term.id}
                           initial={{ opacity: 0, y: 10 }}
@@ -336,7 +354,7 @@ export default function GlossaryDetailPage() {
                   </Table>
                 </div>
 
-                {filteredTerms.length === 0 && !loading && (
+                {terms.length === 0 && !loading && (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">{trmlGlossaries("noTermsFound")}</p>
                   </div>
