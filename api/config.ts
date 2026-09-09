@@ -23,7 +23,7 @@ export const getApiBaseUrl = (): string => {
   }
 
   if (host === "172.16.6.10:23000") {
-    return "http://172.16.6.10:18000";
+    return "http://172.16.6.10:28000";
   }
 
   return envUrl || "http://172.16.6.10:18000";
@@ -58,6 +58,7 @@ export const API_CONFIG = {
       PERMISSION_BY_ID: (id: string, permissionId: string) =>
         `/api/v2/glossaries/${id}/permissions/${permissionId}`,
       CLONE: (id: string) => `/api/v2/glossaries/${id}/clone`,
+      RECOMMEND: "/api/v2/glossaries/recommend",
     },
 
     // Documents

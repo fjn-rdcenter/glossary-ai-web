@@ -87,7 +87,15 @@
         "Translate": "翻訳"
     },
     "Login": {
+        "brandTagline": "\u6B63\u3057\u3044<highlight>\u7528\u8A9E</highlight> - \u6B63\u3057\u3044<highlight>\u6587\u8108</highlight>",
+        "brandDescriptionPreserve": "\u7FFB\u8A33\u6642\u306B\u7528\u8A9E\u3001\u6587\u8108\u3001\u30D5\u30A1\u30A4\u30EB\u69CB\u9020\u3092\u4FDD\u6301\u3057\u307E\u3059\u3002",
+        "brandDescriptionFormats": "Office\u3001PDF\u3001HTML\u3001Markdown\u3001TXT \u306A\u3069\u306E\u8907\u6570\u306E\u30D5\u30A1\u30A4\u30EB\u5F62\u5F0F\u306B\u5BFE\u5FDC\u3057\u307E\u3059\u3002",
+        "brandDescriptionGlossary": "\u6587\u66F8\u304B\u3089 Glossary \u3092\u4F5C\u6210\u3067\u304D\u307E\u3059\u3002",
         "subtitle": "GlossaryAI を続ける",
+        "tagline": "インテリジェントな翻訳管理。",
+        "signInSubtitle": "アカウントにサインイン",
+        "languageMenu": "表示言語を選択",
+        "copyright": "© GlossaryAI、AI Innovation Center が開発したインテリジェント翻訳アプリケーション。",
         "usernameLabel": "ユーザー名",
         "usernamePlaceholder": "ユーザー名を入力してください",
         "passwordLabel": "パスワード",
@@ -100,7 +108,8 @@
         "noAccount": "アカウントをお持ちでないですか？",
         "footer": "AI Innovation Center によって開発されました",
         "loginSuccess": "ログインに成功しました！",
-        "loginError": "ログインに失敗しました。認証情報を確認してください。"
+        "loginError": "ログインに失敗しました。認証情報を確認してください。",
+        "restoringSession": "ログインセッションを復元しています"
     },
     "Dashboard": {
         "dashboard": "ダッシュボード",
@@ -117,7 +126,7 @@
         "quickUploadDescription": "ドキュメントをここにドラッグ＆ドロップして、すぐに翻訳を開始できます。",
         "dropFile": "ここにファイルをドロップ",
         "clickOrDrag": "クリックまたはファイルをドラッグしてアップロード",
-        "supportedFiles": "PDF, DOCX, PPTX, XLSX, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
+        "supportedFiles": "PDF, DOCX, PPTX, XLSX, HTML, MD, TXT, 画像 • 最大5ファイル / 各最大 {maxSize}MB",
         "translateFiles_count": "{count, plural, one {# 件のファイルを翻訳} other {# 件のファイルを翻訳}}",
         "continue": "次へ",
         "fileTooLarge": "ファイルが大きすぎます。最大サイズは{maxSize}MBです。",
@@ -171,7 +180,16 @@
         "translationLanguages": "翻訳言語",
         "translateImages": "画像を翻訳",
         "translateImagesDescription": "ドキュメント内の画像からテキストを抽出して翻訳",
-        "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。"
+        "keepSource": "原文を保持",
+        "keepSourceDescription": "用語集の使用時に翻訳文の横に原文を保持します",
+        "fileTooLarge": "ファイルサイズは{maxSize}MBを超えることはできません。",
+        "translationOptions": "翻訳オプション",
+        "clearAll": "すべてクリア",
+        "noGlossarySelected": "用語集が選択されていません",
+        "noGlossarySelectedDetail": "右側のリストから用語集を選択するか、GlossaryAIのおすすめ用語集をご利用ください。",
+        "recommendGlossary": "用語集をおすすめ",
+        "generating": "生成中...",
+        "termsCount": "{count, plural, one {# 件の用語} other {# 件の用語}}"
     },
     "GlossarySelection": {
         "noGlossary": "用語集を使用しない",
@@ -213,7 +231,7 @@
         "processing": "ドキュメントを処理しています",
         "complete": "完了",
         "cancel": "キャンセル",
-        "successTitle": "翻訳が完了しました！",
+        "successTitle": "翻訳終了！",
         "successDesc": "ドキュメントの翻訳が成功しました",
         "download": "ファイルをダウンロード",
         "newTranslation": "新しい翻訳",

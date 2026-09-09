@@ -12,6 +12,12 @@ const withNextIntl = createNextIntlPlugin(
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+
+  // Cho phép máy khác trong LAN truy cập Next.js dev resources / HMR
+  allowedDevOrigins: [
+    '172.16.1.169',
+  ],
+
   turbopack: {
     root: path.resolve(process.cwd()),
   },
