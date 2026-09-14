@@ -4,6 +4,8 @@
  */
 
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+export const USE_LEGACY_EXTRACTION_MEDIA =
+  process.env.NEXT_PUBLIC_USE_LEGACY_EXTRACTION_MEDIA === "false";
 
 export const getApiBaseUrl = (): string => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -40,8 +42,8 @@ export const API_CONFIG = {
       LOGIN: "/api/v2/auth/login",
       LOGOUT: "/api/v2/auth/logout",
       REFRESH: "/api/v2/auth/refresh-token",
-      ME: "/api/v2/me/",
-      UPDATE_ME: "/api/v2/me/",
+      ME: "/api/v2/users/me",
+      UPDATE_ME: "/api/v2/users/me",
     },
 
     // Glossaries
@@ -68,10 +70,20 @@ export const API_CONFIG = {
       DELETE: (id: string) => `/api/v2/documents/${id}`,
     },
 
+    MEDIA: {
+      GET: (mediaPath: string) => `/api/v2/media/${encodeURIComponent(mediaPath)}`,
+    },
+
     // Translations
     TRANSLATIONS: {
       UPLOAD: "/api/v2/documents/upload",
       START: "/api/v2/translations",
+      CREATE: "/api/v2/translations/create",
+      START_PIPELINE: "/api/v2/translations/start",
+      TABLES: (translationId: string) => `/api/v2/translations/${translationId}/tables`,
+      TABLE: (translationId: string, tableId: string) => `/api/v2/translations/${translationId}/tables/${tableId}`,
+      TABLES_BATCH: (translationId: string) => `/api/v2/translations/${translationId}/tables/batch`,
+      GENERATE: "/api/v2/translations/generate",
       STATUS: (jobId: string) => `/api/v2/translations/${jobId}`,
       CANCEL: (jobId: string) => `/api/v2/translations/${jobId}/cancel`,
       HISTORY: "/api/v2/translations",

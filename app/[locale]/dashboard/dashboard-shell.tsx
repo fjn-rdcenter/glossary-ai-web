@@ -47,10 +47,11 @@ import {LanguageDisplay} from "@/components/language-display";
 import {TranslationDetailDialog, type TranslationDetailJob} from "@/components/translation-detail-dialog";
 import {Link, useRouter} from "@/i18n/routing";
 import {usePendingUploadStore} from "@/lib/pending-upload-store";
-import type {GlossaryResponse, StatusEnum, TranslationHistoryResponse} from "@/lib/types";
+import type {GlossaryResponse, StatusEnum, TranslationHistoryResponse, UserResponse} from "@/lib/types";
 import {getGlossaryLanguageFlag, glossaryCopy} from "./glossaries/glossary-copy";
 
 const USERNAME_STORAGE_KEY = "glossaryai_username";
+const USER_INFO_STORAGE_KEY = "glossaryai_user_info";
 const FALLBACK_USERNAME = "User";
 
 const languages = [
@@ -1588,16 +1589,56 @@ function DashboardLanguageSwitcher({
 
 export function DashboardUserInfo({greeting}: {greeting: string}) {
   const [username, setUsername] = useState(FALLBACK_USERNAME);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem(USERNAME_STORAGE_KEY)?.trim();
+    const storedUserInfo = localStorage.getItem(USER_INFO_STORAGE_KEY);
 
     if (storedUsername) {
       setUsername(storedUsername);
     }
+
+    if (storedUserInfo) {
+      try {
+        const user = JSON.parse(storedUserInfo) as Partial<UserResponse>;
+
+        if (typeof user.username === "string" && user.username.trim()) {
+          setUsername(user.username.trim());
+        }
+
+        if (typeof user.displayName === "string" || user.displayName === null) {
+          setDisplayName(user.displayName);
+        }
+      } catch {
+        localStorage.removeItem(USER_INFO_STORAGE_KEY);
+      }
+    }
+
+    let isMounted = true;
+
+    AuthService.getCurrentUser()
+      .then((user) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setUsername(user.username.trim() || FALLBACK_USERNAME);
+        setDisplayName(user.displayName);
+        localStorage.setItem(USERNAME_STORAGE_KEY, user.username);
+        localStorage.setItem(USER_INFO_STORAGE_KEY, JSON.stringify(user));
+      })
+      .catch((error) => {
+        console.warn("Failed to fetch current user for dashboard", error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const initial = useMemo(() => getInitial(username), [username]);
+  const greetingName = displayName?.trim() || username;
+  const initial = useMemo(() => getInitial(greetingName), [greetingName]);
 
   return (
     <div className="hidden items-center gap-2 sm:flex">
@@ -1606,7 +1647,7 @@ export function DashboardUserInfo({greeting}: {greeting: string}) {
       </span>
       <span className="hidden min-w-0 flex-col leading-tight xl:flex">
         <span className="text-[11px] font-medium text-[#77717f]">{greeting},</span>
-        <span className="max-w-[130px] truncate text-[13px] font-bold text-[#21175c]">{username}</span>
+        <span className="max-w-[130px] truncate text-[13px] font-bold text-[#21175c]">{greetingName}</span>
       </span>
     </div>
   );

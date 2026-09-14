@@ -8,7 +8,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Construction,
   Download,
   Eye,
   FolderOpen,
@@ -64,10 +63,17 @@ import {
   GlossaryFormView,
   type GlossaryFormInitialValues,
 } from "../glossaries/glossary-form-view";
+import {TranslationPreviewDialog} from "./translation-preview-dialog";
 
 const MAX_FILES = 5;
 const GLOSSARIES_PER_PAGE = 4;
 const UPLOADED_FILES_PER_PAGE = 8;
+const PIPELINE_FILE_EXTENSIONS = new Set(["docx", "xlsx", "pptx"]);
+
+const usesTranslationPipeline = (fileName: string) => {
+  const extension = fileName.split(".").pop()?.toLocaleLowerCase();
+  return Boolean(extension && PIPELINE_FILE_EXTENSIONS.has(extension));
+};
 
 type TranslateLocale = "en" | "vi" | "ja";
 type FileTranslationConfig = {
@@ -439,8 +445,33 @@ type WorkflowCopy = {
   viewDetails: string;
   retry: string;
   preview: string;
-  previewDevelopmentTitle: string;
-  previewDevelopmentDescription: string;
+  all: string;
+  applied: string;
+  appliedCount: string;
+  applyAll: string;
+  applyStatus: string;
+  applyToFile: string;
+  contentType: string;
+  discard: string;
+  filter: string;
+  imageContent: string;
+  itemsPerPage: string;
+  noTableResults: string;
+  notApplied: string;
+  nextPage: string;
+  page: string;
+  previewError: string;
+  previewLoading: string;
+  previousPage: string;
+  regenerate: string;
+  regenerating: string;
+  searchTranslations: string;
+  showingPerPage: string;
+  source: string;
+  sourceFile: string;
+  target: string;
+  textContent: string;
+  translatedFile: string;
   download: string;
   completionSummary: string;
   translatedFiles: string;
@@ -486,8 +517,33 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
     viewDetails: "Xem chi tiết",
     retry: "Thử lại",
     preview: "Xem trước",
-    previewDevelopmentTitle: "Chức năng đang phát triển",
-    previewDevelopmentDescription: "Tính năng xem trước bản dịch đang được hoàn thiện và sẽ sớm khả dụng.",
+    all: "Tất cả",
+    applied: "Đang áp dụng",
+    appliedCount: "Đã áp dụng: {applied} / {total}",
+    applyAll: "Áp dụng tất cả",
+    applyStatus: "Trạng thái áp dụng",
+    applyToFile: "Áp dụng vào tệp",
+    contentType: "Loại nội dung",
+    discard: "Khôi phục bản dịch gốc",
+     filter: "Lọc bảng dịch",
+     imageContent: "Ảnh",
+     itemsPerPage: "Số mục mỗi trang",
+     noTableResults: "Không tìm thấy nội dung phù hợp.",
+    notApplied: "Không áp dụng",
+    nextPage: "Trang tiếp theo",
+    page: "Trang",
+    previewError: "Không thể tải bản xem trước. Vui lòng thử lại.",
+    previewLoading: "Đang tải bản xem trước...",
+    previousPage: "Trang trước",
+    regenerate: "Lưu và tạo lại tệp",
+    regenerating: "Đang tạo lại tệp...",
+    searchTranslations: "Tìm kiếm trong bản dịch...",
+    showingPerPage: "Hiển thị {count} mục mỗi trang",
+    source: "Nguồn",
+    sourceFile: "Tệp gốc",
+    target: "Bản dịch",
+    textContent: "Văn bản",
+    translatedFile: "Tệp dịch",
     download: "Tải về",
     completionSummary: "{completed} / {total} tài liệu đã dịch thành công",
     translatedFiles: "Tài liệu đã dịch",
@@ -531,8 +587,33 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
     viewDetails: "View details",
     retry: "Retry",
     preview: "Preview",
-    previewDevelopmentTitle: "Feature in development",
-    previewDevelopmentDescription: "Translation preview is currently being completed and will be available soon.",
+    all: "All",
+    applied: "Applied",
+    appliedCount: "Applied: {applied} / {total}",
+    applyAll: "Apply all",
+    applyStatus: "Apply status",
+    applyToFile: "Apply to file",
+    contentType: "Content type",
+    discard: "Discard changes",
+     filter: "Filter translations",
+     imageContent: "Images",
+     itemsPerPage: "Items per page",
+     noTableResults: "No matching content found.",
+    notApplied: "Not applied",
+    nextPage: "Next page",
+    page: "Page",
+    previewError: "Unable to load the preview. Please try again.",
+    previewLoading: "Loading preview...",
+    previousPage: "Previous page",
+    regenerate: "Save and regenerate file",
+    regenerating: "Regenerating file...",
+    searchTranslations: "Search translations...",
+    showingPerPage: "Showing {count} per page",
+    source: "Source",
+    sourceFile: "Source file",
+    target: "Translation",
+    textContent: "Text",
+    translatedFile: "Translated file",
     download: "Download",
     completionSummary: "{completed} / {total} documents translated successfully",
     translatedFiles: "Translated documents",
@@ -576,8 +657,33 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
     viewDetails: "詳細を見る",
     retry: "再試行",
     preview: "プレビュー",
-    previewDevelopmentTitle: "機能を開発中です",
-    previewDevelopmentDescription: "翻訳プレビュー機能は現在開発中で、近日中にご利用いただけるようになります。",
+    all: "すべて",
+    applied: "適用中",
+    appliedCount: "適用済み: {applied} / {total}",
+    applyAll: "すべて適用",
+    applyStatus: "適用状態",
+    applyToFile: "ファイルに適用",
+    contentType: "コンテンツ種類",
+    discard: "変更を破棄",
+     filter: "翻訳を絞り込む",
+     imageContent: "画像",
+     itemsPerPage: "1ページあたりの項目数",
+     noTableResults: "一致するコンテンツがありません。",
+    notApplied: "適用しない",
+    nextPage: "次のページ",
+    page: "ページ",
+    previewError: "プレビューを読み込めません。もう一度お試しください。",
+    previewLoading: "プレビューを読み込んでいます...",
+    previousPage: "前のページ",
+    regenerate: "保存してファイルを再生成",
+    regenerating: "ファイルを再生成しています...",
+    searchTranslations: "翻訳を検索...",
+    showingPerPage: "{count}件ずつ表示",
+    source: "原文",
+    sourceFile: "原文ファイル",
+    target: "翻訳",
+    textContent: "テキスト",
+    translatedFile: "翻訳ファイル",
     download: "ダウンロード",
     completionSummary: "{completed} / {total} 件の文書を翻訳しました",
     translatedFiles: "翻訳済み文書",
@@ -966,7 +1072,7 @@ export function TranslateConfigure() {
   const [workflowNotice, setWorkflowNotice] = useState("");
   const [detailsFileId, setDetailsFileId] = useState<string | null>(null);
   const [activeFileAction, setActiveFileAction] = useState<string | null>(null);
-  const [isPreviewNoticeOpen, setIsPreviewNoticeOpen] = useState(false);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancellingFileId, setCancellingFileId] = useState<string | null>(null);
@@ -1505,14 +1611,19 @@ export function TranslateConfigure() {
         patchTranslationRun(fileId, {documentId, progress: 12});
       }
 
-      const translation = await TranslationService.startTranslation({
+      const translationRequest = {
         documentId,
         glossaries: Array.from(config.selectedGlossaryIds),
         isTranslateImage: config.translateImages,
         keepSource: config.keepSourceText,
         sourceLanguage: config.sourceLanguage,
         targetLanguage: config.targetLanguage,
-      });
+      };
+      const translation = usesTranslationPipeline(pendingFile.metadata.name)
+        ? await TranslationService.createTranslation(translationRequest).then((createdTranslation) =>
+            TranslationService.startCreatedTranslation({translationId: createdTranslation.id}),
+          )
+        : await TranslationService.startTranslation(translationRequest);
       if (!isCurrentAttempt()) return;
 
       let status = translation.status;
@@ -1841,16 +1952,18 @@ export function TranslateConfigure() {
 
             {status === "completed" && !showSelection ? (
               <>
-                <button
-                  aria-haspopup="dialog"
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[6px] border border-[#5a459d] bg-white px-3 text-[9px] font-bold text-[#30206f] transition-colors hover:bg-[#f5f2ff] disabled:cursor-wait disabled:opacity-55"
-                  disabled={activeFileAction !== null}
-                  onClick={() => setIsPreviewNoticeOpen(true)}
-                  type="button"
-                >
-                  <Eye aria-hidden="true" className="size-3.5" />
-                  {workflow.preview}
-                </button>
+                {usesTranslationPipeline(pendingFile.metadata.name) ? (
+                  <button
+                    aria-haspopup="dialog"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[6px] border border-primary bg-card px-3 text-[9px] font-bold text-primary transition-colors hover:bg-accent disabled:cursor-wait disabled:opacity-55"
+                    disabled={activeFileAction !== null}
+                    onClick={() => setPreviewFileId(pendingFile.id)}
+                    type="button"
+                  >
+                    <Eye aria-hidden="true" className="size-3.5" />
+                    {workflow.preview}
+                  </button>
+                ) : null}
                 <button
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[6px] bg-[#21175c] px-3.5 text-[9px] font-bold text-white transition-colors hover:bg-[#f06317] disabled:cursor-wait disabled:opacity-55"
                   disabled={activeFileAction !== null}
@@ -2470,33 +2583,17 @@ export function TranslateConfigure() {
         sourceLanguage={sourceLanguage}
       />
 
-      <Dialog open={isPreviewNoticeOpen} onOpenChange={setIsPreviewNoticeOpen}>
-        <DialogContent className="overflow-hidden rounded-[8px] border-[#d5d0dc] bg-white p-0 shadow-[0_24px_70px_rgba(33,23,92,0.2)] sm:max-w-[430px]">
-          <div className="px-6 pb-6 pt-8 text-center">
-            <span className="mx-auto grid size-14 place-items-center rounded-full border border-[#f5c5a8] bg-[#fff3eb] text-[#c94f0e]">
-              <Construction aria-hidden="true" className="size-7" />
-            </span>
-            <DialogHeader className="mt-5 items-center text-center sm:text-center">
-              <DialogTitle className="text-[19px] font-bold text-[#21175c]">
-                {workflow.previewDevelopmentTitle}
-              </DialogTitle>
-              <DialogDescription className="max-w-[330px] text-[12px] leading-5 text-[#6f6a78]">
-                {workflow.previewDevelopmentDescription}
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          <DialogFooter className="flex-row justify-center border-t border-[#ebe8ee] bg-[#fcfbfd] px-6 py-4 sm:justify-center">
-            <DialogClose asChild>
-              <button
-                className="inline-flex h-10 min-w-[112px] items-center justify-center rounded-[7px] bg-[#21175c] px-5 text-[11px] font-bold text-white transition-colors hover:bg-[#f06317] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] focus-visible:ring-offset-2"
-                type="button"
-              >
-                {workflow.close}
-              </button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TranslationPreviewDialog
+        copy={workflow}
+        fileName={previewFileId ? getTranslatedFileName(pendingFiles.find((file) => file.id === previewFileId)?.metadata.name ?? "", (fileConfigs[previewFileId] ?? createDefaultFileConfig()).targetLanguage) : ""}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFileId(null);
+        }}
+        open={previewFileId !== null}
+        sourceLanguage={previewFileId ? (fileConfigs[previewFileId] ?? createDefaultFileConfig()).sourceLanguage : sourceLanguage}
+        targetLanguage={previewFileId ? (fileConfigs[previewFileId] ?? createDefaultFileConfig()).targetLanguage : sourceLanguage}
+        translationId={previewFileId ? translationRuns[previewFileId]?.jobId ?? null : null}
+      />
 
       <Dialog
         open={isUploadedFilesOpen}
