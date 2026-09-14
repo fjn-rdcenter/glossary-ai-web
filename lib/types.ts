@@ -9,6 +9,8 @@ export interface UserBase {
 export interface UserCreate extends UserBase {}
 
 export interface UserResponse extends UserBase {
+  displayName: string | null;
+  email: string | null;
   id: string;
   walkthrough_status: {
     dashboard_tour: boolean;
@@ -190,6 +192,7 @@ export interface TranslationJobResponse {
   sourceDocument: string;
   sourceDocumentName?: string;
   targetDocument?: string;
+  targetDocumentName?: string;
   status: StatusEnum;
   progress: number;
   startedAt: string; // datetime
@@ -203,6 +206,29 @@ export interface TranslationJobPaginatedResponse {
   page: number;
   size: number;
   pages: number;
+}
+
+export interface TranslationTableResponse {
+  id: string;
+  translationId: string;
+  path: string;
+  source: string | null;
+  target: string | null;
+  feedback: string | null;
+  isSkipped: boolean;
+}
+
+export interface TranslationTableUpdate {
+  feedback?: string | null;
+  isSkipped?: boolean | null;
+}
+
+export interface TranslationTableBatchUpdate {
+  items: Array<TranslationTableUpdate & {id: string}>;
+}
+
+export interface GenerateTranslationResponse {
+  targetDocument: string;
 }
 
 export interface BBox {
@@ -266,6 +292,9 @@ export type SourceDocumentSortField =
 // Aliases for compatibility during migration if needed
 export type TranslationStatusResponse = TranslationJobResponse;
 export type TranslationHistoryResponse = TranslationJobResponse;
+export interface StartTranslationJobRequest {
+  translationId: string;
+}
 export type CreateTermRequest = GlossaryTermBase;
 export type UpdateTermRequest = GlossaryTermUpdate;
 export type CreateGlossaryRequest = GlossaryCreate;

@@ -12,6 +12,11 @@ import {
   UploadDocumentResponse,
   StartTranslationRequest,
   StartTranslationResponse,
+  StartTranslationJobRequest,
+  TranslationTableResponse,
+  TranslationTableUpdate,
+  TranslationTableBatchUpdate,
+  GenerateTranslationResponse,
   TranslationStatusResponse,
   TranslationHistoryResponse,
   PaginatedResponse,
@@ -63,6 +68,107 @@ export class TranslationService {
       return response.data;
     } catch (error) {
       ApiErrorHandler.logError(error, "TranslationService.startTranslation");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async createTranslation(
+    params: StartTranslationRequest
+  ): Promise<StartTranslationResponse> {
+    try {
+      const response = await apiClient.post<StartTranslationResponse>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.CREATE,
+        params
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.createTranslation");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async startCreatedTranslation(
+    params: StartTranslationJobRequest
+  ): Promise<StartTranslationResponse> {
+    try {
+      const response = await apiClient.post<StartTranslationResponse>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.START_PIPELINE,
+        params
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.startCreatedTranslation");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async getTranslationTables(
+    translationId: string,
+    page = 1,
+    size = 100,
+  ): Promise<PaginatedResponse<TranslationTableResponse>> {
+    try {
+      const response = await apiClient.get<PaginatedResponse<TranslationTableResponse>>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES(translationId),
+        {params: {page, size, sort: "path:asc"}},
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.getTranslationTables");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async updateTranslationTables(
+    translationId: string,
+    data: TranslationTableBatchUpdate,
+  ): Promise<TranslationTableResponse[]> {
+    try {
+      const response = await apiClient.patch<TranslationTableResponse[]>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES_BATCH(translationId),
+        data,
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.updateTranslationTables");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async updateTranslationTable(
+    translationId: string,
+    tableId: string,
+    data: TranslationTableUpdate,
+  ): Promise<TranslationTableResponse> {
+    try {
+      const response = await apiClient.patch<TranslationTableResponse>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLE(translationId, tableId),
+        data,
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.updateTranslationTable");
+      throw new Error(ApiErrorHandler.parseError(error));
+    }
+  }
+
+  static async generateTranslation(
+    translationId: string,
+  ): Promise<GenerateTranslationResponse> {
+    try {
+      const response = await apiClient.post<GenerateTranslationResponse>(
+        API_CONFIG.ENDPOINTS.TRANSLATIONS.GENERATE,
+        {translationId},
+      );
+
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.logError(error, "TranslationService.generateTranslation");
       throw new Error(ApiErrorHandler.parseError(error));
     }
   }

@@ -41,5 +41,8 @@ next-env.d.ts
 
 .agents/
 .agent/
+.opencode/
+AGENTS.md
 
 .env.stage
+.credentials.*

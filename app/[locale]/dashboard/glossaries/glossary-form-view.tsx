@@ -619,6 +619,8 @@ export function GlossaryFormView({
         savedGlossary = await GlossaryService.updateGlossary(glossaryId, {
           name: normalizedName,
           description: description.trim() || undefined,
+          sourceLanguage,
+          targetLanguage,
         });
 
         await Promise.all([
@@ -717,7 +719,7 @@ export function GlossaryFormView({
               <label className="block min-w-0">
                 <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.sourceLanguage}</span>
                 <Select
-                  disabled={mode === "edit" || lockLanguages}
+                  disabled={lockLanguages}
                   onValueChange={(value) => setSourceLanguage(value as SupportedLanguageCode)}
                   value={sourceLanguage}
                 >
@@ -726,7 +728,7 @@ export function GlossaryFormView({
                       {sourceLanguage ? (
                         <span className="flex items-center gap-2">
                           <GlossaryLanguage language={sourceLanguage} locale={locale} />
-                          {mode === "edit" || lockLanguages ? <LockKeyhole className="size-3.5 text-[#918a98]" /> : null}
+                          {lockLanguages ? <LockKeyhole className="size-3.5 text-[#918a98]" /> : null}
                         </span>
                       ) : null}
                     </SelectValue>
@@ -744,7 +746,7 @@ export function GlossaryFormView({
               <label className="block min-w-0">
                 <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.targetLanguage}</span>
                 <Select
-                  disabled={mode === "edit" || lockLanguages}
+                  disabled={lockLanguages}
                   onValueChange={(value) => setTargetLanguage(value as SupportedLanguageCode)}
                   value={targetLanguage}
                 >
@@ -753,7 +755,7 @@ export function GlossaryFormView({
                       {targetLanguage ? (
                         <span className="flex items-center gap-2">
                           <GlossaryLanguage language={targetLanguage} locale={locale} />
-                          {mode === "edit" || lockLanguages ? <LockKeyhole className="size-3.5 text-[#918a98]" /> : null}
+                          {lockLanguages ? <LockKeyhole className="size-3.5 text-[#918a98]" /> : null}
                         </span>
                       ) : null}
                     </SelectValue>

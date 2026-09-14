@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Eye,
   FileText,
   Filter,
   Info,
@@ -25,6 +26,7 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {StatusEnum, TranslationHistoryResponse} from "@/lib/types";
 import {DashboardFooter, DashboardHeader, FileFormatBadgeBackground} from "../dashboard-shell";
+import {TranslationPreviewDialog} from "../translate/translation-preview-dialog";
 
 type HistoryLocale = "en" | "vi" | "ja";
 type HistoryJob = TranslationHistoryResponse & {
@@ -58,6 +60,31 @@ const historyCopy = {
     sourceFile: "Tệp gốc",
     translatedFile: "Tệp dịch",
     viewDetails: "Xem chi tiết",
+    preview: "Xem trước",
+    all: "Tất cả",
+    applied: "Đang áp dụng",
+    appliedCount: "Đã áp dụng: {applied} / {total}",
+    applyAll: "Áp dụng tất cả",
+    applyStatus: "Trạng thái áp dụng",
+    applyToFile: "Áp dụng vào tệp",
+     contentType: "Loại nội dung",
+     discard: "Khôi phục bản dịch gốc",
+     filter: "Lọc bảng dịch",
+     imageContent: "Ảnh",
+     itemsPerPage: "Số mục mỗi trang",
+     noTableResults: "Không tìm thấy nội dung phù hợp.",
+    notApplied: "Không áp dụng",
+    nextPage: "Trang tiếp theo",
+    previousPage: "Trang trước",
+    previewError: "Không thể tải bản xem trước. Vui lòng thử lại.",
+    previewLoading: "Đang tải bản xem trước...",
+    searchTranslations: "Tìm kiếm trong bản dịch...",
+    showingPerPage: "Hiển thị {count} mục mỗi trang",
+    regenerate: "Lưu và tạo lại tệp",
+    regenerating: "Đang tạo lại tệp...",
+    source: "Nguồn",
+    target: "Bản dịch",
+    textContent: "Văn bản",
     loading: "Đang tải lịch sử dịch...",
     empty: "Không tìm thấy tài liệu phù hợp.",
     loadError: "Không thể tải lịch sử dịch. Vui lòng thử lại.",
@@ -110,6 +137,31 @@ const historyCopy = {
     sourceFile: "Source file",
     translatedFile: "Translated file",
     viewDetails: "View details",
+    preview: "Preview",
+    all: "All",
+    applied: "Applied",
+    appliedCount: "Applied: {applied} / {total}",
+    applyAll: "Apply all",
+    applyStatus: "Apply status",
+    applyToFile: "Apply to file",
+     contentType: "Content type",
+     discard: "Discard changes",
+     filter: "Filter translations",
+     imageContent: "Images",
+     itemsPerPage: "Items per page",
+     noTableResults: "No matching content found.",
+    notApplied: "Not applied",
+    nextPage: "Next page",
+    previousPage: "Previous page",
+    previewError: "Unable to load the preview. Please try again.",
+    previewLoading: "Loading preview...",
+    searchTranslations: "Search translations...",
+    showingPerPage: "Showing {count} per page",
+    regenerate: "Save and regenerate file",
+    regenerating: "Regenerating file...",
+    source: "Source",
+    target: "Translation",
+    textContent: "Text",
     loading: "Loading translation history...",
     empty: "No matching documents found.",
     loadError: "Translation history could not be loaded. Please try again.",
@@ -162,6 +214,31 @@ const historyCopy = {
     sourceFile: "原文ファイル",
     translatedFile: "翻訳ファイル",
     viewDetails: "詳細を見る",
+    preview: "プレビュー",
+    all: "すべて",
+    applied: "適用中",
+    appliedCount: "適用済み: {applied} / {total}",
+    applyAll: "すべて適用",
+    applyStatus: "適用状態",
+    applyToFile: "ファイルに適用",
+     contentType: "コンテンツ種類",
+     discard: "変更を破棄",
+     filter: "翻訳を絞り込む",
+     imageContent: "画像",
+     itemsPerPage: "1ページあたりの項目数",
+     noTableResults: "一致するコンテンツがありません。",
+    notApplied: "適用しない",
+    nextPage: "次のページ",
+    previousPage: "前のページ",
+    previewError: "プレビューを読み込めません。もう一度お試しください。",
+    previewLoading: "プレビューを読み込んでいます...",
+    searchTranslations: "翻訳を検索...",
+    showingPerPage: "{count}件ずつ表示",
+    regenerate: "保存してファイルを再生成",
+    regenerating: "ファイルを再生成しています...",
+    source: "原文",
+    target: "翻訳",
+    textContent: "テキスト",
     loading: "翻訳履歴を読み込んでいます...",
     empty: "該当する文書がありません。",
     loadError: "翻訳履歴を読み込めませんでした。もう一度お試しください。",
@@ -312,6 +389,7 @@ export function HistoryView() {
   const [downloadKey, setDownloadKey] = useState<string | null>(null);
   const [cancelJobId, setCancelJobId] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<HistoryJob | null>(null);
+  const [previewJob, setPreviewJob] = useState<HistoryJob | null>(null);
 
   useEffect(() => {
     const requestedStatus = new URLSearchParams(window.location.search).get("status");
@@ -624,7 +702,7 @@ export function HistoryView() {
 
           <div className="mt-5 overflow-hidden rounded-[8px] border border-[#ddd7e7] bg-white/78 shadow-[0_16px_45px_rgba(33,23,92,0.07)] backdrop-blur-xl">
             <div className="list-table-viewport">
-              <table className="w-full min-w-[1130px] table-fixed border-collapse">
+                 <table className="w-full min-w-[1170px] table-fixed border-collapse">
                 <thead className="bg-[#f7f5f9]">
                   <tr className="h-12 bg-[#f7f5f9] text-[11px] font-bold uppercase text-[#6d6674]">
                     <th className="w-[270px] px-8 text-left">{copy.document}</th>
@@ -632,7 +710,7 @@ export function HistoryView() {
                     <th className="w-[125px] px-2 text-center">{copy.sourceLanguage}</th>
                     <th className="w-[125px] px-2 text-center">{copy.targetLanguage}</th>
                     <th className="w-[120px] px-2 text-center">{copy.date}</th>
-                    <th className="w-[300px] px-0 text-center">{copy.actions}</th>
+                     <th className="w-[340px] px-0 text-center">{copy.actions}</th>
                     <th className="sticky right-0 z-[2] w-[80px] bg-inherit px-1 text-center">
                       <span className="sr-only">{copy.cancel}</span>
                     </th>
@@ -726,7 +804,7 @@ export function HistoryView() {
                             {formatDateTime(job.startedAt, locale, copy.unknown)}
                           </td>
                           <td className="px-0 py-4">
-                            <div className="mx-auto grid w-[300px] grid-cols-[124px_124px_36px] items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                           <div className="mx-auto grid w-[340px] grid-cols-[124px_124px_36px_36px] items-center gap-2" onClick={(event) => event.stopPropagation()}>
                               <button
                                 className="inline-flex h-9 w-[124px] items-center justify-center gap-2 whitespace-nowrap rounded-[6px] border border-[#d7d0e0] bg-white px-2 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#6750a4] hover:bg-[#f8f5ff] disabled:cursor-wait disabled:opacity-55"
                                 disabled={downloadKey !== null}
@@ -756,7 +834,17 @@ export function HistoryView() {
                                 title={copy.viewDetails}
                                 type="button"
                               >
-                                <Info aria-hidden="true" className="size-[17px]" />
+                               <Info aria-hidden="true" className="size-[17px]" />
+                              </button>
+                              <button
+                                aria-label={copy.preview + ": " + documentName}
+                                className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:bg-[#f5f3f7] disabled:text-[#a29ca8]"
+                                disabled={!isTranslatedReady}
+                                onClick={() => setPreviewJob(job)}
+                                title={isTranslatedReady ? copy.preview : copy.notReady}
+                                type="button"
+                              >
+                                <Eye aria-hidden="true" className="size-[17px]" />
                               </button>
                             </div>
                           </td>
@@ -820,6 +908,47 @@ export function HistoryView() {
         onOpenChange={(open) => {
           if (!open) setSelectedJob(null);
         }}
+      />
+      <TranslationPreviewDialog
+        copy={{
+          all: copy.all,
+          applied: copy.applied,
+          appliedCount: copy.appliedCount,
+          applyAll: copy.applyAll,
+          applyStatus: copy.applyStatus,
+          applyToFile: copy.applyToFile,
+          close: copy.close,
+           contentType: copy.contentType,
+           discard: copy.discard,
+           filter: copy.filter,
+          imageContent: copy.imageContent,
+          itemsPerPage: copy.itemsPerPage,
+          noTableResults: copy.noTableResults,
+          notApplied: copy.notApplied,
+          nextPage: copy.nextPage,
+          page: copy.page,
+          preview: copy.preview,
+          previewError: copy.previewError,
+          previewLoading: copy.previewLoading,
+          previousPage: copy.previousPage,
+          regenerate: copy.regenerate,
+          regenerating: copy.regenerating,
+          searchTranslations: copy.searchTranslations,
+          showingPerPage: copy.showingPerPage,
+          source: copy.source,
+          sourceFile: copy.sourceFile,
+          target: copy.target,
+          textContent: copy.textContent,
+          translatedFile: copy.translatedFile,
+        }}
+        fileName={previewJob ? getTranslatedFileName(getDocumentName(previewJob), previewJob.targetLanguage) : ""}
+        onOpenChange={(open) => {
+          if (!open) setPreviewJob(null);
+        }}
+        open={previewJob !== null}
+        sourceLanguage={previewJob?.sourceLanguage ?? "en"}
+        targetLanguage={previewJob?.targetLanguage ?? "vn"}
+        translationId={previewJob?.id ?? null}
       />
     </div>
   );
