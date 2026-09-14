@@ -3,7 +3,7 @@
   "info": {
     "title": "GlossaryAI API",
     "description": "API for GlossaryAI application",
-    "version": "2026.07.22.1"
+    "version": "2026.08.04.1"
   },
   "paths": {
     "/api/v2/auth/login": {
@@ -80,20 +80,22 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
         }
       }
     },
-    "/api/v2/me/": {
+    "/api/v2/users/me": {
       "get": {
         "tags": [
-          "Me"
+          "Users"
         ],
         "summary": "Read Users Me",
-        "operationId": "read_users_me_api_v2_me__get",
+        "operationId": "read_users_me_api_v2_users_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -114,10 +116,10 @@
       },
       "patch": {
         "tags": [
-          "Me"
+          "Users"
         ],
         "summary": "Update Users Me",
-        "operationId": "update_users_me_api_v2_me__patch",
+        "operationId": "update_users_me_api_v2_users_me_patch",
         "requestBody": {
           "content": {
             "application/json": {
@@ -637,6 +639,22 @@
               ],
               "title": "Sort"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
           }
         ],
         "responses": {
@@ -763,6 +781,110 @@
       }
     },
     "/api/v2/glossaries/{glossary_id}/terms": {
+      "get": {
+        "tags": [
+          "Glossary"
+        ],
+        "summary": "Search Glossary Terms",
+        "operationId": "search_glossary_terms_api_v2_glossaries__glossary_id__terms_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "glossary_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Glossary UUID",
+              "title": "Glossary Id"
+            },
+            "description": "Glossary UUID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*:(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponse_GlossaryTermResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "Glossary"
@@ -1842,7 +1964,56 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/media/{media_path}": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Get Media",
+        "operationId": "get_media_api_v2_media__media_path__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Media Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
               }
             }
           },
@@ -2047,6 +2218,98 @@
         }
       }
     },
+    "/api/v2/translations/create": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Create Translation Job",
+        "operationId": "create_translation_job_api_v2_translations_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationJobCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v2/translations/start": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Start Translation Job",
+        "operationId": "start_translation_job_api_v2_translations_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTranslationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v2/translations/{translation_id}": {
       "get": {
         "tags": [
@@ -2125,7 +2388,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -2170,7 +2435,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -2187,6 +2454,439 @@
         }
       }
     },
+    "/api/v2/translations/{translation_id}/tables/{table_id}/feedback": {
+      "patch": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Update Translation Feedback",
+        "operationId": "update_translation_feedback_api_v2_translations__translation_id__tables__table_id__feedback_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "translation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Translation Id"
+            }
+          },
+          {
+            "name": "table_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Table Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationTableFeedbackUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationTableFeedbackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/translations/{translation_id}/tables": {
+      "get": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Get Translation Tables",
+        "operationId": "get_translation_tables_api_v2_translations__translation_id__tables_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "translation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Translation Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Size"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "path:asc",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "isSkipped",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Isskipped"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponse_TranslationTableResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/translations/{translation_id}/tables/batch": {
+      "patch": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Update Translation Tables Batch",
+        "operationId": "update_translation_tables_batch_api_v2_translations__translation_id__tables_batch_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "translation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Translation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationTableBatchUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TranslationTableResponse"
+                  },
+                  "title": "Response Update Translation Tables Batch Api V2 Translations  Translation Id  Tables Batch Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/translations/{translation_id}/tables/{table_id}": {
+      "patch": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Update Translation Table",
+        "operationId": "update_translation_table_api_v2_translations__translation_id__tables__table_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "translation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Translation Id"
+            }
+          },
+          {
+            "name": "table_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Table Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationTableUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationTableResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/translations/extract": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Extract",
+        "operationId": "extract_api_v2_translations_extract_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v2/translations/translate": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Translate",
+        "operationId": "translate_api_v2_translations_translate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v2/translations/generate": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Generate",
+        "operationId": "generate_api_v2_translations_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v2/release-notes": {
       "get": {
         "tags": [
@@ -2200,7 +2900,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -2235,7 +2937,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           },
@@ -2266,7 +2970,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+
+                }
               }
             }
           }
@@ -2368,6 +3074,18 @@
             "format": "uuid",
             "title": "Id"
           },
+          "extractionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extractionid"
+          },
           "uploadedAt": {
             "type": "string",
             "format": "date-time",
@@ -2383,6 +3101,67 @@
           "uploadedAt"
         ],
         "title": "DocumentResponse"
+      },
+      "ExtractRequest": {
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Documentid"
+          },
+          "isExtractImage": {
+            "type": "boolean",
+            "title": "Isextractimage",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentId"
+        ],
+        "title": "ExtractRequest"
+      },
+      "ExtractResponse": {
+        "properties": {
+          "extractionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Extractionid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "extractionId"
+        ],
+        "title": "ExtractResponse"
+      },
+      "GenerateRequest": {
+        "properties": {
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "translationId"
+        ],
+        "title": "GenerateRequest"
+      },
+      "GenerateResponse": {
+        "properties": {
+          "targetDocument": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Targetdocument"
+          }
+        },
+        "type": "object",
+        "required": [
+          "targetDocument"
+        ],
+        "title": "GenerateResponse"
       },
       "GlossaryCloneCreate": {
         "properties": {
@@ -2430,12 +3209,10 @@
             "title": "Description"
           },
           "sourceLanguage": {
-            "type": "string",
-            "title": "Sourcelanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "targetLanguage": {
-            "type": "string",
-            "title": "Targetlanguage"
+            "$ref": "#/components/schemas/Language"
           }
         },
         "type": "object",
@@ -2464,12 +3241,10 @@
             "title": "Description"
           },
           "sourceLanguage": {
-            "type": "string",
-            "title": "Sourcelanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "targetLanguage": {
-            "type": "string",
-            "title": "Targetlanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "id": {
             "type": "string",
@@ -2777,12 +3552,10 @@
             "title": "Description"
           },
           "sourceLanguage": {
-            "type": "string",
-            "title": "Sourcelanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "targetLanguage": {
-            "type": "string",
-            "title": "Targetlanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "id": {
             "type": "string",
@@ -3011,24 +3784,22 @@
           "sourceLanguage": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/Language"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Sourcelanguage"
+            ]
           },
           "targetLanguage": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/Language"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Targetlanguage"
+            ]
           }
         },
         "type": "object",
@@ -3046,6 +3817,15 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Language": {
+        "type": "string",
+        "enum": [
+          "jp",
+          "vn",
+          "en"
+        ],
+        "title": "Language"
       },
       "LoginResponse": {
         "properties": {
@@ -3258,6 +4038,42 @@
         ],
         "title": "PageResponse[TranslationJobResponse]"
       },
+      "PageResponse_TranslationTableResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TranslationTableResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "size",
+          "pages"
+        ],
+        "title": "PageResponse[TranslationTableResponse]"
+      },
       "PermissionStatus": {
         "type": "string",
         "enum": [
@@ -3306,6 +4122,18 @@
             "type": "string",
             "title": "Type"
           },
+          "extractionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extractionid"
+          },
           "uploadedAt": {
             "type": "string",
             "format": "date-time",
@@ -3327,6 +4155,20 @@
         ],
         "title": "SourceDocumentResponse"
       },
+      "StartTranslationJobRequest": {
+        "properties": {
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "translationId"
+        ],
+        "title": "StartTranslationJobRequest"
+      },
       "StatusEnum": {
         "type": "string",
         "enum": [
@@ -3338,6 +4180,34 @@
         ],
         "title": "StatusEnum"
       },
+      "TranslateRequest": {
+        "properties": {
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "translationId"
+        ],
+        "title": "TranslateRequest"
+      },
+      "TranslateResponse": {
+        "properties": {
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "translationId"
+        ],
+        "title": "TranslateResponse"
+      },
       "TranslationJobCreate": {
         "properties": {
           "documentId": {
@@ -3346,12 +4216,10 @@
             "title": "Documentid"
           },
           "sourceLanguage": {
-            "type": "string",
-            "title": "Sourcelanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "targetLanguage": {
-            "type": "string",
-            "title": "Targetlanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "isTranslateImage": {
             "type": "boolean",
@@ -3395,12 +4263,10 @@
             "title": "Id"
           },
           "sourceLanguage": {
-            "type": "string",
-            "title": "Sourcelanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "targetLanguage": {
-            "type": "string",
-            "title": "Targetlanguage"
+            "$ref": "#/components/schemas/Language"
           },
           "glossaries": {
             "anyOf": [
@@ -3509,6 +4375,198 @@
         ],
         "title": "TranslationJobResponse"
       },
+      "TranslationTableBatchUpdate": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TranslationTableBatchUpdateItem"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "TranslationTableBatchUpdate"
+      },
+      "TranslationTableBatchUpdateItem": {
+        "properties": {
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "isSkipped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isskipped"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "TranslationTableBatchUpdateItem"
+      },
+      "TranslationTableFeedbackResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "translationId"
+        ],
+        "title": "TranslationTableFeedbackResponse"
+      },
+      "TranslationTableFeedbackUpdate": {
+        "properties": {
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          }
+        },
+        "type": "object",
+        "title": "TranslationTableFeedbackUpdate"
+      },
+      "TranslationTableResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "translationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Translationid"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "isSkipped": {
+            "type": "boolean",
+            "title": "Isskipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "translationId",
+          "path",
+          "isSkipped"
+        ],
+        "title": "TranslationTableResponse"
+      },
+      "TranslationTableUpdate": {
+        "properties": {
+          "feedback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback"
+          },
+          "isSkipped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isskipped"
+          }
+        },
+        "type": "object",
+        "title": "TranslationTableUpdate"
+      },
       "UserExistsBulkRequest": {
         "properties": {
           "usernames": {
@@ -3562,6 +4620,28 @@
             "type": "string",
             "title": "Username"
           },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -3585,6 +4665,8 @@
         "type": "object",
         "required": [
           "username",
+          "displayName",
+          "email",
           "id",
           "walkthrough_status"
         ],
@@ -3663,7 +4745,9 @@
         "type": "oauth2",
         "flows": {
           "password": {
-            "scopes": {},
+            "scopes": {
+
+            },
             "tokenUrl": "api/v2/auth/login"
           }
         }
