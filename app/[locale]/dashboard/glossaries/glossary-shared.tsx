@@ -25,6 +25,13 @@ import {
   type GlossaryCopy,
   type GlossaryLocale,
 } from "./glossary-copy";
+import {
+  getSessionGlossaryPermissions,
+  inviteSessionGlossaryUser,
+  isSessionGlossaryTemplate,
+  removeSessionGlossaryPermission,
+  setSessionGlossaryPublic,
+} from "./glossary-session-template";
 
 export function GlossaryPageFrame({
   children,
@@ -190,7 +197,13 @@ export function GlossaryShareDialog({
     setErrorMessage("");
 
     try {
-      setPermissions(await GlossaryService.getGlossaryPermissions(glossary.id));
+      if (isSessionGlossaryTemplate(glossary)) {
+        const sessionPermissions = getSessionGlossaryPermissions();
+        if (!sessionPermissions) throw new Error("Session glossary permissions are unavailable");
+        setPermissions(sessionPermissions);
+      } else {
+        setPermissions(await GlossaryService.getGlossaryPermissions(glossary.id));
+      }
     } catch (error) {
       console.error("Failed to load glossary permissions", error);
       setPermissions(null);
@@ -218,18 +231,24 @@ export function GlossaryShareDialog({
     setErrorMessage("");
 
     try {
-      if (nextPublic) {
-        await GlossaryService.createGlossaryPermission(glossary.id, {
-          principalType: "public",
-          principalId: null,
-          permission: "clone",
-          expiresAt: null,
-        });
-      } else if (permissions?.publicPermission) {
-        await GlossaryService.deleteGlossaryPermission(glossary.id, permissions.publicPermission.id);
-      }
+      if (isSessionGlossaryTemplate(glossary)) {
+        const sessionPermissions = setSessionGlossaryPublic(nextPublic);
+        if (!sessionPermissions) throw new Error("Session glossary permissions are unavailable");
+        setPermissions(sessionPermissions);
+      } else {
+        if (nextPublic) {
+          await GlossaryService.createGlossaryPermission(glossary.id, {
+            principalType: "public",
+            principalId: null,
+            permission: "clone",
+            expiresAt: null,
+          });
+        } else if (permissions?.publicPermission) {
+          await GlossaryService.deleteGlossaryPermission(glossary.id, permissions.publicPermission.id);
+        }
 
-      await loadPermissions();
+        await loadPermissions();
+      }
     } catch (error) {
       console.error("Failed to update public glossary permission", error);
       setErrorMessage(copy.share.publicError);
@@ -251,15 +270,22 @@ export function GlossaryShareDialog({
     setErrorMessage("");
 
     try {
-      await GlossaryService.createGlossaryPermission(glossary.id, {
-        principalType: "user",
-        principalId: normalizedUsername,
-        permission: "view",
-        expiresAt: expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : null,
-      });
+      const normalizedExpiration = expiresAt ? new Date(expiresAt + "T23:59:59").toISOString() : null;
+      if (isSessionGlossaryTemplate(glossary)) {
+        const sessionPermissions = inviteSessionGlossaryUser(normalizedUsername, normalizedExpiration);
+        if (!sessionPermissions) throw new Error("Session glossary permissions are unavailable");
+        setPermissions(sessionPermissions);
+      } else {
+        await GlossaryService.createGlossaryPermission(glossary.id, {
+          principalType: "user",
+          principalId: normalizedUsername,
+          permission: "view",
+          expiresAt: normalizedExpiration,
+        });
+        await loadPermissions();
+      }
       setUsername("");
       setExpiresAt("");
-      await loadPermissions();
     } catch (error) {
       console.error("Failed to invite glossary user", error);
       setErrorMessage(copy.share.inviteError);
@@ -275,8 +301,14 @@ export function GlossaryShareDialog({
     setErrorMessage("");
 
     try {
-      await GlossaryService.deleteGlossaryPermission(glossary.id, permission.id);
-      await loadPermissions();
+      if (isSessionGlossaryTemplate(glossary)) {
+        const sessionPermissions = removeSessionGlossaryPermission(permission.id);
+        if (!sessionPermissions) throw new Error("Session glossary permissions are unavailable");
+        setPermissions(sessionPermissions);
+      } else {
+        await GlossaryService.deleteGlossaryPermission(glossary.id, permission.id);
+        await loadPermissions();
+      }
     } catch (error) {
       console.error("Failed to remove glossary permission", error);
       setErrorMessage(copy.share.removeError);

@@ -42,8 +42,27 @@ import {
   GlossaryPagination,
   GlossaryShareDialog,
 } from "./glossary-shared";
+import {GlossaryGuidedTour} from "./glossary-guided-tour";
+import {
+  clearSessionGlossaryTemplate,
+  deleteSessionGlossaryTemplate,
+  getOrCreateSessionGlossaryTemplate,
+  isSessionGlossaryTemplate,
+} from "./glossary-session-template";
 
 type GlossaryTab = "mine" | "public" | "shared";
+
+type GlossaryPageCacheEntry = {
+  items: GlossaryResponse[];
+  total: number;
+  totalPages: number;
+};
+
+type GlossaryPageParams = {
+  page: number;
+  search?: string;
+  size: number;
+};
 
 const DEFAULT_PAGE_SIZE = 8;
 
@@ -52,6 +71,27 @@ function getPageSizeForViewport(width: number) {
   if (width >= 1100) return 6;
   if (width >= 760) return 4;
   return 2;
+}
+
+function getGlossaryCacheKey(tab: GlossaryTab, search: string, page: number, pageSize: number) {
+  return JSON.stringify([tab, search, page, pageSize]);
+}
+
+function fetchGlossaryPage(tab: GlossaryTab, params: GlossaryPageParams) {
+  if (tab === "public") return GlossaryService.getPublicGlossaries(params);
+  if (tab === "shared") return GlossaryService.getSharedWithMeGlossaries(params);
+
+  return GlossaryService.getGlossaries(params);
+}
+
+function setGlossaryCacheEntry(cache: Map<string, GlossaryPageCacheEntry>, key: string, entry: GlossaryPageCacheEntry) {
+  cache.delete(key);
+  cache.set(key, entry);
+
+  if (cache.size > 24) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey) cache.delete(oldestKey);
+  }
 }
 
 const createdAtLabels = {
@@ -97,6 +137,10 @@ export function GlossaryListView() {
   const [errorMessage, setErrorMessage] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [shareGlossary, setShareGlossary] = useState<GlossaryResponse | null>(null);
+  const [sessionTemplate, setSessionTemplate] = useState<GlossaryResponse | null>(null);
+  const glossaryCacheRef = useRef<Map<string, GlossaryPageCacheEntry>>(new Map());
+  const glossaryRequestIdRef = useRef(0);
+  const [showInitialSkeleton, setShowInitialSkeleton] = useState(false);
 
   useEffect(() => {
     const syncPageSize = () => {
@@ -125,8 +169,30 @@ export function GlossaryListView() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  const isInitialLoading = isLoading && items.length === 0;
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      setShowInitialSkeleton(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setShowInitialSkeleton(true), 150);
+    return () => window.clearTimeout(timer);
+  }, [isInitialLoading]);
+
   const loadGlossaries = useCallback(async () => {
     if (!isPageSizeReady) return;
+
+    const requestId = ++glossaryRequestIdRef.current;
+    const cacheKey = getGlossaryCacheKey(activeTab, debouncedSearch, page, pageSize);
+    const cachedPage = glossaryCacheRef.current.get(cacheKey);
+
+    if (cachedPage) {
+      setItems(cachedPage.items);
+      setTotal(cachedPage.total);
+      setTotalPages(cachedPage.totalPages);
+    }
 
     setIsLoading(true);
     setErrorMessage("");
@@ -138,36 +204,51 @@ export function GlossaryListView() {
         size: pageSize,
         search: debouncedSearch || undefined,
       };
-
-      let response: PaginatedResponse<GlossaryResponse>;
-
-      if (activeTab === "public") {
-        response = await GlossaryService.getPublicGlossaries(params);
-      } else if (activeTab === "shared") {
-        response = await GlossaryService.getSharedWithMeGlossaries(params);
-      } else {
-        response = await GlossaryService.getGlossaries(params);
-      }
+      const response: PaginatedResponse<GlossaryResponse> = await fetchGlossaryPage(activeTab, params);
+      if (requestId !== glossaryRequestIdRef.current) return;
 
       const pages = Math.max(1, response.pages || 1);
+      const entry = {
+        items: response.items || [],
+        total: response.total || 0,
+        totalPages: pages,
+      };
+      setGlossaryCacheEntry(glossaryCacheRef.current, cacheKey, entry);
+
       if (page > pages) {
         setPage(pages);
         return;
       }
 
-      setItems(response.items || []);
-      setTotal(response.total || 0);
+      setItems(entry.items);
+      setTotal(entry.total);
       setTotalPages(pages);
       setSelectedIds(new Set());
+
+      if (page < pages) {
+        const nextPage = page + 1;
+        const nextCacheKey = getGlossaryCacheKey(activeTab, debouncedSearch, nextPage, pageSize);
+
+        if (!glossaryCacheRef.current.has(nextCacheKey)) {
+          void fetchGlossaryPage(activeTab, {...params, page: nextPage})
+            .then((nextResponse) => {
+              if (requestId !== glossaryRequestIdRef.current) return;
+              setGlossaryCacheEntry(glossaryCacheRef.current, nextCacheKey, {
+                items: nextResponse.items || [],
+                total: nextResponse.total || 0,
+                totalPages: Math.max(1, nextResponse.pages || 1),
+              });
+            })
+            .catch(() => undefined);
+        }
+      }
     } catch (error) {
+      if (requestId !== glossaryRequestIdRef.current) return;
       console.error("Failed to load glossaries", error);
-      setItems([]);
-      setTotal(0);
-      setTotalPages(1);
       setSelectedIds(new Set());
       setErrorMessage(copy.list.loadError);
     } finally {
-      setIsLoading(false);
+      if (requestId === glossaryRequestIdRef.current) setIsLoading(false);
     }
   }, [activeTab, copy.list.loadError, debouncedSearch, isPageSizeReady, page, pageSize, refreshVersion]);
 
@@ -175,8 +256,35 @@ export function GlossaryListView() {
     void loadGlossaries();
   }, [loadGlossaries]);
 
-  const allVisibleSelected = items.length > 0 && items.every((item) => selectedIds.has(item.id));
+  const showGlossaryTourTemplate =
+    activeTab === "mine" &&
+    page === 1 &&
+    total === 0 &&
+    items.length === 0 &&
+    debouncedSearch === "" &&
+    search.trim() === "" &&
+    !errorMessage;
+
+  useEffect(() => {
+    if (!showGlossaryTourTemplate) {
+      setSessionTemplate(null);
+      return;
+    }
+
+    setSessionTemplate(getOrCreateSessionGlossaryTemplate(locale));
+  }, [locale, showGlossaryTourTemplate]);
+
+  useEffect(() => {
+    if (activeTab !== "mine" || total === 0) return;
+    clearSessionGlossaryTemplate();
+    setSessionTemplate(null);
+  }, [activeTab, total]);
+
+  const visibleGlossaryItems = showGlossaryTourTemplate && sessionTemplate ? [sessionTemplate] : items;
+  const allVisibleSelected =
+    visibleGlossaryItems.length > 0 && visibleGlossaryItems.every((item) => selectedIds.has(item.id));
   const selectedCount = selectedIds.size;
+  const skeletonCount = Math.max(1, pageSize / 2);
 
   const tabs = useMemo(
     () =>
@@ -200,7 +308,7 @@ export function GlossaryListView() {
   const toggleAllVisible = (selected: boolean) => {
     setSelectedIds((current) => {
       const next = new Set(current);
-      items.forEach((item) => {
+      visibleGlossaryItems.forEach((item) => {
         if (selected) next.add(item.id);
         else next.delete(item.id);
       });
@@ -215,9 +323,23 @@ export function GlossaryListView() {
     setErrorMessage("");
 
     try {
-      await Promise.all(Array.from(selectedIds, (id) => GlossaryService.deleteGlossary(id)));
+      const ids = Array.from(selectedIds);
+      const backendIds = ids.filter((id) => !isSessionGlossaryTemplate(id));
+      await Promise.all(backendIds.map((id) => GlossaryService.deleteGlossary(id)));
+
+      if (backendIds.length > 0) {
+        clearSessionGlossaryTemplate();
+      }
+
+      if (ids.some(isSessionGlossaryTemplate)) {
+        deleteSessionGlossaryTemplate();
+        setSessionTemplate(null);
+      }
+
       setIsDeleteOpen(false);
       setSelectedIds(new Set());
+      glossaryRequestIdRef.current += 1;
+      glossaryCacheRef.current.clear();
       setRefreshVersion((version) => version + 1);
     } catch (error) {
       console.error("Failed to delete selected glossaries", error);
@@ -260,7 +382,7 @@ export function GlossaryListView() {
 
         <div className="mt-10">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="inline-grid w-full shrink-0 grid-cols-3 rounded-[7px] bg-[#f0edf4] p-1 sm:w-[400px]">
+            <div className="inline-grid w-full shrink-0 grid-cols-3 rounded-[7px] bg-[#f0edf4] p-1 sm:w-[400px]" data-glossary-list-tour="scope">
               {tabs.map((tab) => (
                 <button
                   aria-pressed={activeTab === tab.key}
@@ -281,7 +403,7 @@ export function GlossaryListView() {
             </div>
 
             <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:flex-nowrap lg:justify-end">
-              <label className="flex h-11 w-full min-w-[230px] items-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white/90 px-3 focus-within:border-[#21175c] focus-within:ring-2 focus-within:ring-[#21175c]/10 sm:max-w-[360px] sm:flex-1">
+              <label className="flex h-11 w-full min-w-[230px] items-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white/90 px-3 focus-within:border-[#21175c] focus-within:ring-2 focus-within:ring-[#21175c]/10 sm:max-w-[360px] sm:flex-1" data-glossary-list-tour="search">
                 <Search className="size-4 shrink-0 text-[#777080]" />
                 <input
                   aria-label={copy.list.searchPlaceholder}
@@ -306,7 +428,11 @@ export function GlossaryListView() {
                   aria-label={copy.list.refresh}
                   className="grid size-11 place-items-center rounded-[7px] border border-[#d8d2e1] bg-white/90 text-[#21175c] shadow-sm transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-wait disabled:opacity-50"
                   disabled={isLoading}
-                  onClick={() => setRefreshVersion((version) => version + 1)}
+                  onClick={() => {
+                    glossaryRequestIdRef.current += 1;
+                    glossaryCacheRef.current.clear();
+                    setRefreshVersion((version) => version + 1);
+                  }}
                   title={copy.list.refresh}
                   type="button"
                 >
@@ -326,6 +452,7 @@ export function GlossaryListView() {
 
                 <Link
                   className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[7px] bg-[#21175c] px-4 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-[#f06317]"
+                  data-glossary-list-tour="create"
                   href="/dashboard/glossaries/new"
                 >
                   <Plus className="size-4" />
@@ -347,8 +474,10 @@ export function GlossaryListView() {
             </p>
           ) : null}
 
-          <div className="mt-5 w-full">
-            {isLoading ? (
+          <div aria-busy={isLoading} className="relative mt-5 w-full">
+            {isLoading && !isInitialLoading ? <span aria-hidden="true" className="list-loading-progress" /> : null}
+            {isInitialLoading ? (
+              showInitialSkeleton ? (
               <div
                 aria-label={copy.list.loading}
                 aria-live="polite"
@@ -356,7 +485,7 @@ export function GlossaryListView() {
                 role="status"
               >
                 <span className="sr-only">{copy.list.loading}</span>
-                {Array.from({length: pageSize}, (_, index) => (
+                {Array.from({length: skeletonCount}, (_, index) => (
                   <div aria-hidden="true" className="glossary-reference-card" key={index}>
                     <span className="glossary-reference-sheet glossary-reference-sheet-back" />
                     <span className="glossary-reference-sheet glossary-reference-sheet-front" />
@@ -364,7 +493,7 @@ export function GlossaryListView() {
                     <span className="glossary-reference-surface" />
                     <span className="glossary-reference-bookmark" />
 
-                    <div className="relative z-[5] flex h-full min-w-0 flex-col px-5 pb-4 pt-6">
+                    <div className="glossary-lazy-content relative z-[5] flex h-full min-w-0 flex-col px-5 pb-4 pt-6">
                       <div className="flex items-start justify-between gap-3 pl-7">
                         <Skeleton className="h-6 w-3/5" />
                         <Skeleton className="size-5 rounded-[4px]" />
@@ -389,14 +518,19 @@ export function GlossaryListView() {
                   </div>
                 ))}
               </div>
-            ) : items.length === 0 ? (
+              ) : (
+                <div aria-hidden="true" className="min-h-[310px]" />
+              )
+            ) : visibleGlossaryItems.length === 0 ? (
               <div className="content-reveal flex min-h-[520px] items-center justify-center rounded-[8px] border border-dashed border-[#d7d0e1] bg-white/55 px-6 text-center text-[13px] text-[#716b79]">
                 {copy.list.empty}
               </div>
             ) : (
-              <div className="glossary-reference-grid">
-                {items.map((glossary) => {
+              <div className={"glossary-reference-grid transition-opacity duration-200 " + (isLoading ? "pointer-events-none opacity-60" : "")}>
+                {visibleGlossaryItems.map((glossary, glossaryIndex) => {
+                  const isTemplate = isSessionGlossaryTemplate(glossary);
                   const isSelected = selectedIds.has(glossary.id);
+                  const isTourItem = activeTab === "mine" && glossaryIndex === 0;
                   const createdAt = glossary.createdAt || glossary.updatedAt;
 
                   return (
@@ -404,6 +538,7 @@ export function GlossaryListView() {
                       aria-label={glossary.name}
                       aria-selected={isSelected}
                       className={"glossary-reference-card glossary-reference-reveal group cursor-pointer focus-visible:outline-none " + (isSelected ? "is-selected" : "")}
+                      data-glossary-list-tour={isTourItem ? "item" : undefined}
                       key={glossary.id}
                       onClick={(event) => {
                         if ((event.target as HTMLElement).closest("a, button, input, [role='checkbox']")) return;
@@ -423,7 +558,7 @@ export function GlossaryListView() {
                       <span aria-hidden="true" className="glossary-reference-surface" />
                       <span aria-hidden="true" className="glossary-reference-bookmark" />
 
-                      <div className="relative z-[5] flex h-full min-w-0 flex-col px-5 pb-4 pt-6">
+                      <div className="glossary-lazy-content relative z-[5] flex h-full min-w-0 flex-col px-5 pb-4 pt-6">
                         <div className="flex min-w-0 items-start justify-between gap-3 pl-7">
                           <h2 className="line-clamp-2 min-w-0 text-[18px] font-bold leading-[1.35] text-[#142147]" title={glossary.name}>
                             {glossary.name}
@@ -437,6 +572,7 @@ export function GlossaryListView() {
                         </div>
 
                         <p className="mt-2 line-clamp-2 min-h-[38px] text-[12px] leading-[19px] text-[#5f687c]">
+                          {isTemplate ? <span className="mr-1.5 rounded-full bg-[#eaf1ff] px-2 py-0.5 font-bold text-[#31548a]">{copy.common.sampleData}</span> : null}
                           {glossary.description || copy.common.noDescription}
                         </p>
 
@@ -477,6 +613,7 @@ export function GlossaryListView() {
                           <Link
                             aria-label={copy.list.open}
                             className="glossary-reference-action"
+                            data-glossary-list-tour={isTourItem ? "info" : undefined}
                             href={"/dashboard/glossaries/" + glossary.id}
                             title={copy.list.open}
                           >
@@ -489,6 +626,7 @@ export function GlossaryListView() {
                               <Link
                                 aria-label={copy.detail.edit}
                                 className="glossary-reference-action"
+                                data-glossary-list-tour={isTourItem ? "edit" : undefined}
                                 href={"/dashboard/glossaries/" + glossary.id + "/edit"}
                                 title={copy.detail.edit}
                               >
@@ -497,7 +635,8 @@ export function GlossaryListView() {
                               </Link>
                               <button
                                 aria-label={copy.list.share}
-                                className="glossary-reference-action"
+                                className="glossary-reference-action disabled:cursor-not-allowed disabled:opacity-70"
+                                data-glossary-list-tour={isTourItem ? "share" : undefined}
                                 onClick={() => setShareGlossary(glossary)}
                                 title={copy.list.share}
                                 type="button"
@@ -565,6 +704,8 @@ export function GlossaryListView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <GlossaryGuidedTour locale={locale} phase="list" />
     </GlossaryPageFrame>
   );
 }

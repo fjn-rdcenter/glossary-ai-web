@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import {useLocale} from "next-intl";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {TranslationService} from "@/api";
 import {FileTypeTile} from "@/components/file-type-tile";
 import {LanguageDisplay} from "@/components/language-display";
@@ -40,6 +40,32 @@ type HistoryJob = TranslationHistoryResponse & {
 const PAGE_SIZE = 10;
 type HistoryStatusFilter = "all" | "processing" | Exclude<StatusEnum, "pending" | "translating">;
 const statusOptions: Exclude<HistoryStatusFilter, "all">[] = ["completed", "processing", "failed", "cancelled"];
+
+type HistoryPageCacheEntry = {
+  jobs: HistoryJob[];
+  total: number;
+  totalPages: number;
+};
+
+function getHistoryCacheKey(
+  status: HistoryStatusFilter,
+  search: string,
+  dateFrom: string,
+  dateTo: string,
+  page: number,
+) {
+  return JSON.stringify([status, search, dateFrom, dateTo, page]);
+}
+
+function setHistoryCacheEntry(cache: Map<string, HistoryPageCacheEntry>, key: string, entry: HistoryPageCacheEntry) {
+  cache.delete(key);
+  cache.set(key, entry);
+
+  if (cache.size > 32) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey) cache.delete(oldestKey);
+  }
+}
 
 const historyCopy = {
   vi: {
@@ -299,7 +325,7 @@ function clampProgress(progress: number | undefined) {
 }
 
 function getStatusLabel(job: HistoryJob, copy: (typeof historyCopy)[HistoryLocale]) {
-  if (job.status === "pending" || job.status === "translating") {
+  if (job.status === "translating") {
     return copy.statuses[job.status] + " (" + clampProgress(job.progress) + "%)";
   }
 
@@ -390,6 +416,9 @@ export function HistoryView() {
   const [cancelJobId, setCancelJobId] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<HistoryJob | null>(null);
   const [previewJob, setPreviewJob] = useState<HistoryJob | null>(null);
+  const historyCacheRef = useRef<Map<string, HistoryPageCacheEntry>>(new Map());
+  const historyRequestIdRef = useRef(0);
+  const [showInitialSkeleton, setShowInitialSkeleton] = useState(false);
 
   useEffect(() => {
     const requestedStatus = new URLSearchParams(window.location.search).get("status");
@@ -406,7 +435,29 @@ export function HistoryView() {
     return () => window.clearTimeout(timeout);
   }, [search]);
 
+  const isInitialLoading = isLoading && jobs.length === 0;
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      setShowInitialSkeleton(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setShowInitialSkeleton(true), 150);
+    return () => window.clearTimeout(timer);
+  }, [isInitialLoading]);
+
   const fetchHistory = useCallback(async (silent = false) => {
+    const requestId = ++historyRequestIdRef.current;
+    const cacheKey = getHistoryCacheKey(statusFilter, debouncedSearch, dateFrom, dateTo, page);
+    const cachedPage = historyCacheRef.current.get(cacheKey);
+
+    if (!silent && cachedPage) {
+      setJobs(cachedPage.jobs);
+      setTotal(cachedPage.total);
+      setTotalPages(cachedPage.totalPages);
+    }
+
     if (!silent) {
       setIsLoading(true);
       setLoadError("");
@@ -445,6 +496,8 @@ export function HistoryView() {
           fetchAllByStatus("pending"),
           fetchAllByStatus("translating"),
         ]);
+        if (requestId !== historyRequestIdRef.current) return;
+
         const processingJobs = Array.from(
           new Map([...pendingJobs, ...translatingJobs].map((job) => [job.id, job])).values(),
         ).sort((currentJob, nextJob) => (
@@ -452,10 +505,26 @@ export function HistoryView() {
         ));
         const processingPages = Math.max(1, Math.ceil(processingJobs.length / PAGE_SIZE));
         const currentPage = Math.min(page, processingPages);
-        const startIndex = (currentPage - 1) * PAGE_SIZE;
+
+        for (let cachePage = 1; cachePage <= processingPages; cachePage += 1) {
+          const startIndex = (cachePage - 1) * PAGE_SIZE;
+          setHistoryCacheEntry(
+            historyCacheRef.current,
+            getHistoryCacheKey(statusFilter, debouncedSearch, dateFrom, dateTo, cachePage),
+            {
+              jobs: processingJobs.slice(startIndex, startIndex + PAGE_SIZE),
+              total: processingJobs.length,
+              totalPages: processingPages,
+            },
+          );
+        }
+
+        const currentEntry = historyCacheRef.current.get(
+          getHistoryCacheKey(statusFilter, debouncedSearch, dateFrom, dateTo, currentPage),
+        );
 
         if (currentPage !== page) setPage(currentPage);
-        setJobs(processingJobs.slice(startIndex, startIndex + PAGE_SIZE));
+        setJobs(currentEntry?.jobs || []);
         setTotal(processingJobs.length);
         setTotalPages(processingPages);
       } else {
@@ -465,21 +534,54 @@ export function HistoryView() {
           size: PAGE_SIZE,
           status: statusFilter === "all" ? undefined : statusFilter,
         });
+        if (requestId !== historyRequestIdRef.current) return;
 
-        setJobs((response.items || []) as HistoryJob[]);
-        setTotal(response.total || 0);
-        setTotalPages(Math.max(1, response.pages || 1));
+        const pages = Math.max(1, response.pages || 1);
+        const entry = {
+          jobs: (response.items || []) as HistoryJob[],
+          total: response.total || 0,
+          totalPages: pages,
+        };
+        setHistoryCacheEntry(historyCacheRef.current, cacheKey, entry);
+
+        if (page > pages) {
+          setPage(pages);
+          return;
+        }
+
+        setJobs(entry.jobs);
+        setTotal(entry.total);
+        setTotalPages(pages);
+
+        if (page < pages) {
+          const nextPage = page + 1;
+          const nextCacheKey = getHistoryCacheKey(statusFilter, debouncedSearch, dateFrom, dateTo, nextPage);
+
+          if (!historyCacheRef.current.has(nextCacheKey)) {
+            void TranslationService.getTranslationHistory({
+              ...sharedParams,
+              page: nextPage,
+              size: PAGE_SIZE,
+              status: statusFilter === "all" ? undefined : statusFilter,
+            })
+              .then((nextResponse) => {
+                if (requestId !== historyRequestIdRef.current) return;
+                setHistoryCacheEntry(historyCacheRef.current, nextCacheKey, {
+                  jobs: (nextResponse.items || []) as HistoryJob[],
+                  total: nextResponse.total || 0,
+                  totalPages: Math.max(1, nextResponse.pages || 1),
+                });
+              })
+              .catch(() => undefined);
+          }
+        }
       }
     } catch (error) {
+      if (requestId !== historyRequestIdRef.current) return;
       console.error("Failed to load translation history", error);
-      if (!silent) {
-        setJobs([]);
-        setTotal(0);
-        setTotalPages(1);
-        setLoadError(copy.loadError);
-      }
+      if (!silent) setLoadError(copy.loadError);
     } finally {
-      if (!silent) setIsLoading(false);
+      if (requestId === historyRequestIdRef.current) setIsLoading(false);
     }
   }, [copy.loadError, dateFrom, dateTo, debouncedSearch, page, refreshVersion, statusFilter]);
 
@@ -489,14 +591,14 @@ export function HistoryView() {
   }, [fetchHistory, isStatusFilterReady]);
 
   useEffect(() => {
-    if (!jobs.some((job) => job.status === "pending" || job.status === "translating")) return;
+    if (isLoading || !jobs.some((job) => job.status === "pending" || job.status === "translating")) return;
 
     const interval = window.setInterval(() => {
       void fetchHistory(true);
     }, 4000);
 
     return () => window.clearInterval(interval);
-  }, [fetchHistory, jobs]);
+  }, [fetchHistory, isLoading, jobs]);
 
   const dateRangeLabel = useMemo(() => {
     if (!dateFrom && !dateTo) return copy.dateRange;
@@ -510,7 +612,6 @@ export function HistoryView() {
     : statusFilter === "processing"
       ? copy.statuses.translating
       : copy.statuses[statusFilter];
-
   const handleDownloadOriginal = async (job: HistoryJob) => {
     const actionKey = "source:" + job.id;
     setDownloadKey(actionKey);
@@ -558,6 +659,8 @@ export function HistoryView() {
       setSelectedJob((currentJob) => (
         currentJob?.id === job.id ? {...currentJob, status: "cancelled" as const} : currentJob
       ));
+      historyRequestIdRef.current += 1;
+      historyCacheRef.current.clear();
       await fetchHistory(true);
     } catch (error) {
       console.error("Failed to cancel translation", error);
@@ -684,7 +787,11 @@ export function HistoryView() {
               aria-label={copy.refresh}
               className="flex size-10 shrink-0 items-center justify-center rounded-[7px] border border-[#d8d2e1] bg-white/80 text-[#21175c] shadow-sm transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-wait disabled:opacity-55"
               disabled={isLoading}
-              onClick={() => setRefreshVersion((value) => value + 1)}
+              onClick={() => {
+                historyRequestIdRef.current += 1;
+                historyCacheRef.current.clear();
+                setRefreshVersion((value) => value + 1);
+              }}
               title={copy.refresh}
               type="button"
             >
@@ -700,25 +807,27 @@ export function HistoryView() {
             </div>
           ) : null}
 
-          <div className="mt-5 overflow-hidden rounded-[8px] border border-[#ddd7e7] bg-white/78 shadow-[0_16px_45px_rgba(33,23,92,0.07)] backdrop-blur-xl">
-            <div className="list-table-viewport">
-                 <table className="w-full min-w-[1170px] table-fixed border-collapse">
+          <div className="relative mt-5 overflow-hidden rounded-[8px] border border-[#ddd7e7] bg-white/78 shadow-[0_16px_45px_rgba(33,23,92,0.07)] backdrop-blur-xl">
+            {isLoading && !isInitialLoading ? <span aria-hidden="true" className="list-loading-progress" /> : null}
+            <div className="history-table-viewport list-table-viewport">
+              <table className="w-full min-w-[1240px] table-fixed border-collapse">
                 <thead className="bg-[#f7f5f9]">
-                  <tr className="h-12 bg-[#f7f5f9] text-[11px] font-bold uppercase text-[#6d6674]">
-                    <th className="w-[270px] px-8 text-left">{copy.document}</th>
-                    <th className="w-[110px] px-2 text-center">{copy.status}</th>
-                    <th className="w-[125px] px-2 text-center">{copy.sourceLanguage}</th>
-                    <th className="w-[125px] px-2 text-center">{copy.targetLanguage}</th>
-                    <th className="w-[120px] px-2 text-center">{copy.date}</th>
-                     <th className="w-[340px] px-0 text-center">{copy.actions}</th>
-                    <th className="sticky right-0 z-[2] w-[80px] bg-inherit px-1 text-center">
-                      <span className="sr-only">{copy.cancel}</span>
-                    </th>
+                  <tr className="h-12 whitespace-nowrap bg-[#f7f5f9] text-[11px] font-bold uppercase text-[#6d6674]">
+                    <th className="w-[23%] px-8 text-left">{copy.document}</th>
+                    <th className="w-[10%] px-2 text-center">{copy.status}</th>
+                    <th className="w-[11%] px-2 text-center">{copy.sourceLanguage}</th>
+                    <th className="w-[11%] px-2 text-center">{copy.targetLanguage}</th>
+                    <th className="w-[10%] px-2 text-center">{copy.date}</th>
+                    <th className="w-[35%] px-0 text-center">{copy.actions}</th>
                   </tr>
                 </thead>
-                <tbody aria-busy={isLoading}>
-                  {isLoading ? (
-                    Array.from({length: 5}, (_, index) => (
+                <tbody
+                  aria-busy={isLoading}
+                  className={"transition-opacity duration-200 " + (isLoading && !isInitialLoading ? "pointer-events-none opacity-60" : "")}
+                >
+                  {isInitialLoading ? (
+                    showInitialSkeleton ? (
+                    Array.from({length: 1}, (_, index) => (
                       <tr aria-hidden="true" className="history-record-row bg-[#fffdfc]" key={index}>
                         <td className="px-8 py-4">
                           <div className="flex items-center gap-3.5">
@@ -734,37 +843,43 @@ export function HistoryView() {
                         <td className="px-4 py-4"><Skeleton className="mx-auto h-4 w-24" /></td>
                         <td className="px-4 py-4"><Skeleton className="mx-auto h-3 w-28" /></td>
                         <td className="px-0 py-4">
-                          <div className="mx-auto grid w-[300px] grid-cols-[124px_124px_36px] gap-2">
+                          <div className="mx-auto grid w-[424px] grid-cols-[124px_124px_36px_36px_72px] gap-2">
                             <Skeleton className="h-9 w-[124px] rounded-[6px]" />
                             <Skeleton className="h-9 w-[124px] rounded-[6px]" />
                             <Skeleton className="size-9 rounded-[6px]" />
+                            <Skeleton className="size-9 rounded-[6px]" />
+                            <Skeleton className="h-9 w-[72px] rounded-[6px]" />
                           </div>
-                        </td>
-                        <td className="sticky right-0 z-[1] bg-inherit px-1 py-4">
-                          <Skeleton className="mx-auto h-9 w-[72px] rounded-[6px] opacity-0" />
                         </td>
                       </tr>
                     ))
+                    ) : (
+                      <tr aria-hidden="true">
+                        <td className="h-[68px]" colSpan={6} />
+                      </tr>
+                    )
                   ) : jobs.length === 0 ? (
                     <tr>
-                      <td className="content-reveal h-[260px] text-center text-[12px] font-medium text-[#676170]" colSpan={7}>
+                      <td className="content-reveal h-[260px] text-center text-[12px] font-medium text-[#676170]" colSpan={6}>
                         <FileText aria-hidden="true" className="mx-auto mb-3 size-7 text-[#a49dab]" />
                         {copy.empty}
                       </td>
                     </tr>
                   ) : (
-                    jobs.map((job) => {
+                    jobs.map((job, jobIndex) => {
+                      const isTourItem = jobIndex === 0;
                       const documentName = getDocumentName(job);
                       const documentSize = getDocumentSize(job);
                       const sourceActionKey = "source:" + job.id;
                       const targetActionKey = "target:" + job.id;
                       const isTranslatedReady = job.status === "completed";
-                      const canCancel = job.status === "translating";
+                      const canCancel = job.status === "pending" || job.status === "translating";
 
                       return (
                         <tr
                           aria-label={copy.viewDetails + ": " + documentName}
                           className="history-record-row group content-reveal cursor-pointer bg-[#fffdfc] transition-colors hover:bg-[#fff7f2] focus-visible:bg-[#fff7f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f06317]/60"
+                          data-history-tour={isTourItem ? "item" : undefined}
                           key={job.id}
                           onClick={() => {
                             setDownloadError("");
@@ -790,25 +905,28 @@ export function HistoryView() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <span className={"inline-flex rounded-full px-3 py-1.5 text-[11px] font-bold " + getStatusClassName(job.status)}>
+                            <span className={"inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-bold " + getStatusClassName(job.status)}>
                               {getStatusLabel(job, copy)}
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-center text-[13px]">
+                          <td className="whitespace-nowrap px-4 py-4 text-center text-[13px]">
                             <LanguageDisplay className="justify-center" language={job.sourceLanguage} locale={locale} nameClassName="font-semibold text-[#302a3a]" />
                           </td>
-                          <td className="px-4 py-4 text-center text-[13px]">
+                          <td className="whitespace-nowrap px-4 py-4 text-center text-[13px]">
                             <LanguageDisplay className="justify-center" language={job.targetLanguage} locale={locale} nameClassName="font-semibold text-[#302a3a]" />
                           </td>
-                          <td className="px-4 py-4 text-center text-[12px] font-medium text-[#686270]">
+                          <td className="whitespace-nowrap px-4 py-4 text-center text-[12px] font-medium text-[#686270]">
                             {formatDateTime(job.startedAt, locale, copy.unknown)}
                           </td>
                           <td className="px-0 py-4">
-                           <div className="mx-auto grid w-[340px] grid-cols-[124px_124px_36px_36px] items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                            <div className="mx-auto grid w-[424px] grid-cols-[124px_124px_36px_36px_72px] items-center gap-2" onClick={(event) => event.stopPropagation()}>
                               <button
                                 className="inline-flex h-9 w-[124px] items-center justify-center gap-2 whitespace-nowrap rounded-[6px] border border-[#d7d0e0] bg-white px-2 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#6750a4] hover:bg-[#f8f5ff] disabled:cursor-wait disabled:opacity-55"
+                                data-history-tour={isTourItem ? "source-file" : undefined}
                                 disabled={downloadKey !== null}
-                                onClick={() => void handleDownloadOriginal(job)}
+                                onClick={() => {
+                                  void handleDownloadOriginal(job);
+                                }}
                                 type="button"
                               >
                                 {downloadKey === sourceActionKey ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin" /> : <Download aria-hidden="true" className="size-4" />}
@@ -816,8 +934,11 @@ export function HistoryView() {
                               </button>
                               <button
                                 className="inline-flex h-9 w-[124px] items-center justify-center gap-2 whitespace-nowrap rounded-[6px] border border-[#d7d0e0] bg-white px-2 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#6750a4] hover:bg-[#f8f5ff] disabled:cursor-not-allowed disabled:bg-[#f5f3f7] disabled:text-[#a29ca8]"
+                                data-history-tour={isTourItem ? "translated-file" : undefined}
                                 disabled={!isTranslatedReady || downloadKey !== null}
-                                onClick={() => void handleDownloadTranslated(job)}
+                                onClick={() => {
+                                  void handleDownloadTranslated(job);
+                                }}
                                 title={isTranslatedReady ? copy.translatedFile : copy.notReady}
                                 type="button"
                               >
@@ -826,7 +947,8 @@ export function HistoryView() {
                               </button>
                               <button
                                 aria-label={copy.viewDetails + ": " + documentName}
-                                className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
+                                className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:opacity-55"
+                                data-history-tour={isTourItem ? "info" : undefined}
                                 onClick={() => {
                                   setDownloadError("");
                                   setSelectedJob(job);
@@ -839,30 +961,28 @@ export function HistoryView() {
                               <button
                                 aria-label={copy.preview + ": " + documentName}
                                 className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:bg-[#f5f3f7] disabled:text-[#a29ca8]"
+                                data-history-tour={isTourItem ? "preview" : undefined}
                                 disabled={!isTranslatedReady}
-                                onClick={() => setPreviewJob(job)}
+                                onClick={() => {
+                                  setPreviewJob(job);
+                                }}
                                 title={isTranslatedReady ? copy.preview : copy.notReady}
                                 type="button"
                               >
                                 <Eye aria-hidden="true" className="size-[17px]" />
                               </button>
+                              <button
+                                data-history-tour={isTourItem ? "cancel" : undefined}
+                                className="inline-flex h-9 w-[72px] items-center justify-center gap-1.5 rounded-[6px] border border-[#f4aaa2] bg-white px-2 text-[11px] font-bold text-[#b42318] transition-colors hover:bg-[#fff1ef] disabled:cursor-not-allowed disabled:border-[#ddd7e7] disabled:bg-[#f5f3f7] disabled:text-[#aaa4af]"
+                                disabled={!canCancel || cancelJobId !== null}
+                                onClick={() => void handleCancelTranslation(job)}
+                                title={copy.cancel}
+                                type="button"
+                              >
+                                {cancelJobId === job.id ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin" /> : <X aria-hidden="true" className="size-4" />}
+                                {cancelJobId === job.id ? copy.cancelling : copy.cancel}
+                              </button>
                             </div>
-                          </td>
-                          <td className="sticky right-0 z-[1] bg-inherit px-1 py-4 transition-colors">
-                            <button
-                              aria-hidden={!canCancel}
-                              className={"mx-auto inline-flex h-9 w-[72px] items-center justify-center gap-1.5 rounded-[6px] border border-[#f4aaa2] bg-white px-2 text-[11px] font-bold text-[#b42318] transition-all hover:bg-[#fff1ef] " + (canCancel ? (cancelJobId !== null ? "cursor-wait opacity-55" : "opacity-100") : "pointer-events-none opacity-0")}
-                              disabled={!canCancel || cancelJobId !== null}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleCancelTranslation(job);
-                              }}
-                              tabIndex={canCancel ? 0 : -1}
-                              type="button"
-                            >
-                              {cancelJobId === job.id ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin" /> : <X aria-hidden="true" className="size-4" />}
-                              {cancelJobId === job.id ? copy.cancelling : copy.cancel}
-                            </button>
                           </td>
                         </tr>
                       );

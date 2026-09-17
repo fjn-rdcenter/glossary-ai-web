@@ -18,6 +18,10 @@ import {
   GlossaryPagination,
   GlossaryShareDialog,
 } from "../glossary-shared";
+import {
+  getOrCreateSessionGlossaryTemplate,
+  isSessionGlossaryTemplate,
+} from "../glossary-session-template";
 
 const FETCH_SIZE = 100;
 const TERMS_PER_PAGE = 10;
@@ -96,6 +100,13 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
       setErrorMessage("");
 
       try {
+        if (isSessionGlossaryTemplate(glossaryId)) {
+          const sessionGlossary = getOrCreateSessionGlossaryTemplate(locale);
+          if (!sessionGlossary) throw new Error("Session glossary template is unavailable");
+          if (isMounted) setGlossary(sessionGlossary);
+          return;
+        }
+
         const firstPage = await GlossaryService.getGlossaryById(glossaryId, {
           page: 1,
           size: FETCH_SIZE,
@@ -147,7 +158,7 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
     return () => {
       isMounted = false;
     };
-  }, [copy.detail.loadError, glossaryId]);
+  }, [copy.detail.loadError, glossaryId, locale]);
 
   const filteredTerms = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -198,9 +209,16 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
 
           <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h1 id="glossary-detail-title" className="break-words text-[30px] font-bold leading-tight text-[#21175c]">
-                {glossary.name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 id="glossary-detail-title" className="break-words text-[30px] font-bold leading-tight text-[#21175c]">
+                  {glossary.name}
+                </h1>
+                {isSessionGlossaryTemplate(glossary) ? (
+                  <span className="rounded-full bg-[#eaf1ff] px-2.5 py-1 text-[11px] font-bold text-[#31548a]">
+                    {copy.common.sampleData}
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
@@ -283,9 +301,11 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
                 </div>
 
                 {visibleTerms.length > 0 ? (
-                  visibleTerms.map((term) => (
+                  visibleTerms.map((term, index) => (
                     <article
-                      className="grid min-h-[62px] grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-center border-t border-[#ebe7ef] px-6 py-3 first:border-t-0"
+                      className={`grid min-h-[62px] grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-center border-t border-[#ebe7ef] px-6 py-3 first:border-t-0 ${
+                        index % 2 === 0 ? "bg-white" : "bg-[#f7f7f9]"
+                      }`}
                       key={term.id}
                     >
                       <span className="min-w-0 break-words text-[12px] font-semibold text-[#21175c]">{term.source}</span>

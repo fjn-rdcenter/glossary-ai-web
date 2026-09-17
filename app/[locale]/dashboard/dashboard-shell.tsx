@@ -49,6 +49,7 @@ import {Link, useRouter} from "@/i18n/routing";
 import {usePendingUploadStore} from "@/lib/pending-upload-store";
 import type {GlossaryResponse, StatusEnum, TranslationHistoryResponse, UserResponse} from "@/lib/types";
 import {getGlossaryLanguageFlag, glossaryCopy} from "./glossaries/glossary-copy";
+import {DashboardGuidedTour} from "./dashboard-guided-tour";
 
 const USERNAME_STORAGE_KEY = "glossaryai_username";
 const USER_INFO_STORAGE_KEY = "glossaryai_user_info";
@@ -381,6 +382,7 @@ const dashboardStatusLabels: Record<AppLocale, Record<StatusEnum, string>> = {
 };
 
 const fileFormatTypes = ["PDF", "DOCX", "PPTX", "XLSX", "HTML", "MD", "TXT", "PNG", "JPEG"] as const;
+const FILE_FORMAT_BADGE_LAYOUT_HEIGHT = 1440;
 const dashboardAcceptedFileExtensions = new Set(["pdf", "docx", "pptx", "xlsx", "html", "htm", "md", "txt", "png", "jpeg", "jpg"]);
 
 function isSupportedDashboardFile(file: File) {
@@ -445,6 +447,13 @@ const backgroundFileFormats = fileFormatBadgePositions.map((position, index) => 
   ...position,
 }));
 
+function getFileFormatBadgeTop(position: FileFormatBadgePosition) {
+  const ratio = position.top
+    ? Number.parseFloat(position.top) / 100
+    : 1 - Number.parseFloat(position.bottom ?? "0") / 100;
+
+  return Math.round(FILE_FORMAT_BADGE_LAYOUT_HEIGHT * ratio) + "px";
+}
 export function FileFormatBadgeBackground() {
   return (
     <div aria-hidden="true" className="auth-file-format-background">
@@ -459,11 +468,10 @@ export function FileFormatBadgeBackground() {
               "--badge-color": fileFormat.color,
               backgroundColor: `${fileFormat.color}14`,
               borderColor: fileFormat.color,
-              bottom: fileFormat.bottom,
               color: fileFormat.color,
               left: fileFormat.left,
               right: fileFormat.right,
-              top: fileFormat.top,
+              top: getFileFormatBadgeTop(fileFormat),
             } as CSSProperties
           }
         >
@@ -561,7 +569,7 @@ export function DashboardHeader({
   );
 
   return (
-    <header className="relative z-50 flex h-[68px] items-center border-b border-[#d5d0dc] bg-white/78 px-3 backdrop-blur-xl sm:px-8">
+    <header className="relative z-50 flex h-[var(--dashboard-header-height)] items-center border-b border-[#d5d0dc] bg-white/78 px-3 backdrop-blur-xl sm:px-8">
       <Link aria-label="GlossaryAI home" className="flex shrink-0 items-center gap-1" href="/dashboard">
         <Image
           alt="GlossaryAI logo"
@@ -603,6 +611,7 @@ export function DashboardHeader({
           <button
             aria-label={copy.quickStart}
             className="login-submit-button inline-flex h-10 cursor-not-allowed items-center justify-center rounded-[10px] px-3.5 text-[13px] font-bold text-white opacity-45"
+            data-dashboard-tour="new-translation"
             disabled
             type="button"
           >
@@ -611,6 +620,7 @@ export function DashboardHeader({
         ) : (
           <Link
             className="login-submit-button inline-flex h-10 items-center justify-center rounded-[10px] px-3.5 text-[13px] font-bold text-white"
+            data-dashboard-tour="new-translation"
             href="/dashboard/translate"
           >
             {newTranslationContent}
@@ -673,7 +683,7 @@ export function DashboardFooter() {
   );
 }
 
-export function DashboardShell() {
+export function DashboardShell({mediaStorage}: {mediaStorage: string}) {
   const locale = useLocale();
   const currentLocale = isAppLocale(locale) ? locale : "en";
   const copy = dashboardCopy[currentLocale];
@@ -758,7 +768,7 @@ export function DashboardShell() {
       <DashboardHeader activeNav="home" />
 
       <main
-        className="dashboard-page-body relative z-10 flex flex-1 flex-col px-6 pb-10 pt-20 sm:px-10 lg:pb-14 lg:pt-24"
+        className="dashboard-page-body relative z-10 flex flex-1 flex-col px-6 pb-10 pt-8 sm:px-10 lg:pb-14 lg:pt-8"
         data-dashboard-page="home"
       >
         <section className="mx-auto w-full max-w-[1360px]">
@@ -769,9 +779,10 @@ export function DashboardShell() {
           <DashboardDataPanel
             icon={History}
             title={copy.recentTranslations}
+            tourTarget="recent-translations"
           >
             {recentTranslations.length > 0 ? (
-              <div className="content-reveal space-y-2">
+              <div className="content-reveal flex flex-1 flex-col gap-2">
                 {recentTranslations.slice(0, 4).map((translation) => (
                   <DashboardRecentTranslationItem
                     key={translation.id}
@@ -781,7 +792,7 @@ export function DashboardShell() {
                   />
                 ))}
                 <Link
-                  className="flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-dashed border-[#c9bfda] bg-white/55 px-4 text-[13px] font-bold text-[#f06317] transition-colors hover:border-[#f06317] hover:bg-[#fff7f2] hover:text-[#21175c]"
+                  className="mt-auto flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-dashed border-[#c9bfda] bg-white/55 px-4 text-[13px] font-bold text-[#f06317] transition-colors hover:border-[#f06317] hover:bg-[#fff7f2] hover:text-[#21175c]"
                   href="/dashboard/history"
                 >
                   {copy.viewAll}
@@ -796,9 +807,10 @@ export function DashboardShell() {
           <DashboardDataPanel
             icon={BookOpenText}
             title={copy.glossaryList}
+            tourTarget="my-glossaries"
           >
             {recentGlossaries.length > 0 ? (
-              <div className="content-reveal grid grid-cols-1 gap-x-3 gap-y-5 pt-3 sm:grid-cols-2">
+              <div className="content-reveal grid grid-cols-1 gap-x-3 gap-y-5 pb-3 pt-3 sm:grid-cols-2">
                 {recentGlossaries.map((glossary) => (
                   <DashboardGlossaryItem
                     glossary={glossary}
@@ -813,7 +825,7 @@ export function DashboardShell() {
               <DashboardEmptyPanel message={copy.glossaryListEmpty} />
             )}
             <Link
-              className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-[8px] border border-dashed border-[#c9bfda] bg-white/55 px-4 text-[13px] font-bold text-[#f06317] transition-colors hover:border-[#f06317] hover:bg-[#fff7f2] hover:text-[#21175c]"
+              className="mt-auto flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-dashed border-[#c9bfda] bg-white/55 px-4 text-[13px] font-bold text-[#f06317] transition-colors hover:border-[#f06317] hover:bg-[#fff7f2] hover:text-[#21175c]"
               href="/dashboard/glossaries"
             >
               {copy.viewAll}
@@ -824,6 +836,7 @@ export function DashboardShell() {
       </main>
 
       <DashboardFooter />
+      <DashboardGuidedTour locale={currentLocale} mediaStorage={mediaStorage} />
       <TranslationDetailDialog
         job={selectedTranslation}
         locale={currentLocale}
@@ -984,7 +997,7 @@ function DashboardHeroDropzone({
       <input {...getInputProps({"aria-label": copy.dropFilesTitle})} />
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_720px] xl:items-center">
         <div className="min-w-0 text-center xl:text-left">
-          <h1 className="dashboard-workspace-greeting w-full max-w-full text-balance whitespace-normal break-words text-[30px] font-bold leading-tight sm:text-[40px] xl:text-[42px]">
+          <h1 className="dashboard-workspace-greeting w-full max-w-full whitespace-normal break-words text-[30px] font-bold leading-tight sm:text-[40px] xl:text-[42px]">
             {copy.workspaceGreeting}
           </h1>
         </div>
@@ -996,6 +1009,7 @@ function DashboardHeroDropzone({
             return (
               <Link
                 className="group min-h-[126px] rounded-[14px] border border-[#d5d0dc] bg-white/76 p-4 shadow-[0_10px_24px_rgba(33,23,92,0.08)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f16418] hover:bg-[#fff7f2] hover:shadow-[0_14px_28px_rgba(241,100,24,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f16418]"
+                data-dashboard-tour={`stat-${stat.key}`}
                 href={stat.href}
                 key={stat.key}
               >
@@ -1028,6 +1042,7 @@ function DashboardHeroDropzone({
               ? "dashboard-active-dropzone border-[#f06317] bg-[#fff0e6]"
               : "border-[#8a82cb] bg-white/55 hover:border-[#f06317] hover:bg-[#fff9f5]/80"
         }`}
+        data-dashboard-tour="drop-files"
         disabled={isFileLimitReached}
         onClick={() => {
           if (!isFileLimitReached) {
@@ -1086,13 +1101,18 @@ function DashboardDataPanel({
   children,
   icon: Icon,
   title,
+  tourTarget,
 }: {
   children: ReactNode;
   icon: LucideIcon;
   title: string;
+  tourTarget?: string;
 }) {
   return (
-    <article className="h-full w-full min-w-0 rounded-[16px] border border-white/70 bg-white/74 p-4 shadow-[0_14px_38px_rgba(33,23,92,0.09)] backdrop-blur-xl md:p-5">
+    <article
+      className="flex h-full w-full min-w-0 flex-col rounded-[16px] border border-white/70 bg-white/74 p-4 shadow-[0_14px_38px_rgba(33,23,92,0.09)] backdrop-blur-xl md:p-5"
+      data-dashboard-tour={tourTarget}
+    >
       <div className="mb-3.5 flex items-center gap-4">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-[10px] bg-[#f7f2f9] text-[#21175c]">
@@ -1173,7 +1193,7 @@ function DashboardGlossaryItem({
         router.push(glossaryHref);
       }}
       role="link"
-      style={{height: 156, isolation: "isolate", marginTop: 4, minHeight: 156, minWidth: 0, position: "relative"}}
+      style={{height: 168, isolation: "isolate", marginTop: 4, minHeight: 168, minWidth: 0, position: "relative"}}
       tabIndex={0}
     >
       <span
