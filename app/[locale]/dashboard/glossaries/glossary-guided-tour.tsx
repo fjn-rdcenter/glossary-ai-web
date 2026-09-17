@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import {createPortal} from "react-dom";
 import {
   ACTIONS,
   EVENTS,
@@ -682,28 +683,33 @@ export function GlossaryGuidedTour({
         />
       ) : null}
 
-      <button
-        aria-label={copy.labels.launcherLabel[phase]}
-        aria-pressed={run}
-        className="dashboard-tour-launcher fixed bottom-5 left-5 z-[70] flex size-12 items-center justify-center rounded-[12px] border border-[#b8cef2] bg-[#dbeafe] shadow-[0_10px_24px_rgba(33,23,92,0.18)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-[#cfe2ff] hover:shadow-[0_13px_28px_rgba(33,23,92,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] focus-visible:ring-offset-2"
-        onClick={restartTour}
-        title={copy.labels.launcherLabel[phase]}
-        type="button"
-      >
-        <Lightbulb
-          aria-hidden="true"
-          className="size-6"
-          stroke={`url(#${bulbGradientId})`}
-          strokeWidth={2.2}
-        >
-          <defs key={`glossary-${phase}-tour-bulb-gradient-definition`}>
-            <linearGradient gradientUnits="userSpaceOnUse" id={bulbGradientId} x1="3" x2="21" y1="3" y2="21">
-              <stop offset="0%" stopColor="#f06317" />
-              <stop offset="100%" stopColor="#21175c" />
-            </linearGradient>
-          </defs>
-        </Lightbulb>
-      </button>
+      {isClientReady
+        ? createPortal(
+            <button
+              aria-label={copy.labels.launcherLabel[phase]}
+              aria-pressed={run}
+              className="dashboard-tour-launcher fixed bottom-5 left-5 z-[70] flex size-12 items-center justify-center rounded-[12px] border border-[#b8cef2] bg-[#dbeafe] shadow-[0_10px_24px_rgba(33,23,92,0.18)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-[#cfe2ff] hover:shadow-[0_13px_28px_rgba(33,23,92,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] focus-visible:ring-offset-2"
+              onClick={restartTour}
+              title={copy.labels.launcherLabel[phase]}
+              type="button"
+            >
+              <Lightbulb
+                aria-hidden="true"
+                className="size-6"
+                stroke={"url(#" + bulbGradientId + ")"}
+                strokeWidth={2.2}
+              >
+                <defs key={"glossary-" + phase + "-tour-bulb-gradient-definition"}>
+                  <linearGradient gradientUnits="userSpaceOnUse" id={bulbGradientId} x1="3" x2="21" y1="3" y2="21">
+                    <stop offset="0%" stopColor="#f06317" />
+                    <stop offset="100%" stopColor="#21175c" />
+                  </linearGradient>
+                </defs>
+              </Lightbulb>
+            </button>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
