@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   ArrowRight,
   Check,
+  CopyCheck,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -63,6 +64,7 @@ import {
   GlossaryFormView,
   type GlossaryFormInitialValues,
 } from "../glossaries/glossary-form-view";
+import {TranslateGuidedTour} from "./translate-guided-tour";
 import {TranslationPreviewDialog} from "./translation-preview-dialog";
 
 const MAX_FILES = 5;
@@ -83,6 +85,15 @@ type FileTranslationConfig = {
   targetLanguage: SupportedLanguageCode;
   translateImages: boolean;
 };
+
+type BulkConfigSection = "languages" | "options" | "glossaries";
+type BulkApplyFeedback = {canUndo: boolean; message: string};
+type BulkApplyUndo = {configs: Record<string, FileTranslationConfig>};
+
+const cloneFileTranslationConfig = (config: FileTranslationConfig): FileTranslationConfig => ({
+  ...config,
+  selectedGlossaryIds: new Set(config.selectedGlossaryIds),
+});
 
 type WorkflowStep = "configure" | "processing" | "complete";
 type TranslationRunStatus = StatusEnum | "uploading";
@@ -143,6 +154,18 @@ type TranslateCopy = {
   source: string;
   target: string;
   swapLanguages: string;
+  languages: string;
+  applyToOtherFiles: string;
+  noOtherFiles: string;
+  bulkApplyTitle: string;
+  bulkApplyDescription: string;
+  bulkApplyLanguageWarning: string;
+  bulkApplyOptionsWarning: string;
+  bulkApplyGlossaryWarning: string;
+  bulkApplySuccess: string;
+  bulkApplyUndone: string;
+  apply: string;
+  undo: string;
   options: string;
   translateImages: string;
   translateImagesDescription: string;
@@ -223,6 +246,18 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     source: "Gốc",
     target: "Dịch sang",
     swapLanguages: "Đảo ngôn ngữ gốc và ngôn ngữ dịch",
+    languages: "Ngôn ngữ",
+    applyToOtherFiles: "Áp dụng cho {count} tệp khác",
+    noOtherFiles: "Không có tệp phù hợp khác để áp dụng.",
+    bulkApplyTitle: "Áp dụng cấu hình \"{section}\"?",
+    bulkApplyDescription: "Thiết lập của tệp hiện tại sẽ thay thế cấu hình tương ứng ở {count} tệp khác.",
+    bulkApplyLanguageWarning: "Các bộ thuật ngữ đang chọn ở những tệp đó sẽ bị xóa và Keep Source sẽ được tắt.",
+    bulkApplyOptionsWarning: "Keep Source chỉ được bật ở những tệp đã có ít nhất một bộ thuật ngữ.",
+    bulkApplyGlossaryWarning: "Chỉ những tệp có cùng cặp ngôn ngữ mới được áp dụng.",
+    bulkApplySuccess: "Đã áp dụng {section} cho {count} tệp.",
+    bulkApplyUndone: "Đã hoàn tác thay đổi hàng loạt.",
+    apply: "Áp dụng",
+    undo: "Hoàn tác",
     options: "Tùy chọn nâng cao",
     translateImages: "Dịch hình ảnh",
     translateImagesDescription: "Nhận diện và dịch nội dung chữ trong hình ảnh.",
@@ -301,6 +336,18 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     source: "Source",
     target: "Translate to",
     swapLanguages: "Swap source and target languages",
+    languages: "Languages",
+    applyToOtherFiles: "Apply to {count} other files",
+    noOtherFiles: "There are no other compatible files to update.",
+    bulkApplyTitle: "Apply \"{section}\" settings?",
+    bulkApplyDescription: "The current file settings will replace the corresponding configuration in {count} other files.",
+    bulkApplyLanguageWarning: "Selected glossaries in those files will be cleared and Keep Source will be turned off.",
+    bulkApplyOptionsWarning: "Keep Source is enabled only for files that already have at least one glossary.",
+    bulkApplyGlossaryWarning: "Only files with the same language pair will be updated.",
+    bulkApplySuccess: "Applied {section} to {count} files.",
+    bulkApplyUndone: "The bulk change was undone.",
+    apply: "Apply",
+    undo: "Undo",
     options: "Advanced options",
     translateImages: "Translate images",
     translateImagesDescription: "Detect and translate text contained in images.",
@@ -379,6 +426,18 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     source: "原文",
     target: "翻訳先",
     swapLanguages: "原文と翻訳先の言語を入れ替える",
+    languages: "言語",
+    applyToOtherFiles: "他の{count}件に適用",
+    noOtherFiles: "適用できる他のファイルはありません。",
+    bulkApplyTitle: "「{section}」設定を適用しますか？",
+    bulkApplyDescription: "現在のファイル設定で、他の{count}件の対応する設定を上書きします。",
+    bulkApplyLanguageWarning: "対象ファイルで選択中の用語集は解除され、原文保持はオフになります。",
+    bulkApplyOptionsWarning: "原文保持は、用語集が1つ以上選択されているファイルでのみオンになります。",
+    bulkApplyGlossaryWarning: "同じ言語ペアのファイルにのみ適用されます。",
+    bulkApplySuccess: "{section}を{count}件のファイルに適用しました。",
+    bulkApplyUndone: "一括変更を元に戻しました。",
+    apply: "適用",
+    undo: "元に戻す",
     options: "詳細オプション",
     translateImages: "画像を翻訳",
     translateImagesDescription: "画像内の文字を検出して翻訳します。",
@@ -1049,6 +1108,8 @@ export function TranslateConfigure() {
   const pendingFiles = usePendingUploadStore((state) => state.pendingFiles);
   const setPendingFiles = usePendingUploadStore((state) => state.setPendingFiles);
   const [fileConfigs, setFileConfigs] = useState<Record<string, FileTranslationConfig>>({});
+  const [bulkApplySection, setBulkApplySection] = useState<BulkConfigSection | null>(null);
+  const [bulkApplyFeedback, setBulkApplyFeedback] = useState<BulkApplyFeedback | null>(null);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [openLanguageSelect, setOpenLanguageSelect] = useState<"source" | "target" | null>(null);
   const [glossaries, setGlossaries] = useState<GlossaryResponse[]>([]);
@@ -1091,12 +1152,23 @@ export function TranslateConfigure() {
   const translationAttemptsRef = useRef<Record<string, number>>({});
   const translationRunsRef = useRef<Record<string, TranslationRunState>>({});
   const isWorkflowMountedRef = useRef(true);
+  const bulkApplyUndoRef = useRef<BulkApplyUndo | null>(null);
   const isFileLimitReached = pendingFiles.length >= MAX_FILES;
   const uploadedFilesAvailableSlots = Math.max(0, MAX_FILES - pendingFiles.length);
   const selectedUploadedFilesCount = Object.keys(selectedUploadedDocuments).length;
   const selectedFileId = pendingFiles.some((file) => file.id === activeFileId) ? activeFileId : (pendingFiles[0]?.id ?? null);
   const activeFile = pendingFiles.find((file) => file.id === selectedFileId) ?? null;
   const activeConfig = selectedFileId && fileConfigs[selectedFileId] ? fileConfigs[selectedFileId] : createDefaultFileConfig();
+  const otherFileCount = Math.max(0, pendingFiles.length - (selectedFileId ? 1 : 0));
+  const compatibleGlossaryFileCount = pendingFiles.filter((file) => {
+    if (file.id === selectedFileId) return false;
+    const config = fileConfigs[file.id] ?? createDefaultFileConfig();
+    return config.sourceLanguage === activeConfig.sourceLanguage && config.targetLanguage === activeConfig.targetLanguage;
+  }).length;
+  const getBulkApplyTargetCount = (section: BulkConfigSection) =>
+    section === "glossaries" ? compatibleGlossaryFileCount : otherFileCount;
+  const getBulkApplySectionLabel = (section: BulkConfigSection) =>
+    section === "languages" ? copy.languages : section === "options" ? copy.options : copy.glossaries;
   const {keepSourceText, selectedGlossaryIds, sourceLanguage, targetLanguage, translateImages} = activeConfig;
   const hasSelectedGlossary = selectedGlossaryIds.size > 0;
   const canStartTranslation =
@@ -1155,6 +1227,17 @@ export function TranslateConfigure() {
         : (pendingFiles[0]?.id ?? null),
     );
   }, [pendingFiles]);
+
+  useEffect(() => {
+    if (!bulkApplyFeedback) return;
+
+    const timeout = window.setTimeout(() => {
+      setBulkApplyFeedback(null);
+      bulkApplyUndoRef.current = null;
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [bulkApplyFeedback]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -1484,6 +1567,91 @@ export function TranslateConfigure() {
         selectedGlossaryIds: nextSelection,
       };
     });
+  };
+
+  const confirmBulkApply = () => {
+    if (!bulkApplySection || !selectedFileId) {
+      setBulkApplySection(null);
+      return;
+    }
+
+    const section = bulkApplySection;
+    const activeSnapshot = cloneFileTranslationConfig(activeConfig);
+    const targetFiles = pendingFiles.filter((file) => {
+      if (file.id === selectedFileId) return false;
+      if (section !== "glossaries") return true;
+      const config = fileConfigs[file.id] ?? createDefaultFileConfig();
+      return config.sourceLanguage === activeSnapshot.sourceLanguage && config.targetLanguage === activeSnapshot.targetLanguage;
+    });
+
+    if (targetFiles.length === 0) {
+      setBulkApplySection(null);
+      return;
+    }
+
+    setFileConfigs((currentConfigs) => {
+      const nextConfigs = {...currentConfigs};
+      const previousConfigs: Record<string, FileTranslationConfig> = {};
+
+      targetFiles.forEach((file) => {
+        const currentConfig = currentConfigs[file.id] ?? createDefaultFileConfig();
+        previousConfigs[file.id] = cloneFileTranslationConfig(currentConfig);
+
+        if (section === "languages") {
+          nextConfigs[file.id] = {
+            ...currentConfig,
+            keepSourceText: false,
+            selectedGlossaryIds: new Set<string>(),
+            sourceLanguage: activeSnapshot.sourceLanguage,
+            targetLanguage: activeSnapshot.targetLanguage,
+          };
+          return;
+        }
+
+        if (section === "options") {
+          nextConfigs[file.id] = {
+            ...currentConfig,
+            keepSourceText: activeSnapshot.keepSourceText && currentConfig.selectedGlossaryIds.size > 0,
+            translateImages: activeSnapshot.translateImages,
+          };
+          return;
+        }
+
+        nextConfigs[file.id] = {
+          ...currentConfig,
+          keepSourceText: activeSnapshot.selectedGlossaryIds.size > 0 ? currentConfig.keepSourceText : false,
+          selectedGlossaryIds: new Set(activeSnapshot.selectedGlossaryIds),
+        };
+      });
+
+      bulkApplyUndoRef.current = {configs: previousConfigs};
+      return nextConfigs;
+    });
+
+    const sectionLabel = getBulkApplySectionLabel(section);
+    setBulkApplyFeedback({
+      canUndo: true,
+      message: copy.bulkApplySuccess
+        .replace("{section}", sectionLabel)
+        .replace("{count}", String(targetFiles.length)),
+    });
+    setBulkApplySection(null);
+    setGlossaryNotice("");
+  };
+
+  const undoBulkApply = () => {
+    const undoState = bulkApplyUndoRef.current;
+    if (!undoState) return;
+
+    setFileConfigs((currentConfigs) => {
+      const nextConfigs = {...currentConfigs};
+      Object.entries(undoState.configs).forEach(([fileId, config]) => {
+        nextConfigs[fileId] = cloneFileTranslationConfig(config);
+      });
+      return nextConfigs;
+    });
+    bulkApplyUndoRef.current = null;
+    setBulkApplyFeedback({canUndo: false, message: copy.bulkApplyUndone});
   };
 
   const openGlossaryForm = (initialValues: GlossaryFormInitialValues) => {
@@ -2043,6 +2211,32 @@ export function TranslateConfigure() {
     window.location.assign(destination);
   };
 
+  const bulkApplySectionLabel = bulkApplySection ? getBulkApplySectionLabel(bulkApplySection) : "";
+  const bulkApplyTargetCount = bulkApplySection ? getBulkApplyTargetCount(bulkApplySection) : 0;
+  const bulkApplyWarning = bulkApplySection === "languages"
+    ? copy.bulkApplyLanguageWarning
+    : bulkApplySection === "options"
+      ? copy.bulkApplyOptionsWarning
+      : copy.bulkApplyGlossaryWarning;
+  const renderBulkApplyButton = (section: BulkConfigSection) => {
+    const targetCount = getBulkApplyTargetCount(section);
+    const label = copy.applyToOtherFiles.replace("{count}", String(targetCount));
+
+    return (
+      <button
+        aria-label={label}
+        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[7px] border border-[#21175c] bg-white px-3 text-[11px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:bg-[#fff7f2] hover:text-[#d84f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] disabled:cursor-not-allowed disabled:border-[#d8d2e1] disabled:bg-[#f5f3f7] disabled:text-[#aaa4af]"
+        disabled={!activeFile || targetCount === 0}
+        onClick={() => setBulkApplySection(section)}
+        title={targetCount === 0 ? copy.noOtherFiles : label}
+        type="button"
+      >
+        <CopyCheck aria-hidden="true" className="size-4" />
+        {label}
+      </button>
+    );
+  };
+
   const workflowStepIndex = workflowStep === "configure" ? 0 : workflowStep === "processing" ? 1 : 2;
   const stepperItems = [
     {key: "configure", label: copy.configure},
@@ -2081,7 +2275,7 @@ export function TranslateConfigure() {
         className="dashboard-page-body relative z-10 mx-auto w-full max-w-[1600px] flex-1 px-4 pb-12 pt-5 sm:px-6 lg:px-8 xl:px-10"
         data-dashboard-page="translate"
       >
-        <nav aria-label={copy.pageTitle} className="w-full rounded-[8px] border border-[#ddd8e6] bg-white/90 px-2 py-3 shadow-[0_6px_20px_rgba(33,23,92,0.04)] sm:px-8">
+        <nav aria-label={copy.pageTitle} className="w-full rounded-[8px] border border-[#ddd8e6] bg-white/90 px-2 py-3 shadow-[0_6px_20px_rgba(33,23,92,0.04)] sm:px-8" data-translate-tour="progress">
           <ol className="mx-auto grid w-full max-w-[860px] grid-cols-[minmax(0,1fr)_clamp(18px,5vw,72px)_minmax(0,1fr)_clamp(18px,5vw,72px)_minmax(0,1fr)] items-center">
             {stepperItems.map((step, index) => {
               const isCurrent = index === workflowStepIndex;
@@ -2185,6 +2379,7 @@ export function TranslateConfigure() {
                     ? "border-[#f06317] bg-[#fff5ef]"
                     : "border-[#9f96bd] bg-[#fcfaff]"
               } ${isFileLimitReached ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-[#6250a5] hover:bg-[#f9f6ff]"}`}
+              data-translate-tour="drop-files"
               onClick={isFileLimitReached ? undefined : open}
             >
               <input {...getInputProps({"aria-label": copy.dropTitle})} />
@@ -2264,6 +2459,7 @@ export function TranslateConfigure() {
 
             <button
               className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#3d2b83] bg-white px-4 text-[12px] font-bold text-[#30206f] transition-colors hover:border-[#f06317] hover:bg-[#fffaf7] hover:text-[#d84f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] disabled:cursor-not-allowed disabled:opacity-45"
+              data-translate-tour="uploaded-files"
               disabled={isFileLimitReached}
               onClick={openUploadedFilesDialog}
               type="button"
@@ -2287,7 +2483,12 @@ export function TranslateConfigure() {
               </h2>
             </div>
 
-            <div className="mt-5 grid grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)] items-end gap-2 sm:gap-3">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-[16px] font-bold text-[#30265c]">{copy.languages}</h3>
+              {renderBulkApplyButton("languages")}
+            </div>
+
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)] items-end gap-2 sm:gap-3" data-translate-tour="language-pair">
               <div className="min-w-0">
                 <Label className="mb-2 block text-[12px] font-bold text-[#4c4655]">{copy.source}</Label>
                 <Select disabled={!activeFile} onOpenChange={(open) => setOpenLanguageSelect(open ? "source" : null)} onValueChange={(value) => changeSourceLanguage(value as SupportedLanguageCode)} open={openLanguageSelect === "source"} value={sourceLanguage}>
@@ -2342,9 +2543,12 @@ export function TranslateConfigure() {
             </div>
 
             <div className="mt-6 border-t border-[#ebe8ee] pt-5">
-              <h3 className="text-[16px] font-bold text-[#30265c]">{copy.options}</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-[16px] font-bold text-[#30265c]">{copy.options}</h3>
+                {renderBulkApplyButton("options")}
+              </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div className={`flex min-h-[102px] items-center justify-between gap-3 rounded-[8px] border p-4 transition-colors ${translateImages ? "border-[#b9a8ff] bg-[#fbf9ff]" : "border-[#ded9e6] bg-white"}`}>
+                <div className={`flex min-h-[102px] items-center justify-between gap-3 rounded-[8px] border p-4 transition-colors ${translateImages ? "border-[#b9a8ff] bg-[#fbf9ff]" : "border-[#ded9e6] bg-white"}`} data-translate-tour="translate-images">
                   <div className="min-w-0">
                     <p className="text-[14px] font-bold text-[#30265c]">{copy.translateImages}</p>
                     <p className="mt-1 text-[11px] leading-4 text-[#827c89]">{copy.translateImagesDescription}</p>
@@ -2352,7 +2556,7 @@ export function TranslateConfigure() {
                   <Switch aria-label={copy.translateImages} checked={translateImages} className="shrink-0 scale-105 data-[state=checked]:bg-[#2d1b78] data-[state=unchecked]:bg-[#d0cbd8]" disabled={!activeFile} onCheckedChange={(checked) => updateActiveFileConfig((currentConfig) => ({...currentConfig, translateImages: checked}))} />
                 </div>
 
-                <div className={`flex min-h-[102px] items-center justify-between gap-3 rounded-[8px] border p-4 transition-colors ${keepSourceText && hasSelectedGlossary ? "border-[#b9a8ff] bg-[#fbf9ff]" : "border-[#ded9e6] bg-white"}`}>
+                <div className={`flex min-h-[102px] items-center justify-between gap-3 rounded-[8px] border p-4 transition-colors ${keepSourceText && hasSelectedGlossary ? "border-[#b9a8ff] bg-[#fbf9ff]" : "border-[#ded9e6] bg-white"}`} data-translate-tour="keep-source">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-[14px] font-bold text-[#30265c]">{copy.keepSource}</p>
@@ -2376,14 +2580,17 @@ export function TranslateConfigure() {
               </div>
             </div>
 
-            <div className="mt-6 border-t border-[#ebe8ee] pt-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-[16px] font-bold text-[#30265c]">{copy.glossaries}</h3>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-[#21175c] bg-white px-3 text-[13px] font-bold text-[#21175c] transition-colors hover:bg-[#f3f0ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] disabled:cursor-not-allowed disabled:opacity-45" disabled={!activeFile} onClick={openCreateGlossary} type="button">
+            <div className="mt-6 border-t border-[#ebe8ee] pt-5" data-translate-tour="glossary-selection">
+              <div className="flex flex-col gap-3 min-[1440px]:flex-row min-[1440px]:items-center min-[1440px]:justify-between">
+                <div className="flex w-full flex-wrap items-center justify-between gap-3 min-[1440px]:w-auto min-[1440px]:flex-nowrap">
+                  <h3 className="text-[16px] font-bold text-[#30265c]">{copy.glossaries}</h3>
+                  {renderBulkApplyButton("glossaries")}
+                </div>
+                <div className="flex w-full flex-wrap items-center justify-end gap-2 min-[1440px]:w-auto min-[1440px]:flex-nowrap">
+                  <button className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-[#21175c] bg-white px-3 text-[13px] font-bold text-[#21175c] transition-colors hover:bg-[#f3f0ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] disabled:cursor-not-allowed disabled:opacity-45" data-translate-tour="create-glossary" disabled={!activeFile} onClick={openCreateGlossary} type="button">
                     <Plus aria-hidden="true" className="size-4" />{copy.createGlossary}
                   </button>
-                  <button className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-[#f06317] bg-white px-3 text-[13px] font-bold text-[#d84f00] transition-colors hover:bg-[#fff3ec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317] disabled:cursor-not-allowed disabled:opacity-55" disabled={!activeFile || isSuggesting} onClick={suggestGlossary} type="button">
+                  <button className="inline-flex h-9 items-center gap-2 rounded-[7px] border border-[#f06317] bg-white px-3 text-[13px] font-bold text-[#d84f00] transition-colors hover:bg-[#fff3ec] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317] disabled:cursor-not-allowed disabled:opacity-55" data-translate-tour="suggest-glossary" disabled={!activeFile || isSuggesting} onClick={suggestGlossary} type="button">
                     {isSuggesting ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin" /> : <Sparkles aria-hidden="true" className="size-4" />}{isSuggesting ? copy.suggesting : copy.suggestGlossary}
                   </button>
                   <span className="rounded-full bg-[#eee9fb] px-3 py-1.5 text-[12px] font-bold text-[#65508f]">{selectedGlossaryIds.size} {copy.selected}</span>
@@ -2575,6 +2782,36 @@ export function TranslateConfigure() {
         </AnimatePresence>
       </main>
       <DashboardFooter />
+
+      {workflowStep === "configure" ? <TranslateGuidedTour locale={currentLocale} /> : null}
+
+      <AnimatePresence>
+        {bulkApplyFeedback ? (
+          <motion.div
+            animate={{opacity: 1, y: 0}}
+            aria-live="polite"
+            className="fixed bottom-5 left-4 right-4 z-[90] mx-auto flex max-w-[520px] items-center gap-3 rounded-[8px] border border-[#cfc7df] bg-white px-4 py-3 text-[12px] font-semibold text-[#30265c] shadow-[0_18px_50px_rgba(33,23,92,0.2)] sm:left-auto sm:right-6 sm:mx-0"
+            exit={{opacity: 0, y: 8}}
+            initial={{opacity: 0, y: 8}}
+            role="status"
+            transition={{duration: 0.18}}
+          >
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#e8f7ee] text-[#16813d]">
+              <Check aria-hidden="true" className="size-4" strokeWidth={2.6} />
+            </span>
+            <span className="min-w-0 flex-1">{bulkApplyFeedback.message}</span>
+            {bulkApplyFeedback.canUndo ? (
+              <button
+                className="shrink-0 rounded-[6px] px-2 py-1.5 text-[11px] font-bold text-[#d84f00] transition-colors hover:bg-[#fff1e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317]"
+                onClick={undoBulkApply}
+                type="button"
+              >
+                {copy.undo}
+              </button>
+            ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <KeepSourceGuideDialog
         locale={currentLocale}
@@ -2848,6 +3085,43 @@ export function TranslateConfigure() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={bulkApplySection !== null}
+        onOpenChange={(open) => {
+          if (!open) setBulkApplySection(null);
+        }}
+      >
+        <AlertDialogContent className="rounded-[8px] border-[#d5d0dc] bg-white shadow-[0_24px_70px_rgba(33,23,92,0.2)] sm:max-w-[480px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#21175c]">
+              {copy.bulkApplyTitle.replace("{section}", bulkApplySectionLabel)}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[#6f6a78]">
+              {copy.bulkApplyDescription.replace("{count}", String(bulkApplyTargetCount))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-start gap-2.5 rounded-[7px] border border-[#ffd3bb] bg-[#fff7f2] px-3 py-2.5 text-[11px] leading-4 text-[#9a4518]">
+            <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#f06317]" />
+            <p>{bulkApplyWarning}</p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-[6px] border-[#d5d0dc] bg-white text-[#5f5968] hover:border-[#21175c] hover:text-[#21175c]">
+              {copy.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="inline-flex items-center gap-2 rounded-[6px] bg-[#21175c] text-white hover:bg-[#f06317]"
+              onClick={(event) => {
+                event.preventDefault();
+                confirmBulkApply();
+              }}
+            >
+              <CopyCheck aria-hidden="true" className="size-4" />
+              {copy.apply}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
         <AlertDialogContent className="rounded-[8px] border-[#d5d0dc] bg-white shadow-[0_24px_70px_rgba(33,23,92,0.2)] sm:max-w-[460px]">

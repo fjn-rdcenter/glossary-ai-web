@@ -1,5 +1,5 @@
 import {GlossaryFormView} from "../glossary-form-view";
 
 export default function CreateGlossaryPage() {
-  return <GlossaryFormView mode="create" />;
+  return <GlossaryFormView enableGuidedTour mode="create" />;
 }

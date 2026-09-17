@@ -26,6 +26,12 @@ import {
   normalizeGlossaryLanguage,
   resolveGlossaryLocale,
 } from "./glossary-copy";
+import {GlossaryGuidedTour} from "./glossary-guided-tour";
+import {
+  getOrCreateSessionGlossaryTemplate,
+  isSessionGlossaryTemplate,
+  updateSessionGlossaryTemplate,
+} from "./glossary-session-template";
 import {GlossaryLanguage, GlossaryPageFrame} from "./glossary-shared";
 
 type GlossaryFormMode = "create" | "edit";
@@ -48,6 +54,7 @@ export type GlossaryFormInitialValues = {
 
 type GlossaryFormViewProps = {
   embedded?: boolean;
+  enableGuidedTour?: boolean;
   glossaryId?: string;
   initialValues?: GlossaryFormInitialValues;
   lockLanguages?: boolean;
@@ -207,15 +214,18 @@ function parseGlossaryFile(text: string) {
   if (rows.length > 0 && isHeaderRow(rows[0])) rows.shift();
 
   return rows
-    .map((columns) => ({
-      source: (columns[0] || "").trim(),
-      target: (columns[1] || "").trim(),
-    }))
+    .map((columns) => {
+      const source = (columns[0] || "").trim();
+      const target = (columns[1] || "").trim();
+
+      return {source, target: target || source};
+    })
     .filter((term) => term.source.length > 0);
 }
 
 export function GlossaryFormView({
   embedded = false,
+  enableGuidedTour = false,
   mode,
   glossaryId,
   initialValues,
@@ -272,7 +282,14 @@ export function GlossaryFormView({
       setErrorMessage("");
 
       try {
-        const firstPage = await GlossaryService.getGlossaryById(glossaryId, {
+        const sessionGlossary = isSessionGlossaryTemplate(glossaryId)
+          ? getOrCreateSessionGlossaryTemplate(locale)
+          : null;
+        if (isSessionGlossaryTemplate(glossaryId) && !sessionGlossary) {
+          throw new Error("Session glossary template is unavailable");
+        }
+
+        const firstPage = sessionGlossary ?? await GlossaryService.getGlossaryById(glossaryId, {
           page: 1,
           size: 100,
           sort: "source:asc",
@@ -329,7 +346,7 @@ export function GlossaryFormView({
     return () => {
       isMounted = false;
     };
-  }, [copy.form.loadError, glossaryId, mode]);
+  }, [copy.form.loadError, glossaryId, locale, mode]);
 
   const visibleTerms = useMemo(() => {
     const query = manualSearch.trim().toLocaleLowerCase();
@@ -615,6 +632,15 @@ export function GlossaryFormView({
             normalizedTerms.map(({source, target}) => ({source, target})),
           );
         }
+      } else if (glossaryId && isSessionGlossaryTemplate(glossaryId)) {
+        savedGlossary = updateSessionGlossaryTemplate({
+          name: normalizedName,
+          description: description.trim() || undefined,
+          sourceLanguage,
+          targetLanguage,
+          terms: normalizedTerms.map(({id, source, target}) => ({id, source, target})),
+        });
+        if (!savedGlossary) throw new Error("Session glossary template is unavailable");
       } else if (glossaryId) {
         savedGlossary = await GlossaryService.updateGlossary(glossaryId, {
           name: normalizedName,
@@ -670,8 +696,8 @@ export function GlossaryFormView({
         <div className="pointer-events-none fixed inset-0 z-[100] grid place-items-center border-2 border-dashed border-[#f06317] bg-[#21175c]/24 p-6 backdrop-blur-[2px]">
           <div className="flex min-h-36 w-full max-w-[520px] flex-col items-center justify-center rounded-[8px] border border-[#f06317] bg-white px-6 text-center shadow-[0_24px_70px_rgba(33,23,92,0.24)]">
             <Upload className="size-8 text-[#f06317]" />
-            <p className="mt-3 text-[15px] font-bold text-[#21175c]">{copy.form.dropActive}</p>
-            <p className="mt-1 text-[11px] text-[#716b79]">{copy.form.fileSupport}</p>
+            <p className="mt-3 text-[17px] font-bold text-[#21175c]">{copy.form.dropActive}</p>
+            <p className="mt-1 text-[13px] text-[#716b79]">{copy.form.fileSupport}</p>
           </div>
         </div>
       ) : null}
@@ -681,7 +707,7 @@ export function GlossaryFormView({
         <form className="content-reveal" onSubmit={handleSubmit}>
           {!embedded ? (
             <>
-              <nav className="flex items-center gap-2 text-[11px]">
+              <nav className="flex items-center gap-2 text-[13px]">
                 <Link className="font-semibold text-[#f06317] hover:text-[#21175c]" href="/dashboard/glossaries">
                   {copy.common.backToGlossaries}
                 </Link>
@@ -692,10 +718,17 @@ export function GlossaryFormView({
               </nav>
 
               <div className="mt-4">
-                <h1 className="text-[30px] font-bold leading-tight text-[#21175c]">
-                  {mode === "create" ? copy.form.createTitle : copy.form.editTitle}
-                </h1>
-                <p className="mt-1.5 text-[12px] leading-5 text-[#716b79]">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-[32px] font-bold leading-tight text-[#21175c]">
+                    {mode === "create" ? copy.form.createTitle : copy.form.editTitle}
+                  </h1>
+                  {mode === "edit" && isSessionGlossaryTemplate(glossaryId) ? (
+                    <span className="rounded-full bg-[#eaf1ff] px-2.5 py-1 text-[12px] font-bold text-[#31548a]">
+                      {copy.common.sampleData}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1.5 text-[14px] leading-5 text-[#716b79]">
                   {mode === "create" ? copy.form.createDescription : copy.form.editDescription}
                 </p>
               </div>
@@ -703,27 +736,28 @@ export function GlossaryFormView({
           ) : null}
 
           <section className={`${embedded ? "mt-0" : "mt-7"} rounded-[8px] border border-[#d9d3e1] bg-white/92 p-5 shadow-[0_10px_26px_rgba(33,23,92,0.04)] sm:p-6`}>
-            <h2 className="text-[11px] font-bold uppercase text-[#f06317]">{copy.form.basicInfo}</h2>
+            <h2 className="text-[13px] font-bold uppercase text-[#f06317]">{copy.form.basicInfo}</h2>
 
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_.85fr_.85fr]">
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.name}</span>
+              <label className="block min-w-0" data-glossary-create-tour="name">
+                <span className="mb-1.5 block text-[13px] font-semibold text-[#21175c]">{copy.form.name}</span>
                 <input
-                  className="h-11 w-full rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[12px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
+                  className="h-11 w-full rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[14px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
                   onChange={(event) => setName(event.target.value)}
                   placeholder={copy.form.namePlaceholder}
                   value={name}
                 />
               </label>
 
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.sourceLanguage}</span>
+              <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2" data-glossary-create-tour="languages">
+                <label className="block min-w-0">
+                <span className="mb-1.5 block text-[13px] font-semibold text-[#21175c]">{copy.form.sourceLanguage}</span>
                 <Select
                   disabled={lockLanguages}
                   onValueChange={(value) => setSourceLanguage(value as SupportedLanguageCode)}
                   value={sourceLanguage}
                 >
-                  <SelectTrigger className="h-11 w-full rounded-[7px] border-[#d8d2e1] bg-white text-[12px] disabled:bg-[#f1eff4]">
+                  <SelectTrigger className="h-11 w-full rounded-[7px] border-[#d8d2e1] bg-white text-[14px] disabled:bg-[#f1eff4]">
                     <SelectValue placeholder={copy.form.chooseLanguage}>
                       {sourceLanguage ? (
                         <span className="flex items-center gap-2">
@@ -741,16 +775,16 @@ export function GlossaryFormView({
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+                </label>
 
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.targetLanguage}</span>
+                <label className="block min-w-0">
+                <span className="mb-1.5 block text-[13px] font-semibold text-[#21175c]">{copy.form.targetLanguage}</span>
                 <Select
                   disabled={lockLanguages}
                   onValueChange={(value) => setTargetLanguage(value as SupportedLanguageCode)}
                   value={targetLanguage}
                 >
-                  <SelectTrigger className="h-11 w-full rounded-[7px] border-[#d8d2e1] bg-white text-[12px] disabled:bg-[#f1eff4]">
+                  <SelectTrigger className="h-11 w-full rounded-[7px] border-[#d8d2e1] bg-white text-[14px] disabled:bg-[#f1eff4]">
                     <SelectValue placeholder={copy.form.chooseLanguage}>
                       {targetLanguage ? (
                         <span className="flex items-center gap-2">
@@ -768,13 +802,14 @@ export function GlossaryFormView({
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+                </label>
+              </div>
             </div>
 
-            <label className="mt-4 block">
-              <span className="mb-1.5 block text-[11px] font-semibold text-[#21175c]">{copy.form.description}</span>
+            <label className="mt-4 block" data-glossary-create-tour="description">
+              <span className="mb-1.5 block text-[13px] font-semibold text-[#21175c]">{copy.form.description}</span>
               <textarea
-                className="min-h-20 w-full resize-y rounded-[7px] border border-[#d8d2e1] bg-white px-3 py-3 text-[12px] leading-5 outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
+                className="min-h-20 w-full resize-y rounded-[7px] border border-[#d8d2e1] bg-white px-3 py-3 text-[14px] leading-5 outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder={copy.form.descriptionPlaceholder}
                 value={description}
@@ -782,22 +817,24 @@ export function GlossaryFormView({
             </label>
 
             <div className="mt-5 border-t border-[#e7e2ed] pt-5">
-              <h2 className="text-[11px] font-bold uppercase text-[#f06317]">{copy.form.addTerms}</h2>
+              <h2 className="text-[13px] font-bold uppercase text-[#f06317]">{copy.form.addTerms}</h2>
 
               <div className="mt-3 inline-grid grid-cols-2 rounded-[7px] bg-[#f0edf4] p-1">
                 <button
-                  className={"h-9 min-w-32 rounded-[5px] px-4 text-[12px] font-semibold transition-colors " + (
+                  className={"h-9 min-w-32 rounded-[5px] px-4 text-[14px] font-semibold transition-colors " + (
                     entryMode === "manual" ? "bg-white text-[#21175c] shadow-sm" : "text-[#716b79]"
                   )}
+                  data-glossary-create-tour="manual-mode"
                   onClick={() => setEntryMode("manual")}
                   type="button"
                 >
                   {copy.form.manual}
                 </button>
                 <button
-                  className={"h-9 min-w-32 rounded-[5px] px-4 text-[12px] font-semibold transition-colors " + (
+                  className={"h-9 min-w-32 rounded-[5px] px-4 text-[14px] font-semibold transition-colors " + (
                     entryMode === "file" ? "bg-white text-[#21175c] shadow-sm" : "text-[#716b79]"
                   )}
+                  data-glossary-create-tour="import-file"
                   onClick={() => setEntryMode("file")}
                   type="button"
                 >
@@ -806,13 +843,13 @@ export function GlossaryFormView({
               </div>
 
               {entryMode === "manual" ? (
-                <div className="mt-4 min-h-[460px]">
+                <div className="mt-4 min-h-[460px]" data-glossary-create-tour="terms">
                   {mode === "edit" ? (
                     <label className="mb-3 flex h-11 w-full max-w-[520px] items-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white px-3 focus-within:border-[#21175c] focus-within:ring-2 focus-within:ring-[#21175c]/10">
                       <Search className="size-4 shrink-0 text-[#777080]" />
                       <input
                         aria-label={copy.detail.searchPlaceholder}
-                        className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-[#9a94a1]"
+                        className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#9a94a1]"
                         onChange={(event) => setManualSearch(event.target.value)}
                         placeholder={copy.detail.searchPlaceholder}
                         type="search"
@@ -824,17 +861,21 @@ export function GlossaryFormView({
                     <div className="overflow-x-auto">
                       <div className="min-w-[760px]">
                         <div className="glossary-term-list h-[340px] overflow-y-auto [scrollbar-gutter:stable]" ref={termsViewportRef}>
-                          <div className="sticky top-0 z-20 grid min-h-10 grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)_46px] items-center bg-[#f6f3f8] px-4 py-3 text-[10px] font-semibold uppercase text-[#6f6877]">
+                          <div className="sticky top-0 z-20 grid min-h-10 grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)_46px] items-center bg-[#f6f3f8] px-4 py-3 text-[12px] font-semibold uppercase text-[#6f6877]">
                             <span>{copy.common.source}</span>
                             <span aria-hidden="true" />
                             <span>{copy.common.target}</span>
                             <span aria-hidden="true" />
                           </div>
                           {visibleTerms.length > 0 ? (
-                            visibleTerms.map((term) => (
+                            visibleTerms.map((term, index) => (
                               <div
                                 className={`grid min-h-[58px] grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)_46px] items-center border-t border-[#ebe7ef] px-4 py-2 first:border-t-0 ${
-                                  term.isNew ? "glossary-new-term-row" : ""
+                                  term.isNew
+                                    ? "glossary-new-term-row"
+                                    : index % 2 === 0
+                                      ? "bg-white"
+                                      : "bg-[#f7f7f9]"
                                 }`}
                                 data-term-key={term.key}
                                 key={term.key}
@@ -842,14 +883,14 @@ export function GlossaryFormView({
                                 <div className="relative min-w-0">
                                   <input
                                     aria-label={copy.common.source}
-                                    className={`h-10 w-full min-w-0 rounded-[5px] border border-transparent bg-transparent px-2 py-2 text-[12px] font-semibold text-[#21175c] outline-none hover:border-[#ddd8e5] focus:border-[#21175c] focus:bg-white ${
+                                    className={`h-10 w-full min-w-0 rounded-[5px] border border-transparent bg-transparent px-2 py-2 text-[14px] font-semibold text-[#21175c] outline-none hover:border-[#ddd8e5] focus:border-[#21175c] focus:bg-white ${
                                       term.isNew ? "pr-14" : ""
                                     }`}
                                     onChange={(event) => updateTerm(term.key, "source", event.target.value)}
                                     value={term.source}
                                   />
                                   {term.isNew ? (
-                                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#fff0e7] px-2 py-0.5 text-[8px] font-bold uppercase text-[#d9570d]">
+                                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#e4f7ea] px-2 py-0.5 text-[10px] font-bold uppercase text-[#178347]">
                                       {newTermLabel}
                                     </span>
                                   ) : null}
@@ -857,7 +898,7 @@ export function GlossaryFormView({
                                 <ArrowRight className="mx-auto size-4 text-[#8a8391]" />
                                 <input
                                   aria-label={copy.common.target}
-                                  className="h-10 w-full min-w-0 rounded-[5px] border border-transparent bg-transparent px-2 py-2 text-[12px] text-[#2f2b34] outline-none hover:border-[#ddd8e5] focus:border-[#21175c] focus:bg-white"
+                                  className="h-10 w-full min-w-0 rounded-[5px] border border-transparent bg-transparent px-2 py-2 text-[14px] text-[#2f2b34] outline-none hover:border-[#ddd8e5] focus:border-[#21175c] focus:bg-white"
                                   onChange={(event) => updateTerm(term.key, "target", event.target.value)}
                                   placeholder={copy.form.targetPlaceholder}
                                   value={term.target}
@@ -874,7 +915,7 @@ export function GlossaryFormView({
                               </div>
                             ))
                           ) : (
-                            <div className="flex min-h-[300px] items-center justify-center text-[12px] text-[#777080]">
+                            <div className="flex min-h-[300px] items-center justify-center text-[14px] text-[#777080]">
                               {terms.length > 0 ? copy.detail.empty : copy.form.noTerms}
                             </div>
                           )}
@@ -882,7 +923,7 @@ export function GlossaryFormView({
                         <div className="grid min-h-[58px] grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)_46px] items-center overflow-y-auto border-t border-[#ddd8e5] bg-[#fcfbfd] px-4 py-2 [scrollbar-gutter:stable]">
                           <input
                             aria-label={copy.form.sourcePlaceholder}
-                            className="h-10 w-full min-w-0 rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[12px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
+                            className="h-10 w-full min-w-0 rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[14px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
                             onChange={(event) => handleDraftSourceChange(event.target.value)}
                             onKeyDown={(event) => {
                               if (event.key === "Enter") {
@@ -896,7 +937,7 @@ export function GlossaryFormView({
                           <ArrowRight className="mx-auto size-4 text-[#8a8391]" />
                           <input
                             aria-label={copy.form.targetPlaceholder}
-                            className="h-10 w-full min-w-0 rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[12px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
+                            className="h-10 w-full min-w-0 rounded-[7px] border border-[#d8d2e1] bg-white px-3 text-[14px] outline-none focus:border-[#21175c] focus:ring-2 focus:ring-[#21175c]/10"
                             onChange={(event) => handleDraftTargetChange(event.target.value)}
                             onKeyDown={(event) => {
                               if (event.key === "Enter") {
@@ -922,7 +963,7 @@ export function GlossaryFormView({
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 min-h-[460px]">
+                <div className="mt-4 min-h-[460px]" data-glossary-create-tour="terms">
                   <div
                     {...getRootProps()}
                     className={"rounded-[8px] border border-[#ddd8e5] bg-[#fbfaff] p-4 transition-colors " + (
@@ -936,12 +977,12 @@ export function GlossaryFormView({
                           <Upload className="size-5" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[12px] font-bold text-[#21175c]">
+                          <p className="text-[14px] font-bold text-[#21175c]">
                             {isDragActive ? copy.form.dropActive : copy.form.dropTitle}
                           </p>
-                          <p className="mt-1 text-[11px] text-[#777080]">{copy.form.fileSupport}</p>
+                          <p className="mt-1 text-[13px] text-[#777080]">{copy.form.fileSupport}</p>
                           {importFileName ? (
-                            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px]">
                               <span className="inline-flex items-center gap-2 rounded-full bg-[#eaf9f1] px-3 py-1.5 font-semibold text-[#087443]">
                                 <FileText className="size-3.5" />
                                 {importFileName}
@@ -952,7 +993,7 @@ export function GlossaryFormView({
                           ) : null}
                         </div>
                         <button
-                          className="inline-flex h-10 items-center justify-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[14px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
                           onClick={openFilePicker}
                           type="button"
                         >
@@ -962,14 +1003,14 @@ export function GlossaryFormView({
                       </div>
 
                       <div className="mt-5 rounded-[8px] border border-[#bfd7ff] bg-[#f4f8ff]">
-                        <h3 className="flex items-center gap-2 border-b border-[#d7e5ff] px-4 py-3 text-[12px] font-bold text-[#21175c]">
+                        <h3 className="flex items-center gap-2 border-b border-[#d7e5ff] px-4 py-3 text-[14px] font-bold text-[#21175c]">
                           <Lightbulb className="size-4 text-[#f0a000]" />
                           {copy.form.fileGuideTitle}
                         </h3>
                         <div className="grid gap-4 p-4 md:grid-cols-2">
                           <div className="px-3">
-                            <p className="text-center text-[11px] font-semibold text-[#21175c]">{copy.form.pairedFormat}</p>
-                            <div className="mt-2 rounded-[7px] border border-[#2b8cff] bg-white px-3 py-2 text-[11px]">
+                            <p className="text-center text-[13px] font-semibold text-[#21175c]">{copy.form.pairedFormat}</p>
+                            <div className="mt-2 rounded-[7px] border border-[#2b8cff] bg-white px-3 py-2 text-[13px]">
                               <code className="block text-center text-[#1769d2]">{copy.form.pairedColumns}</code>
                               <p className="mt-2 text-[#716b79]">
                                 Example: <span className="rounded bg-[#dff8e8] px-1.5 py-0.5 text-[#087443]">{copy.form.pairedExample}</span>
@@ -977,8 +1018,8 @@ export function GlossaryFormView({
                             </div>
                           </div>
                           <div className="border-l-2 border-[#f0a000] pl-3">
-                            <p className="text-center text-[11px] font-semibold text-[#21175c]">{copy.form.singleFormat}</p>
-                            <div className="mt-2 rounded-[7px] border border-[#2b8cff] bg-white px-3 py-2 text-[11px]">
+                            <p className="text-center text-[13px] font-semibold text-[#21175c]">{copy.form.singleFormat}</p>
+                            <div className="mt-2 rounded-[7px] border border-[#2b8cff] bg-white px-3 py-2 text-[13px]">
                               <code className="block text-center text-[#1769d2]">{copy.form.singleColumns}</code>
                               <p className="mt-2 text-[#716b79]">
                                 Example: <span className="rounded bg-[#fff0c8] px-1.5 py-0.5 text-[#a15c00]">{copy.form.singleExample}</span>
@@ -986,7 +1027,7 @@ export function GlossaryFormView({
                             </div>
                           </div>
                         </div>
-                        <div className="space-y-1 border-t border-[#d7e5ff] px-4 py-3 text-center text-[10px] italic text-[#5570a0]">
+                        <div className="space-y-1 border-t border-[#d7e5ff] px-4 py-3 text-center text-[12px] italic text-[#5570a0]">
                           <p>{copy.form.noHeader}</p>
                           <p>{copy.form.singleNote}</p>
                         </div>
@@ -994,9 +1035,9 @@ export function GlossaryFormView({
                     </div>
                   </div>
 
-                  <p className="mt-3 text-[11px] text-[#777080]">{copy.form.duplicateNote}</p>
+                  <p className="mt-3 text-[13px] text-[#777080]">{copy.form.duplicateNote}</p>
                   {fileError ? (
-                    <p className="mt-3 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[12px] text-[#b42318]">
+                    <p className="mt-3 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[14px] text-[#b42318]">
                       {fileError}
                     </p>
                   ) : null}
@@ -1006,7 +1047,7 @@ export function GlossaryFormView({
           </section>
 
           {errorMessage ? (
-            <p className="mt-4 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[12px] text-[#b42318]">
+            <p className="mt-4 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[14px] text-[#b42318]">
               {errorMessage}
             </p>
           ) : null}
@@ -1014,7 +1055,7 @@ export function GlossaryFormView({
           <div className="mt-5 flex items-center justify-end gap-3">
             {onCancel ? (
               <button
-                className="inline-flex h-10 min-w-24 items-center justify-center rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
+                className="inline-flex h-10 min-w-24 items-center justify-center rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[14px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
                 onClick={onCancel}
                 type="button"
               >
@@ -1022,14 +1063,14 @@ export function GlossaryFormView({
               </button>
             ) : (
               <Link
-                className="inline-flex h-10 min-w-24 items-center justify-center rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[12px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
+                className="inline-flex h-10 min-w-24 items-center justify-center rounded-[7px] border border-[#d8d2e1] bg-white px-4 text-[14px] font-bold text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317]"
                 href={cancelHref}
               >
                 {copy.common.cancel}
               </Link>
             )}
             <button
-              className="inline-flex h-10 min-w-36 items-center justify-center gap-2 rounded-[7px] bg-[#21175c] px-5 text-[12px] font-bold text-white transition-colors hover:bg-[#f06317] disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex h-10 min-w-36 items-center justify-center gap-2 rounded-[7px] bg-[#21175c] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#f06317] disabled:cursor-not-allowed disabled:opacity-45"
               disabled={isSaving || (mode === "edit" && !hasFormChanges)}
               type="submit"
             >
@@ -1039,6 +1080,10 @@ export function GlossaryFormView({
           </div>
         </form>
       )}
+
+      {enableGuidedTour && mode === "create" && !embedded ? (
+        <GlossaryGuidedTour locale={locale} phase="create" />
+      ) : null}
     </GlossaryFormFrame>
   );
 }

@@ -8,6 +8,7 @@ export const USE_LEGACY_EXTRACTION_MEDIA =
   process.env.NEXT_PUBLIC_USE_LEGACY_EXTRACTION_MEDIA === "false";
 
 export const getApiBaseUrl = (): string => {
+  return " http://172.16.6.10:28000"
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (typeof window === "undefined") {

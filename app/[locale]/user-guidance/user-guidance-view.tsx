@@ -10,15 +10,18 @@ import {
   ImagePlus,
   Languages,
   Play,
+  X,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import {useLocale} from "next-intl";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {
   DashboardFooter,
   DashboardHeader,
   FileFormatBadgeBackground,
 } from "../dashboard/dashboard-shell";
+import {userGuidanceMedia} from "./user-guidance-media";
 
 type GuideLocale = "en" | "vi" | "ja";
 type GuideSectionKey = "translation" | "glossary" | "history" | "videos";
@@ -28,6 +31,7 @@ type SlideDirection = "backward" | "forward";
 
 type MediaSlot = {
   label: string;
+  src?: string;
 };
 
 type MediaGroup = {
@@ -44,6 +48,12 @@ type GuideStep = {
 
 type GuideTopic = {
   steps: GuideStep[];
+  title: string;
+};
+
+type GuideVideo = {
+  description: string;
+  src?: string;
   title: string;
 };
 
@@ -74,14 +84,14 @@ type GuideCopy = {
   };
   videos: {
     description: string;
-    items: Array<{description: string; title: string}>;
+    items: GuideVideo[];
     title: string;
   };
 };
 
-const singleImage = (label: string): MediaGroup => ({
+const singleImage = (label: string, src?: string): MediaGroup => ({
   layout: "single",
-  slots: [{label}],
+  slots: [{label, src}],
 });
 
 const guidanceCopy: Record<GuideLocale, GuideCopy> = {
@@ -109,12 +119,12 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
           description: "Chọn tài liệu từ máy tính hoặc dùng lại tài liệu đã tải lên trước đó.",
           media: [
             {
-              title: "Cách 1: Tải tệp từ máy tính",
+              title: "Cách 1",
               layout: "sequence",
               slots: [{label: "Mở khu vực tải tệp"}, {label: "Chọn tệp cần dịch"}],
             },
             {
-              title: "Cách 2: Dùng tệp đã tải lên",
+              title: "Cách 2",
               layout: "sequence",
               slots: [{label: "Mở danh sách tệp"}, {label: "Chọn tệp đã tải lên"}],
             },
@@ -132,13 +142,8 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
         },
         {
           title: "Xác nhận kết quả",
-          description: "Tải kết quả đã hoàn thành hoặc quay lại cấu hình để tạo một bản dịch khác.",
-          media: [
-            {
-              layout: "independent",
-              slots: [{label: "Tải tệp đích"}, {label: "Cấu hình lại bản dịch"}],
-            },
-          ],
+          description: "Tải kết quả đã hoàn thành.",
+          media: [singleImage("Tải tệp đích")],
         },
       ],
     },
@@ -164,8 +169,14 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
               description: "Nhập từng cặp thuật ngữ thủ công hoặc nhập nhiều thuật ngữ từ tệp.",
               media: [
                 {
-                  layout: "independent",
-                  slots: [{label: "Nhập thủ công"}, {label: "Nhập từ tệp"}],
+                  title: "Cách 1",
+                  layout: "single",
+                  slots: [{label: "Nhập thủ công"}],
+                },
+                {
+                  title: "Cách 2",
+                  layout: "single",
+                  slots: [{label: "Nhập từ tệp"}],
                 },
               ],
             },
@@ -273,12 +284,12 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
           description: "Choose documents from your computer or reuse previously uploaded documents.",
           media: [
             {
-              title: "Method 1: Upload from computer",
+              title: "Method 1",
               layout: "sequence",
               slots: [{label: "Open the upload area"}, {label: "Select files to translate"}],
             },
             {
-              title: "Method 2: Use uploaded files",
+              title: "Method 2",
               layout: "sequence",
               slots: [{label: "Open the file list"}, {label: "Select uploaded files"}],
             },
@@ -296,13 +307,8 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
         },
         {
           title: "Confirm results",
-          description: "Download completed results or return to configuration to create another translation.",
-          media: [
-            {
-              layout: "independent",
-              slots: [{label: "Download target file"}, {label: "Configure another translation"}],
-            },
-          ],
+          description: "Download completed results.",
+          media: [singleImage("Download target file")],
         },
       ],
     },
@@ -328,8 +334,14 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
               description: "Enter term pairs manually or import multiple terms from a file.",
               media: [
                 {
-                  layout: "independent",
-                  slots: [{label: "Manual entry"}, {label: "Import from file"}],
+                  title: "Method 1",
+                  layout: "single",
+                  slots: [{label: "Manual entry"}],
+                },
+                {
+                  title: "Method 2",
+                  layout: "single",
+                  slots: [{label: "Import from file"}],
                 },
               ],
             },
@@ -437,12 +449,12 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
           description: "パソコンから文書を選択するか、アップロード済みの文書を再利用します。",
           media: [
             {
-              title: "方法1：パソコンからアップロード",
+              title: "方法1",
               layout: "sequence",
               slots: [{label: "アップロード領域を開く"}, {label: "翻訳するファイルを選択"}],
             },
             {
-              title: "方法2：アップロード済みファイルを使用",
+              title: "方法2",
               layout: "sequence",
               slots: [{label: "ファイル一覧を開く"}, {label: "アップロード済みファイルを選択"}],
             },
@@ -460,13 +472,8 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
         },
         {
           title: "結果を確認",
-          description: "完了した結果をダウンロードするか、設定に戻って別の翻訳を作成します。",
-          media: [
-            {
-              layout: "independent",
-              slots: [{label: "翻訳済みファイルをダウンロード"}, {label: "翻訳を再設定"}],
-            },
-          ],
+          description: "完了した結果をダウンロードします。",
+          media: [singleImage("翻訳済みファイルをダウンロード")],
         },
       ],
     },
@@ -492,8 +499,14 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
               description: "用語ペアを手動で入力するか、ファイルからまとめて読み込みます。",
               media: [
                 {
-                  layout: "independent",
-                  slots: [{label: "手動入力"}, {label: "ファイルから読み込み"}],
+                  title: "方法1",
+                  layout: "single",
+                  slots: [{label: "手動入力"}],
+                },
+                {
+                  title: "方法2",
+                  layout: "single",
+                  slots: [{label: "ファイルから読み込み"}],
                 },
               ],
             },
@@ -579,6 +592,43 @@ const guidanceCopy: Record<GuideLocale, GuideCopy> = {
   },
 };
 
+function attachSharedMedia(copy: GuideCopy) {
+  const media = userGuidanceMedia;
+
+  copy.translation.steps[0].media[0].slots[0].src = media.translation.selectFiles.uploadOpen;
+  copy.translation.steps[0].media[0].slots[1].src = media.translation.selectFiles.uploadSelect;
+  copy.translation.steps[0].media[1].slots[0].src = media.translation.selectFiles.reuseOpen;
+  copy.translation.steps[0].media[1].slots[1].src = media.translation.selectFiles.reuseSelect;
+  copy.translation.steps[1].media[0].slots[0].src = media.translation.configureFile;
+  copy.translation.steps[2].media[0].slots[0].src = media.translation.trackProgress;
+  copy.translation.steps[3].media[0].slots[0].src = media.translation.confirmResults.download;
+
+  copy.glossary.topics.create.steps[0].media[0].slots[0].src = media.glossary.create.createNew;
+  copy.glossary.topics.create.steps[1].media[0].slots[0].src = media.glossary.create.basicInfo;
+  copy.glossary.topics.create.steps[2].media[0].slots[0].src = media.glossary.create.manualTerms;
+  copy.glossary.topics.create.steps[2].media[1].slots[0].src = media.glossary.create.importFile;
+  copy.glossary.topics.create.steps[3].media[0].slots[0].src = media.glossary.create.finish;
+
+  copy.glossary.topics.edit.steps[0].media[0].slots[0].src = media.glossary.edit.editButton;
+  copy.glossary.topics.edit.steps[1].media[0].slots[0].src = media.glossary.edit.editableContent;
+  copy.glossary.topics.edit.steps[2].media[0].slots[0].src = media.glossary.edit.saveChanges;
+
+  copy.glossary.topics.share.steps[0].media[0].slots[0].src = media.glossary.share.shareButton;
+  copy.glossary.topics.share.steps[1].media[0].slots[0].src = media.glossary.share.sharingOptions;
+  copy.glossary.topics.share.steps[2].media[0].slots[0].src = media.glossary.share.finish;
+
+  copy.history.steps[0].media[0].slots[0].src = media.history.details;
+  copy.history.steps[1].media[0].slots[0].src = media.history.processing;
+  copy.history.steps[2].media[0].slots[0].src = media.history.downloads;
+
+  copy.videos.items[0].src = media.videos.translation;
+  copy.videos.items[1].src = media.videos.glossary;
+  copy.videos.items[2].src = media.videos.history;
+
+  return copy;
+}
+
+(Object.values(guidanceCopy) as GuideCopy[]).forEach(attachSharedMedia);
 const sectionItems: Array<{icon: LucideIcon; key: GuideSectionKey}> = [
   {key: "translation", icon: Languages},
   {key: "glossary", icon: BookOpenText},
@@ -588,27 +638,95 @@ const sectionItems: Array<{icon: LucideIcon; key: GuideSectionKey}> = [
 
 const glossaryTopicKeys: GlossaryTopicKey[] = ["create", "edit", "share"];
 
-function MediaPlaceholder({label, placeholder}: {label: string; placeholder: string}) {
+const isAbsoluteMediaSource = (src: string) =>
+  src.startsWith("http://") ||
+  src.startsWith("https://") ||
+  src.startsWith("//") ||
+  src.startsWith("data:") ||
+  src.startsWith("blob:");
+
+const resolveMediaSrc = (mediaStorage: string, src?: string) => {
+  if (!src) {
+    return undefined;
+  }
+
+  if (isAbsoluteMediaSource(src) || src.startsWith("/")) {
+    return src;
+  }
+
+  let root = mediaStorage;
+  let path = src;
+
+  while (root.endsWith("/")) {
+    root = root.slice(0, -1);
+  }
+
+  while (path.startsWith("/")) {
+    path = path.slice(1);
+  }
+
+  return root + "/" + path;
+};
+
+function MediaPlaceholder({
+  isLarge = false,
+  label,
+  mediaStorage,
+  placeholder,
+  src,
+}: {
+  isLarge?: boolean;
+  label: string;
+  mediaStorage: string;
+  placeholder: string;
+  src?: string;
+}) {
+  const mediaSrc = resolveMediaSrc(mediaStorage, src);
+  const frameSizeClass = isLarge ? "min-h-[220px] sm:min-h-[320px] lg:min-h-[400px]" : "min-h-[128px]";
+
   return (
-    <div className="relative flex aspect-video min-h-[128px] w-full flex-col items-center justify-center overflow-hidden rounded-[7px] border border-dashed border-[#c9c3d4] bg-white px-4 text-center shadow-[0_3px_12px_rgba(33,23,92,0.035)]">
-      <span className="grid size-10 place-items-center rounded-[7px] bg-[#eef4ff] text-[#31548a]">
-        <ImagePlus aria-hidden="true" className="size-5" />
-      </span>
-      <strong className="mt-3 text-[12px] text-[#21175c]">{label}</strong>
-      <span className="mt-1 text-[10px] text-[#85808b]">{placeholder}</span>
+    <div className={`relative flex aspect-video ${frameSizeClass} w-full flex-col items-center justify-center overflow-hidden rounded-[7px] border border-dashed border-[#c9c3d4] bg-white px-4 text-center shadow-[0_3px_12px_rgba(33,23,92,0.035)]`}>
+      {mediaSrc ? (
+        <Image
+          alt={label}
+          className="object-contain"
+          fill
+          sizes={isLarge ? "(min-width: 1280px) 980px, (min-width: 1024px) 80vw, 92vw" : "(min-width: 1024px) 640px, 90vw"}
+          src={mediaSrc}
+          unoptimized
+        />
+      ) : (
+        <>
+          <span className="grid size-10 place-items-center rounded-[7px] bg-[#eef4ff] text-[#31548a]">
+            <ImagePlus aria-hidden="true" className="size-5" />
+          </span>
+          <strong className="mt-3 text-[12px] text-[#21175c]">{label}</strong>
+          <span className="mt-1 text-[10px] text-[#85808b]">{placeholder}</span>
+        </>
+      )}
     </div>
   );
 }
 
-function MediaGroupView({group, placeholder}: {group: MediaGroup; placeholder: string}) {
+function MediaGroupView({
+  group,
+  isLargeSingle = false,
+  mediaStorage,
+  placeholder,
+}: {
+  group: MediaGroup;
+  isLargeSingle?: boolean;
+  mediaStorage: string;
+  placeholder: string;
+}) {
   if (group.layout === "sequence") {
     return (
       <div>
         {group.title ? <p className="mb-2 text-[11px] font-bold text-[#4e4760]">{group.title}</p> : null}
         <div className="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)]">
-          <MediaPlaceholder label={group.slots[0].label} placeholder={placeholder} />
+          <MediaPlaceholder label={group.slots[0].label} mediaStorage={mediaStorage} placeholder={placeholder} src={group.slots[0].src} />
           <ArrowRight aria-hidden="true" className="mx-auto size-5 rotate-90 text-[#f06317] sm:rotate-0" />
-          <MediaPlaceholder label={group.slots[1].label} placeholder={placeholder} />
+          <MediaPlaceholder label={group.slots[1].label} mediaStorage={mediaStorage} placeholder={placeholder} src={group.slots[1].src} />
         </div>
       </div>
     );
@@ -620,7 +738,7 @@ function MediaGroupView({group, placeholder}: {group: MediaGroup; placeholder: s
         {group.title ? <p className="mb-2 text-[11px] font-bold text-[#4e4760]">{group.title}</p> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           {group.slots.map((slot) => (
-            <MediaPlaceholder key={slot.label} label={slot.label} placeholder={placeholder} />
+            <MediaPlaceholder key={slot.label} label={slot.label} mediaStorage={mediaStorage} placeholder={placeholder} src={slot.src} />
           ))}
         </div>
       </div>
@@ -628,9 +746,15 @@ function MediaGroupView({group, placeholder}: {group: MediaGroup; placeholder: s
   }
 
   return (
-    <div className="mx-auto w-full max-w-[740px]">
+    <div className={`mx-auto w-full ${isLargeSingle ? "max-w-[980px]" : "max-w-[740px]"}`}>
       {group.title ? <p className="mb-2 text-[11px] font-bold text-[#4e4760]">{group.title}</p> : null}
-      <MediaPlaceholder label={group.slots[0].label} placeholder={placeholder} />
+      <MediaPlaceholder
+        isLarge={isLargeSingle}
+        label={group.slots[0].label}
+        mediaStorage={mediaStorage}
+        placeholder={placeholder}
+        src={group.slots[0].src}
+      />
     </div>
   );
 }
@@ -639,16 +763,19 @@ function StepCarousel({
   common,
   currentStep,
   direction,
+  mediaStorage,
   onStepChange,
   steps,
 }: {
   common: GuideCopy["common"];
   currentStep: number;
   direction: SlideDirection;
+  mediaStorage: string;
   onStepChange: (step: number) => void;
   steps: GuideStep[];
 }) {
   const step = steps[currentStep];
+  const hasOneImage = step.media.length === 1 && step.media[0]?.layout === "single" && step.media[0]?.slots.length === 1;
 
   return (
     <section className="overflow-hidden rounded-[8px] border border-[#ddd8e5] bg-white/94 shadow-[0_8px_26px_rgba(33,23,92,0.055)]">
@@ -711,31 +838,29 @@ function StepCarousel({
         </div>
       </div>
 
-      <div className="px-3 py-5 sm:px-6 sm:py-7">
+      <div className="px-3 py-2 pb-4 sm:px-6 sm:py-2 sm:pb-6">
         <div
           className={`guidance-step-slide guidance-step-slide-${direction} min-w-0`}
           key={`${currentStep}-${step.title}`}
         >
+          <div className="mx-auto max-w-[720px] px-3 pb-2 text-center">
+            <h2 className="text-[18px] font-bold text-[#21175c] sm:text-[21px]">{step.title}</h2>
+            <p className="mx-auto mt-2 max-w-[620px] text-[11px] leading-5 text-[#686270] sm:text-[12px]">
+              {step.description}
+            </p>
+          </div>
           <div className="min-h-[390px] rounded-[8px] border border-[#e1dce6] bg-[#f8f6fa] p-3 sm:p-5">
             <div className="space-y-4">
               {step.media.map((group, index) => (
                 <MediaGroupView
                   group={group}
+                  isLargeSingle={hasOneImage}
                   key={`${group.layout}-${group.title ?? index}`}
+                  mediaStorage={mediaStorage}
                   placeholder={common.imagePlaceholder}
                 />
               ))}
             </div>
-          </div>
-
-          <div className="mx-auto max-w-[720px] px-3 pb-2 pt-5 text-center">
-            <span className="inline-flex rounded-full bg-[#fff0e7] px-3 py-1 text-[9px] font-bold uppercase text-[#d9570d]">
-              {common.step} {currentStep + 1} / {steps.length}
-            </span>
-            <h2 className="mt-3 text-[18px] font-bold text-[#21175c] sm:text-[21px]">{step.title}</h2>
-            <p className="mx-auto mt-2 max-w-[620px] text-[11px] leading-5 text-[#686270] sm:text-[12px]">
-              {step.description}
-            </p>
           </div>
         </div>
       </div>
@@ -743,37 +868,119 @@ function StepCarousel({
   );
 }
 
-function VideoTemplates({copy}: {copy: GuideCopy}) {
+function VideoTemplates({
+  copy,
+  mediaStorage,
+  onOpen,
+}: {
+  copy: GuideCopy;
+  mediaStorage: string;
+  onOpen: (video: GuideVideo) => void;
+}) {
   return (
     <section className="grid gap-5 lg:grid-cols-3">
-      {copy.videos.items.map((video, index) => (
-        <article
-          className="content-reveal overflow-hidden rounded-[8px] border border-[#ddd8e5] bg-white/94 shadow-[0_8px_24px_rgba(33,23,92,0.05)]"
-          key={video.title}
-          style={{animationDelay: `${index * 70}ms`}}
-        >
-          <div className="relative flex aspect-video items-center justify-center border-b border-[#e3dee8] bg-[#f5f3f8]">
-            <span className="grid size-14 place-items-center rounded-full border border-[#f5c7ad] bg-white text-[#f06317] shadow-sm">
-              <Play aria-hidden="true" className="ml-0.5 size-5 fill-current" />
+      {copy.videos.items.map((video, index) => {
+        const videoSrc = resolveMediaSrc(mediaStorage, video.src);
+
+        return (
+          <button
+            aria-label={video.title}
+            className="content-reveal group overflow-hidden rounded-[8px] border border-[#ddd8e5] bg-white/94 text-left shadow-[0_8px_24px_rgba(33,23,92,0.05)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-[#cfc5dc] hover:shadow-[0_14px_30px_rgba(33,23,92,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-65"
+            disabled={!videoSrc}
+            key={video.title}
+            onClick={() => onOpen({...video, src: videoSrc})}
+            style={{animationDelay: String(index * 70) + "ms"}}
+            type="button"
+          >
+            <span className="relative flex aspect-video items-center justify-center overflow-hidden border-b border-[#e3dee8] bg-[#21175c]">
+              {videoSrc ? (
+                <video
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  muted
+                  onLoadedMetadata={(event) => {
+                    const duration = event.currentTarget.duration;
+                    event.currentTarget.currentTime = Number.isFinite(duration) ? Math.min(0.1, duration) : 0.1;
+                    event.currentTarget.pause();
+                  }}
+                  playsInline
+                  preload="metadata"
+                  src={videoSrc}
+                />
+              ) : null}
+              <span className="absolute inset-0 bg-[#21175c]/25" />
+              <span className="relative z-10 grid size-16 place-items-center rounded-full border border-white/35 bg-white text-[#f06317] shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-200 group-hover:scale-105">
+                <Play aria-hidden="true" className="ml-1 size-6 fill-current" />
+              </span>
+              {!videoSrc ? (
+                <span className="absolute bottom-3 left-3 rounded-[5px] bg-white/92 px-2 py-1 text-[9px] font-semibold text-[#716b79]">
+                  {copy.common.videoPlaceholder}
+                </span>
+              ) : null}
             </span>
-            <span className="absolute bottom-3 left-3 rounded-[5px] bg-white/92 px-2 py-1 text-[9px] font-semibold text-[#716b79]">
-              {copy.common.videoPlaceholder}
+            <span className="block p-5">
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="shrink-0 text-[24px] font-bold leading-none text-[#f06317]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="min-w-0 text-[16px] font-bold text-[#21175c]">{video.title}</span>
+              </span>
+              <span className="mt-3 block text-[11px] leading-5 text-[#6f6878]">{video.description}</span>
             </span>
-          </div>
-          <div className="p-5">
-            <span className="text-[9px] font-bold uppercase text-[#f06317]">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <h2 className="mt-2 text-[16px] font-bold text-[#21175c]">{video.title}</h2>
-            <p className="mt-2 text-[11px] leading-5 text-[#6f6878]">{video.description}</p>
-          </div>
-        </article>
-      ))}
+          </button>
+        );
+      })}
     </section>
   );
 }
 
-export function UserGuidanceView() {
+function VideoModal({video, onClose}: {video: GuideVideo; onClose: () => void}) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      aria-labelledby="guidance-video-title"
+      aria-modal="true"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#160f36]/75 p-4 backdrop-blur-[2px] sm:p-8"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+      role="dialog"
+    >
+      <div className="w-full max-w-[1040px] overflow-hidden rounded-[8px] border border-white/15 bg-white shadow-[0_24px_70px_rgba(13,8,38,0.38)]">
+        <header className="flex min-h-14 items-center justify-between gap-4 border-b border-[#e2dce8] px-4 sm:px-5">
+          <h2 className="min-w-0 truncate text-[16px] font-bold text-[#21175c] sm:text-[18px]" id="guidance-video-title">
+            {video.title}
+          </h2>
+          <button
+            aria-label="Close video"
+            className="grid size-9 shrink-0 place-items-center rounded-full text-[#655f6d] transition-colors hover:bg-[#f2eef5] hover:text-[#21175c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317]"
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden="true" className="size-5" />
+          </button>
+        </header>
+        <div className="flex aspect-video w-full items-center justify-center bg-[#100a2d]">
+          {video.src ? (
+            <video autoPlay className="h-full w-full object-contain" controls playsInline preload="metadata" src={video.src} />
+          ) : (
+            <Play aria-hidden="true" className="size-12 text-white/65" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function UserGuidanceView({mediaStorage}: {mediaStorage: string}) {
   const rawLocale = useLocale();
   const locale: GuideLocale = rawLocale === "vi" || rawLocale === "ja" ? rawLocale : "en";
   const copy = guidanceCopy[locale];
@@ -781,6 +988,7 @@ export function UserGuidanceView() {
   const [glossaryTopic, setGlossaryTopic] = useState<GlossaryTopicKey>("create");
   const [currentStep, setCurrentStep] = useState(0);
   const [slideDirection, setSlideDirection] = useState<SlideDirection>("forward");
+  const [activeVideo, setActiveVideo] = useState<GuideVideo | null>(null);
 
   const activeTitle = copy[activeSection].title;
   const activeDescription = copy[activeSection].description;
@@ -798,6 +1006,7 @@ export function UserGuidanceView() {
     setSlideDirection("forward");
     setActiveSection(section);
     setCurrentStep(0);
+    setActiveVideo(null);
   };
 
   const selectGlossaryTopic = (topic: GlossaryTopicKey) => {
@@ -857,14 +1066,6 @@ export function UserGuidanceView() {
                       <Icon aria-hidden="true" className="size-4" />
                     </span>
                     <span className="min-w-0 flex-1">{copy.sections[item.key]}</span>
-                    <ChevronRight
-                      aria-hidden="true"
-                      className={`size-4 shrink-0 ${
-                        isActive
-                          ? "text-[#f06317]"
-                          : "text-[#aaa4af] group-hover:text-[#f06317]"
-                      }`}
-                    />
                   </button>
                 );
               })}
@@ -908,12 +1109,13 @@ export function UserGuidanceView() {
             ) : null}
 
             {activeSection === "videos" ? (
-              <VideoTemplates copy={copy} />
+              <VideoTemplates copy={copy} mediaStorage={mediaStorage} onOpen={setActiveVideo} />
             ) : (
               <StepCarousel
                 common={copy.common}
                 currentStep={Math.min(currentStep, activeSteps.length - 1)}
                 direction={slideDirection}
+                mediaStorage={mediaStorage}
                 onStepChange={selectStep}
                 steps={activeSteps}
               />
@@ -923,6 +1125,10 @@ export function UserGuidanceView() {
       </main>
 
       <DashboardFooter />
+
+      {activeVideo ? (
+        <VideoModal onClose={() => setActiveVideo(null)} video={activeVideo} />
+      ) : null}
     </div>
   );
 }
