@@ -3074,18 +3074,6 @@
             "format": "uuid",
             "title": "Id"
           },
-          "extractionId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Extractionid"
-          },
           "uploadedAt": {
             "type": "string",
             "format": "date-time",
@@ -3104,20 +3092,15 @@
       },
       "ExtractRequest": {
         "properties": {
-          "documentId": {
+          "translationId": {
             "type": "string",
             "format": "uuid",
-            "title": "Documentid"
-          },
-          "isExtractImage": {
-            "type": "boolean",
-            "title": "Isextractimage",
-            "default": false
+            "title": "Translationid"
           }
         },
         "type": "object",
         "required": [
-          "documentId"
+          "translationId"
         ],
         "title": "ExtractRequest"
       },
@@ -4122,18 +4105,6 @@
             "type": "string",
             "title": "Type"
           },
-          "extractionId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Extractionid"
-          },
           "uploadedAt": {
             "type": "string",
             "format": "date-time",
@@ -4338,6 +4309,18 @@
             "type": "boolean",
             "title": "Keepsource",
             "default": true
+          },
+          "extractionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extractionid"
           },
           "status": {
             "$ref": "#/components/schemas/StatusEnum"

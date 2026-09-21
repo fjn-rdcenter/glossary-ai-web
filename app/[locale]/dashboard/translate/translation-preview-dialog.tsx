@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
-import { API_CONFIG, apiClient, DocumentService, TranslationService, USE_LEGACY_EXTRACTION_MEDIA } from "@/api";
+import { API_CONFIG, apiClient, DocumentService, MEDIA_BASE_URL, TranslationService, USE_LEGACY_EXTRACTION_MEDIA } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileViewerPreview } from "@/components/ui/file-viewer";
 import { Input } from "@/components/ui/input";
+import { LuckysheetPreview, type LuckysheetCellTarget } from "@/components/ui/luckysheet-preview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { TranslationTableResponse } from "@/lib/types";
@@ -98,9 +99,82 @@ type EditableTable = TranslationTableResponse & {
   rowNumber: number;
 };
 
-function getLegacyExtractionImageUrl(path: string, userId: string) {
-  const extractionPath = path.replace(/^\/+/, "");
-  return `http://localhost:18888/extraction/${encodeURIComponent(userId)}/${extractionPath}`;
+type XlsxExtraction = {
+  sheets?: Array<{
+    cells?: Array<{
+      ref?: string;
+      type?: string;
+      value?: unknown;
+    }>;
+    sheetName?: string;
+  }>;
+};
+
+type XlsxCellMaps = {
+  cellsByPath: Map<string, LuckysheetCellTarget>;
+  pathsByCell: Map<string, string>;
+};
+
+function getXlsxCellKey({cellRef, sheetName}: LuckysheetCellTarget) {
+  return `${sheetName}\u0000${cellRef}`;
+}
+
+function createEmptyXlsxCellMaps(): XlsxCellMaps {
+  return {cellsByPath: new Map(), pathsByCell: new Map()};
+}
+
+function getLegacyMediaUrl(path: string, userId: string) {
+  if (!userId) return "";
+  return `${MEDIA_BASE_URL}/extraction/${encodeURIComponent(userId)}/${path.replace(/^\/+/, "")}`;
+}
+
+async function loadMedia<T>(path: string, userId: string): Promise<T> {
+  const mediaPath = path.replace(/^\/+/, "");
+  if (USE_LEGACY_EXTRACTION_MEDIA) {
+    const mediaUrl = getLegacyMediaUrl(mediaPath, userId);
+    if (!mediaUrl) throw new Error("Extraction media user is unavailable");
+
+    const response = await fetch(mediaUrl);
+    if (!response.ok) throw new Error(`Failed to load extraction media (${response.status})`);
+    return response.json() as Promise<T>;
+  }
+
+  const response = await apiClient.get<T>(API_CONFIG.ENDPOINTS.MEDIA.GET(mediaPath));
+  return response.data;
+}
+
+function buildXlsxCellMaps(extraction: XlsxExtraction) {
+  const maps = createEmptyXlsxCellMaps();
+
+  for (const [sheetIndex, sheet] of (extraction.sheets ?? []).entries()) {
+    if (!sheet.sheetName) continue;
+
+    for (const [cellIndex, cell] of (sheet.cells ?? []).entries()) {
+      if (!cell.ref || cell.value === undefined || cell.value === null) continue;
+
+      let path: string;
+      if (cell.type === "s") {
+        if (typeof cell.value !== "number" && typeof cell.value !== "string") continue;
+        if (typeof cell.value === "string" && !cell.value.trim()) continue;
+
+        const sharedStringIndex = Number(cell.value);
+        if (!Number.isInteger(sharedStringIndex) || sharedStringIndex < 0) continue;
+        path = `/sharedStrings/${sharedStringIndex}`;
+      } else if (cell.type === "str" || cell.type === "inlineStr") {
+        path = `/sheets/${sheetIndex}/cells/${cellIndex}/value`;
+      } else {
+        continue;
+      }
+
+      const target = {cellRef: cell.ref, sheetName: sheet.sheetName};
+      maps.pathsByCell.set(getXlsxCellKey(target), path);
+      if (!maps.cellsByPath.has(path)) {
+        maps.cellsByPath.set(path, target);
+      }
+    }
+  }
+
+  return maps;
 }
 
 function getImageName(path: string) {
@@ -225,12 +299,16 @@ export function TranslationPreviewDialog({
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [sourceBlob, setSourceBlob] = useState<Blob | null>(null);
   const [sourceFileName, setSourceFileName] = useState("");
-  const [userId, setUserId] = useState("");
   const [tables, setTables] = useState<EditableTable[]>([]);
   const [targetBlob, setTargetBlob] = useState<Blob | null>(null);
   const [targetFileName, setTargetFileName] = useState("");
+  const [userId, setUserId] = useState("");
   const [imagePreview, setImagePreview] = useState<{alt: string; src: string} | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [xlsxCellMaps, setXlsxCellMaps] = useState<XlsxCellMaps>(createEmptyXlsxCellMaps);
+  const [xlsxSelectedCell, setXlsxSelectedCell] = useState<LuckysheetCellTarget | null>(null);
+  const [xlsxTableNavigationVersion, setXlsxTableNavigationVersion] = useState(0);
+  const selectedTableRowRef = useRef<HTMLDivElement | null>(null);
   const viewerSectionRef = useRef<HTMLElement | null>(null);
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase());
 
@@ -250,13 +328,24 @@ export function TranslationPreviewDialog({
       setSearch("");
       setEditingTableId(null);
       setSelectedTableId(null);
-      setUserId("");
       setSourceBlob(null);
       setTargetBlob(null);
       setSourceFileName("");
       setTargetFileName("");
+      setUserId("");
       setImagePreview(null);
       setImageUrls({});
+      setXlsxCellMaps(createEmptyXlsxCellMaps());
+      setXlsxSelectedCell(null);
+      setXlsxTableNavigationVersion(0);
+
+      let storedUserId = "";
+      try {
+        const storedUser = localStorage.getItem("glossaryai_user_info");
+        storedUserId = storedUser ? (JSON.parse(storedUser) as { id?: string }).id ?? "" : "";
+      } catch {
+        storedUserId = "";
+      }
 
       try {
         const [firstPage, job] = await Promise.all([
@@ -265,7 +354,16 @@ export function TranslationPreviewDialog({
         ]);
         if (!job.targetDocument) throw new Error("Translated document is unavailable");
 
-        const [remainingPages, sourceDocument, targetDocument] = await Promise.all([
+        const isXlsxJob = (job.sourceDocumentName || fileName).toLocaleLowerCase().endsWith(".xlsx");
+        const xlsxCellsPromise = job.extractionId && isXlsxJob
+          ? loadMedia<XlsxExtraction>(`${job.extractionId}/extraction.json`, storedUserId)
+              .then(buildXlsxCellMaps)
+              .catch((mediaError) => {
+                console.error("Failed to load XLSX extraction map", mediaError);
+                return createEmptyXlsxCellMaps();
+              })
+          : Promise.resolve(createEmptyXlsxCellMaps());
+        const [remainingPages, sourceDocument, targetDocument, xlsxCells] = await Promise.all([
           Promise.all(
             Array.from({ length: Math.max(0, firstPage.pages - 1) }, (_, index) =>
               TranslationService.getTranslationTables(translationId, index + 2),
@@ -273,20 +371,20 @@ export function TranslationPreviewDialog({
           ),
           DocumentService.downloadDocument(job.sourceDocument),
           DocumentService.downloadDocument(job.targetDocument),
+          xlsxCellsPromise,
         ]);
 
         if (!isMounted) return;
 
-        let storedUserId = "";
-        try {
-          const storedUser = localStorage.getItem("glossaryai_user_info");
-          storedUserId = storedUser ? (JSON.parse(storedUser) as { id?: string }).id ?? "" : "";
-        } catch {
-          storedUserId = "";
-        }
-
         const editableTables = [firstPage, ...remainingPages]
           .flatMap((responsePage) => responsePage.items)
+          .sort((left, right) => {
+            const leftIsImage = left.path.startsWith("/images");
+            const rightIsImage = right.path.startsWith("/images");
+
+            if (leftIsImage !== rightIsImage) return leftIsImage ? 1 : -1;
+            return left.path.localeCompare(right.path, undefined, {numeric: true, sensitivity: "base"});
+          })
           .map((table, index) => ({
             ...table,
             applyToFile: !table.isSkipped,
@@ -301,6 +399,7 @@ export function TranslationPreviewDialog({
         setTargetBlob(targetDocument);
         setTargetFileName(job.targetDocumentName || fileName);
         setUserId(storedUserId);
+        setXlsxCellMaps(xlsxCells);
       } catch (loadError) {
         console.error("Failed to load translation preview", loadError);
         if (isMounted) setError(copy.previewError);
@@ -317,11 +416,6 @@ export function TranslationPreviewDialog({
   }, [copy.previewError, fileName, open, translationId]);
 
   useEffect(() => {
-    if (USE_LEGACY_EXTRACTION_MEDIA || !userId) {
-      setImageUrls({});
-      return;
-    }
-
     const paths = Array.from(new Set(
       tables
         .filter((table) => table.path.startsWith("/images"))
@@ -330,21 +424,46 @@ export function TranslationPreviewDialog({
     let isMounted = true;
     let createdUrls: string[] = [];
 
-    const loadMedia = async () => {
-      const entries = await Promise.all(paths.map(async (path) => {
-        try {
-          const response = await apiClient.get(
-            API_CONFIG.ENDPOINTS.MEDIA.GET(path.replace(/^\/+/, "")),
-            { responseType: "blob" },
+    const loadImageMedia = async () => {
+      if (USE_LEGACY_EXTRACTION_MEDIA) {
+        const entries = paths.map((path) => {
+          const imageUrl = getLegacyMediaUrl(path, userId);
+
+          console.info("Legacy extraction media", { imageUrl, mediaPath: path, userId });
+          return imageUrl ? [path, imageUrl] as const : null;
+        });
+
+        setImageUrls(Object.fromEntries(entries.filter((entry): entry is readonly [string, string] => entry !== null)));
+        return;
+      }
+
+      const entries = await Promise.all(
+        paths.map(async (path) => {
+          const mediaEndpoint = API_CONFIG.ENDPOINTS.MEDIA.GET(
+            path.replace(/^\/+/, "")
           );
-          const url = URL.createObjectURL(response.data);
-          createdUrls.push(url);
-          return [path, url] as const;
-        } catch (mediaError) {
-          console.error("Failed to load preview media", mediaError);
-          return null;
-        }
-      }));
+
+          try {
+            const response = await apiClient.get(mediaEndpoint);
+
+            const redirectPath = response.headers["x-accel-redirect"];
+
+            if (!redirectPath) {
+              throw new Error("Missing X-Accel-Redirect header");
+            }
+
+            const url = new URL(
+              redirectPath,
+              MEDIA_BASE_URL
+            ).href;
+
+            return [path, url] as const;
+          } catch (error) {
+            console.error("Failed to load preview media", error);
+            return null;
+          }
+        })
+      );
 
       if (!isMounted) {
         createdUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -354,7 +473,7 @@ export function TranslationPreviewDialog({
       setImageUrls(Object.fromEntries(entries.filter((entry): entry is readonly [string, string] => entry !== null)));
     };
 
-    void loadMedia();
+    void loadImageMedia();
 
     return () => {
       isMounted = false;
@@ -436,11 +555,38 @@ export function TranslationPreviewDialog({
   );
   const activeBlob = activeDocument === "translated" ? targetBlob : sourceBlob;
   const activeFileName = activeDocument === "translated" ? targetFileName : sourceFileName;
-  const getImageUrl = (path: string) => USE_LEGACY_EXTRACTION_MEDIA
-    ? getLegacyExtractionImageUrl(path, userId)
-    : imageUrls[path] ?? "";
+  const isXlsxPreview = activeFileName.toLocaleLowerCase().endsWith(".xlsx");
+  const selectedTablePath = tables.find((table) => table.id === selectedTableId)?.path ?? "";
+  const xlsxTargetCell = xlsxSelectedCell ?? xlsxCellMaps.cellsByPath.get(selectedTablePath) ?? null;
+  const selectTableForXlsxCell = (target: LuckysheetCellTarget) => {
+    const cellKey = getXlsxCellKey(target);
+    const path = xlsxCellMaps.pathsByCell.get(cellKey);
+    const table = path ? tables.find((item) => item.path === path) : undefined;
+
+    if (!path || !table) return;
+
+    setXlsxSelectedCell(target);
+    setSelectedTableId(table.id);
+    setXlsxTableNavigationVersion((version) => version + 1);
+    const filteredIndex = filteredTables.findIndex((item) => item.id === table.id);
+    if (filteredIndex >= 0) setPage(Math.floor(filteredIndex / pageSize) + 1);
+  };
+  const selectTable = (tableId: string) => {
+    setXlsxSelectedCell(null);
+    setSelectedTableId(tableId);
+  };
+  const getImageUrl = (path: string) => imageUrls[path] ?? "";
+  const markImageAsUnavailable = (path: string) => {
+    setImageUrls((currentUrls) => ({ ...currentUrls, [path]: "" }));
+  };
 
   useEffect(() => {
+    if (!isXlsxPreview || !selectedTableId || !selectedTableRowRef.current) return;
+    selectedTableRowRef.current.scrollIntoView({behavior: "smooth", block: "nearest"});
+  }, [currentPage, isXlsxPreview, selectedTableId, xlsxTableNavigationVersion]);
+
+  useEffect(() => {
+    if (isXlsxPreview) return;
     const selectedTable = tables.find((table) => table.id === selectedTableId);
     const searchText = activeDocument === "source"
       ? selectedTable?.source
@@ -479,7 +625,7 @@ export function TranslationPreviewDialog({
       if (timeoutId) clearTimeout(timeoutId);
       clearHighlight();
     };
-  }, [activeBlob, activeDocument, selectedTableId, tables]);
+  }, [activeBlob, activeDocument, isXlsxPreview, selectedTableId, tables]);
   const formatLanguageCode = (code: string) => {
     const normalizedCode = code.toLowerCase() === "vn" || code.toLowerCase() === "vi" ? "VI" :
       code.toLowerCase() === "jp" || code.toLowerCase() === "ja" ? "JA" : code.toUpperCase();
@@ -614,11 +760,12 @@ export function TranslationPreviewDialog({
                                 : "hover:bg-muted/35",
                             )}
                             key={table.id}
-                            onClick={() => setSelectedTableId(table.id)}
+                            onClick={() => selectTable(table.id)}
+                            ref={isSelected ? selectedTableRowRef : undefined}
                           >
                             <span className={cn("flex items-center justify-center px-3 py-3.5 text-center text-[13px]", isSelected ? "font-semibold text-primary" : "text-muted-foreground")}>{itemNumber}</span>
                             <div className="relative flex min-w-0 items-center border-l border-[#e4e0e8] py-3">
-                              {table.path.startsWith("/images") && userId ? (
+                              {table.path.startsWith("/images") ? (
                                 (() => {
                                   const imagePath = table.source || table.path;
                                   const imageUrl = getImageUrl(imagePath);
@@ -627,11 +774,11 @@ export function TranslationPreviewDialog({
                                   className="m-2 block rounded-md p-1 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent"
                                   disabled={!imageUrl}
                                   onClick={() => setImagePreview({ alt: imagePath, src: imageUrl })}
-                                  type="button"
-                                >
-                                  {imageUrl ? (
-                                    <img alt={imagePath || copy.imageContent} className="max-h-28 max-w-full rounded object-contain object-left" src={imageUrl} />
-                                  ) : (
+                                   type="button"
+                                 >
+                                   {imageUrl ? (
+                                     <img alt={getImageName(imagePath)} className="max-h-28 max-w-full rounded object-contain object-left" onError={() => markImageAsUnavailable(imagePath)} src={imageUrl} />
+                                   ) : (
                                     <div className="flex min-h-20 min-w-28 items-center gap-2 rounded-md border border-dashed border-border/70 bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
                                       <FileImage className="size-5 shrink-0 text-primary/55" />
                                       <span className="max-w-40 truncate">{getImageName(imagePath)}</span>
@@ -644,7 +791,7 @@ export function TranslationPreviewDialog({
                               )}
                             </div>
                             <div className="relative flex min-w-0 items-center border-l border-[#e4e0e8]">
-                              {table.path.startsWith("/images") && userId ? (
+                              {table.path.startsWith("/images") ? (
                                 (() => {
                                   const imagePath = table.editedTarget || table.target || table.path;
                                   const imageUrl = getImageUrl(imagePath);
@@ -653,11 +800,11 @@ export function TranslationPreviewDialog({
                                   className="m-2 block rounded-md p-1 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent"
                                   disabled={!imageUrl}
                                   onClick={() => setImagePreview({ alt: imagePath, src: imageUrl })}
-                                  type="button"
-                                >
-                                  {imageUrl ? (
-                                    <img alt={imagePath || copy.imageContent} className="max-h-28 max-w-full rounded object-contain object-left" src={imageUrl} />
-                                  ) : (
+                                   type="button"
+                                 >
+                                   {imageUrl ? (
+                                     <img alt={getImageName(imagePath)} className="max-h-28 max-w-full rounded object-contain object-left" onError={() => markImageAsUnavailable(imagePath)} src={imageUrl} />
+                                   ) : (
                                     <div className="flex min-h-20 min-w-28 items-center gap-2 rounded-md border border-dashed border-border/70 bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
                                       <FileImage className="size-5 shrink-0 text-primary/55" />
                                       <span className="max-w-40 truncate">{getImageName(imagePath)}</span>
@@ -680,7 +827,7 @@ export function TranslationPreviewDialog({
                                       setTables((currentTables) => currentTables.map((item) => item.id === table.id ? { ...item, editedTarget } : item));
                                     }}
                                     onFocus={() => {
-                                      setSelectedTableId(table.id);
+                                      selectTable(table.id);
                                       setEditingTableId(table.id);
                                     }}
                                     onBlur={() => setEditingTableId(null)}
@@ -800,7 +947,13 @@ export function TranslationPreviewDialog({
               </section>
 
               <section ref={viewerSectionRef} className="relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[10px] border border-border/70 bg-card shadow-[0_2px_12px_rgba(33,23,92,0.05)]">
-                <div className="relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-3 lg:absolute lg:top-0 lg:left-0 lg:border-b-0" role="tablist">
+                <div
+                  className={cn(
+                    "relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-3",
+                    !isXlsxPreview && "lg:absolute lg:top-0 lg:left-0 lg:border-b-0",
+                  )}
+                  role="tablist"
+                >
                   <Button
                     aria-selected={activeDocument === "source"}
                     className={cn(
@@ -834,7 +987,18 @@ export function TranslationPreviewDialog({
                     {copy.translatedFile}
                   </Button>
                 </div>
-                {activeBlob ? (
+                {activeBlob && isXlsxPreview ? (
+                  <LuckysheetPreview
+                    key={`${activeDocument}:${activeBlob.size}:${activeBlob.type}`}
+                    blob={activeBlob}
+                    className="min-h-0 flex-1"
+                    errorLabel={copy.previewError}
+                    fileName={activeFileName}
+                    loadingLabel={copy.previewLoading}
+                    onCellSelect={selectTableForXlsxCell}
+                    targetCell={xlsxTargetCell}
+                  />
+                ) : activeBlob ? (
                   <FileViewerPreview
                     key={`${activeDocument}:${activeBlob.size}:${activeBlob.type}`}
                      className="min-h-0 flex-1 border-0 bg-muted/70 [&_[data-slot=viewer-controls]]:relative [&_[data-slot=viewer-controls]]:h-12 [&_[data-slot=viewer-controls]]:border-border/60 [&_[data-slot=viewer-controls]]:bg-card lg:[&_[data-slot=viewer-controls]]:h-14 lg:[&_[data-slot=viewer-position]]:absolute lg:[&_[data-slot=viewer-position]]:top-1/2 lg:[&_[data-slot=viewer-position]]:left-1/2 lg:[&_[data-slot=viewer-position]]:-translate-x-1/2 lg:[&_[data-slot=viewer-position]]:-translate-y-1/2 [&_[data-slot=file-viewer-viewport]]:bg-muted/70"

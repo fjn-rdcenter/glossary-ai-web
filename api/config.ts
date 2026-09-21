@@ -4,11 +4,13 @@
  */
 
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-export const USE_LEGACY_EXTRACTION_MEDIA =
-  process.env.NEXT_PUBLIC_USE_LEGACY_EXTRACTION_MEDIA === "false";
+export const USE_LEGACY_EXTRACTION_MEDIA = true;
+
+// export const MEDIA_BASE_URL = "http://abc.test";
+export const MEDIA_BASE_URL = "http://127.0.0.1:18888";
 
 export const getApiBaseUrl = (): string => {
-  return " http://172.16.6.10:28000"
+  return "http://127.0.0.1:18000";
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (typeof window === "undefined") {
