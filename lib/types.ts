@@ -193,6 +193,7 @@ export interface TranslationJobResponse {
   sourceDocumentName?: string;
   targetDocument?: string;
   targetDocumentName?: string;
+  extractionId?: string | null;
   status: StatusEnum;
   progress: number;
   startedAt: string; // datetime
