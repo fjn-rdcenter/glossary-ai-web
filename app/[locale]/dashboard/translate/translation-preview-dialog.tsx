@@ -186,6 +186,11 @@ function getImageName(path: string) {
   }
 }
 
+function getPptxSlideIndex(path: string) {
+  const match = /^\/(\d+)(?:\/|$)/.exec(path);
+  const slideIndex = match ? Number(match[1]) : Number.NaN;
+  return Number.isSafeInteger(slideIndex) && slideIndex >= 0 ? slideIndex : null;
+}
 function findTextRange(root: HTMLElement, needle: string): Range | null {
   const normalizedNeedle = needle.replace(/\s+/g, " ").trim().toLocaleLowerCase();
   if (!normalizedNeedle) return null;
@@ -556,7 +561,13 @@ export function TranslationPreviewDialog({
   const activeBlob = activeDocument === "translated" ? targetBlob : sourceBlob;
   const activeFileName = activeDocument === "translated" ? targetFileName : sourceFileName;
   const isXlsxPreview = activeFileName.toLocaleLowerCase().endsWith(".xlsx");
-  const selectedTablePath = tables.find((table) => table.id === selectedTableId)?.path ?? "";
+  const isPptxPreview = activeFileName.toLocaleLowerCase().endsWith(".pptx");
+  const selectedTable = tables.find((table) => table.id === selectedTableId);
+  const selectedTablePath = selectedTable?.path ?? "";
+  const selectedPptxSlideIndex = isPptxPreview ? getPptxSlideIndex(selectedTablePath) : null;
+  const selectedTableText = activeDocument === "source"
+    ? selectedTable?.source
+    : selectedTable?.editedTarget || selectedTable?.target;
   const xlsxTargetCell = xlsxSelectedCell ?? xlsxCellMaps.cellsByPath.get(selectedTablePath) ?? null;
   const selectTableForXlsxCell = (target: LuckysheetCellTarget) => {
     const cellKey = getXlsxCellKey(target);
@@ -586,11 +597,8 @@ export function TranslationPreviewDialog({
   }, [currentPage, isXlsxPreview, selectedTableId, xlsxTableNavigationVersion]);
 
   useEffect(() => {
-    if (isXlsxPreview) return;
-    const selectedTable = tables.find((table) => table.id === selectedTableId);
-    const searchText = activeDocument === "source"
-      ? selectedTable?.source
-      : selectedTable?.editedTarget || selectedTable?.target;
+    if (isXlsxPreview || isPptxPreview) return;
+    const searchText = selectedTableText;
     const root = viewerSectionRef.current;
     if (!root || !searchText?.trim() || !activeBlob) return;
 
@@ -625,7 +633,49 @@ export function TranslationPreviewDialog({
       if (timeoutId) clearTimeout(timeoutId);
       clearHighlight();
     };
-  }, [activeBlob, activeDocument, isXlsxPreview, selectedTableId, tables]);
+  }, [activeBlob, isPptxPreview, isXlsxPreview, selectedTableId, selectedTableText]);
+  useEffect(() => {
+    if (!isPptxPreview || selectedPptxSlideIndex == null || selectedPptxSlideIndex < 0) return;
+    const root = viewerSectionRef.current;
+    if (!root || !activeBlob) return;
+
+    const clearHighlight = () => {
+      if (typeof CSS !== "undefined" && "highlights" in CSS) {
+        CSS.highlights.delete("translation-preview-match");
+      }
+    };
+    const navigateToSlide = () => {
+      const presentation = root.querySelector<HTMLElement>(
+        '[data-slot="pptx-preview-surface"] > .pptx-preview-wrapper',
+      );
+      if (!presentation) return false;
+
+      const slide = presentation.querySelectorAll<HTMLElement>(".pptx-preview-slide-wrapper")[selectedPptxSlideIndex];
+      if (!slide) return false;
+
+      slide.scrollIntoView({behavior: "smooth", block: "center"});
+      if (selectedTableText?.trim()) {
+        const range = findTextRange(slide, selectedTableText);
+        if (range && typeof CSS !== "undefined" && "highlights" in CSS && typeof Highlight !== "undefined") {
+          CSS.highlights.set("translation-preview-match", new Highlight(range));
+        }
+      }
+      return true;
+    };
+
+    clearHighlight();
+    if (navigateToSlide()) return clearHighlight;
+
+    const observer = new MutationObserver(() => {
+      if (navigateToSlide()) observer.disconnect();
+    });
+    observer.observe(root, {childList: true, subtree: true});
+
+    return () => {
+      observer.disconnect();
+      clearHighlight();
+    };
+  }, [activeBlob, isPptxPreview, selectedPptxSlideIndex, selectedTableText]);
   const formatLanguageCode = (code: string) => {
     const normalizedCode = code.toLowerCase() === "vn" || code.toLowerCase() === "vi" ? "VI" :
       code.toLowerCase() === "jp" || code.toLowerCase() === "ja" ? "JA" : code.toUpperCase();
@@ -638,7 +688,7 @@ export function TranslationPreviewDialog({
         <style>{`::highlight(translation-preview-match){background-color:color-mix(in oklab,var(--primary) 30%,transparent);text-decoration:underline;text-decoration-color:var(--primary);}`}</style>
         <DialogContent
           className={cn(
-            "h-[min(94dvh,960px)] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-xl border-white/80 bg-surface-container-low p-0 shadow-[0_28px_80px_rgba(33,23,92,0.24)] sm:max-w-[1580px]",
+            "h-[min(94dvh,960px)] grid-rows-[auto_minmax(0,1fr)] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-xl border-white/80 bg-surface-container-low p-0 shadow-[0_28px_80px_rgba(33,23,92,0.24)] sm:max-w-[1580px]",
             isFullscreen && "top-0 left-0 h-dvh w-dvw max-w-none translate-x-0 translate-y-0 rounded-none sm:max-w-none",
           )}
           showCloseButton={false}
@@ -1001,7 +1051,7 @@ export function TranslationPreviewDialog({
                 ) : activeBlob ? (
                   <FileViewerPreview
                     key={`${activeDocument}:${activeBlob.size}:${activeBlob.type}`}
-                     className="min-h-0 flex-1 border-0 bg-muted/70 [&_[data-slot=viewer-controls]]:relative [&_[data-slot=viewer-controls]]:h-12 [&_[data-slot=viewer-controls]]:border-border/60 [&_[data-slot=viewer-controls]]:bg-card lg:[&_[data-slot=viewer-controls]]:h-14 lg:[&_[data-slot=viewer-position]]:absolute lg:[&_[data-slot=viewer-position]]:top-1/2 lg:[&_[data-slot=viewer-position]]:left-1/2 lg:[&_[data-slot=viewer-position]]:-translate-x-1/2 lg:[&_[data-slot=viewer-position]]:-translate-y-1/2 [&_[data-slot=file-viewer-viewport]]:bg-muted/70"
+                     className="min-h-0 flex-1 border-0 bg-muted/70 [&_[data-slot=viewer-controls]]:relative [&_[data-slot=viewer-controls]]:h-12 [&_[data-slot=viewer-controls]]:border-border/60 [&_[data-slot=viewer-controls]]:bg-card lg:[&_[data-slot=viewer-controls]]:h-14 lg:[&_[data-slot=viewer-controls-skeleton]]:h-14 lg:[&_[data-slot=viewer-position]]:absolute lg:[&_[data-slot=viewer-position]]:top-1/2 lg:[&_[data-slot=viewer-position]]:left-1/2 lg:[&_[data-slot=viewer-position]]:-translate-x-1/2 lg:[&_[data-slot=viewer-position]]:-translate-y-1/2 [&_[data-slot=file-viewer-viewport]]:bg-muted/70"
                     source={{
                       kind: "blob",
                       blob: activeBlob,
