@@ -27,7 +27,7 @@ export function PptxViewerFallback({
       data-slot="pptx-viewer"
     >
       {controls ? (
-        <ViewerControlsSkeleton position zoom rotate download />
+        <ViewerControlsSkeleton download />
       ) : null}
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="flex flex-col items-center p-4">
