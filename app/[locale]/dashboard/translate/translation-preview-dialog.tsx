@@ -16,7 +16,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
 import { API_CONFIG, apiClient, DocumentService, MEDIA_BASE_URL, TranslationService, USE_LEGACY_EXTRACTION_MEDIA } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -46,6 +46,7 @@ import type { TranslationTableResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const;
+const TEXT_ANCHOR_SEARCH_LIMIT = 50;
 
 type ApplyFilter = "all" | "applied" | "notApplied";
 type ContentFilter = "all" | "text" | "image";
@@ -113,6 +114,22 @@ type XlsxExtraction = {
 type XlsxCellMaps = {
   cellsByPath: Map<string, LuckysheetCellTarget>;
   pathsByCell: Map<string, string>;
+};
+
+type TextSearchIndex = {
+  characters: Array<{node: Text; offset: number}>;
+  normalizedText: string;
+};
+
+type TextMatch = {
+  end: number;
+  range: Range;
+  start: number;
+};
+
+type TextAnchor = {
+  match: TextMatch;
+  tableIndex: number;
 };
 
 function getXlsxCellKey({cellRef, sheetName}: LuckysheetCellTarget) {
@@ -191,14 +208,22 @@ function getPptxSlideIndex(path: string) {
   const slideIndex = match ? Number(match[1]) : Number.NaN;
   return Number.isSafeInteger(slideIndex) && slideIndex >= 0 ? slideIndex : null;
 }
-function findTextRange(root: HTMLElement, needle: string): Range | null {
-  const normalizedNeedle = needle.replace(/\s+/g, " ").trim().toLocaleLowerCase();
-  if (!normalizedNeedle) return null;
 
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+function getDocxTableIndex(path: string) {
+  const match = /^\/tables\/(\d+)(?:\/|$)/.exec(path);
+  const tableIndex = match ? Number(match[1]) : Number.NaN;
+  return Number.isSafeInteger(tableIndex) && tableIndex >= 0 ? tableIndex : null;
+}
+
+function normalizePreviewText(value: string) {
+  return value.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+
+function createTextSearchIndex(root: HTMLElement): TextSearchIndex {
   const characters: Array<{node: Text; offset: number}> = [];
   let normalizedText = "";
   let previousWhitespace = false;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Node | null;
 
   while ((node = walker.nextNode())) {
@@ -220,15 +245,138 @@ function findTextRange(root: HTMLElement, needle: string): Range | null {
     }
   }
 
-  const matchStart = normalizedText.toLocaleLowerCase().indexOf(normalizedNeedle);
-  if (matchStart < 0 || !characters[matchStart] || !characters[matchStart + normalizedNeedle.length - 1]) return null;
+  return {characters, normalizedText};
+}
 
-  const start = characters[matchStart];
-  const end = characters[matchStart + normalizedNeedle.length - 1];
-  const range = document.createRange();
-  range.setStart(start.node, start.offset);
-  range.setEnd(end.node, end.offset + 1);
-  return range;
+function findTextMatches(searchIndex: TextSearchIndex, needle: string): TextMatch[] {
+  const normalizedNeedle = normalizePreviewText(needle);
+  if (!normalizedNeedle) return [];
+
+  const matches: TextMatch[] = [];
+  const searchableText = searchIndex.normalizedText.toLocaleLowerCase();
+  let matchStart = searchableText.indexOf(normalizedNeedle);
+
+  while (matchStart >= 0) {
+    const start = searchIndex.characters[matchStart];
+    const end = searchIndex.characters[matchStart + normalizedNeedle.length - 1];
+    if (start && end) {
+      const range = document.createRange();
+      range.setStart(start.node, start.offset);
+      range.setEnd(end.node, end.offset + 1);
+      matches.push({
+        end: matchStart + normalizedNeedle.length,
+        range,
+        start: matchStart,
+      });
+    }
+    matchStart = searchableText.indexOf(normalizedNeedle, matchStart + 1);
+  }
+
+  return matches;
+}
+
+function findTextRange(root: HTMLElement, needle: string): Range | null {
+  return findTextMatches(createTextSearchIndex(root), needle)[0]?.range ?? null;
+}
+
+function getTablePreviewHighlightText(table: EditableTable, activeDocument: DocumentTab) {
+  return activeDocument === "source"
+    ? table.source ?? ""
+    : table.feedback ?? table.target ?? "";
+}
+
+function findTextAnchors({
+  activeDocument,
+  searchIndex,
+  selectedTableIndex,
+  tables,
+}: {
+  activeDocument: DocumentTab;
+  searchIndex: TextSearchIndex;
+  selectedTableIndex: number;
+  tables: EditableTable[];
+}) {
+  let before: TextAnchor | null = null;
+  let after: TextAnchor | null = null;
+
+  for (
+    let tableIndex = selectedTableIndex - 1;
+    tableIndex >= 0 && tableIndex >= selectedTableIndex - TEXT_ANCHOR_SEARCH_LIMIT;
+    tableIndex -= 1
+  ) {
+    const table = tables[tableIndex];
+    if (!table || table.path.startsWith("/images")) continue;
+    const matches = findTextMatches(searchIndex, getTablePreviewHighlightText(table, activeDocument));
+    if (matches.length === 1) {
+      before = {match: matches[0], tableIndex};
+      break;
+    }
+  }
+
+  for (
+    let tableIndex = selectedTableIndex + 1;
+    tableIndex < tables.length && tableIndex <= selectedTableIndex + TEXT_ANCHOR_SEARCH_LIMIT;
+    tableIndex += 1
+  ) {
+    const table = tables[tableIndex];
+    if (!table || table.path.startsWith("/images")) continue;
+    const matches = findTextMatches(searchIndex, getTablePreviewHighlightText(table, activeDocument));
+    if (matches.length === 1) {
+      after = {match: matches[0], tableIndex};
+      break;
+    }
+  }
+
+  return {after, before};
+}
+
+function selectClosestTextMatch(matches: TextMatch[], distance: (match: TextMatch) => number) {
+  return matches.reduce((closest, match) =>
+    distance(match) < distance(closest) ? match : closest,
+  );
+}
+
+function selectAnchorGuidedTextMatch({
+  anchors,
+  matches,
+  selectedTableIndex,
+}: {
+  anchors: ReturnType<typeof findTextAnchors>;
+  matches: TextMatch[];
+  selectedTableIndex: number;
+}) {
+  if (matches.length === 0) return null;
+
+  const {after, before} = anchors;
+  if (before && after && before.match.end <= after.match.start) {
+    const matchesBetweenAnchors = matches.filter(
+      (match) => match.start >= before.match.end && match.end <= after.match.start,
+    );
+    const candidates = matchesBetweenAnchors.length > 0 ? matchesBetweenAnchors : matches;
+    const relativeTablePosition =
+      (selectedTableIndex - before.tableIndex) / (after.tableIndex - before.tableIndex);
+    const expectedPosition = before.match.end +
+      (after.match.start - before.match.end) * relativeTablePosition;
+
+    return selectClosestTextMatch(
+      candidates,
+      (match) => Math.abs((match.start + match.end) / 2 - expectedPosition),
+    );
+  }
+
+  if (before) {
+    const matchesAfterAnchor = matches.filter((match) => match.start >= before.match.end);
+    const candidates = matchesAfterAnchor.length > 0 ? matchesAfterAnchor : matches;
+    return selectClosestTextMatch(candidates, (match) => Math.abs(match.start - before.match.end));
+  }
+
+  if (after) {
+    const matchesBeforeAnchor = matches.filter((match) => match.end <= after.match.start);
+    const candidates = matchesBeforeAnchor.length > 0 ? matchesBeforeAnchor : matches;
+    return selectClosestTextMatch(candidates, (match) => Math.abs(after.match.start - match.end));
+  }
+
+  return matches[0];
 }
 
 function TranslationPreviewSkeleton() {
@@ -281,6 +429,71 @@ function TranslationPreviewSkeleton() {
   );
 }
 
+function DocxPreview({
+  blob,
+  className,
+  errorLabel,
+  loadingLabel,
+}: {
+  blob: Blob;
+  className?: string;
+  errorLabel: string;
+  loadingLabel: string;
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let isActive = true;
+    setStatus("loading");
+
+    const render = async () => {
+      try {
+        const [{renderAsync}, buffer] = await Promise.all([
+          import("docx-preview"),
+          blob.arrayBuffer(),
+        ]);
+        const renderHost = document.createElement("div");
+
+        await renderAsync(buffer, renderHost, undefined, {
+          breakPages: true,
+          experimental: true,
+          ignoreLastRenderedPageBreak: false,
+          inWrapper: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          renderHeaders: true,
+        });
+
+        if (!isActive || !hostRef.current) return;
+        hostRef.current.replaceChildren(...Array.from(renderHost.childNodes));
+        setStatus("ready");
+      } catch (renderError) {
+        console.error("Failed to render DOCX preview", renderError);
+        if (isActive) setStatus("error");
+      }
+    };
+
+    void render();
+
+    return () => {
+      isActive = false;
+    };
+  }, [blob]);
+
+  return (
+    <div className={cn("relative flex min-h-0 flex-1 flex-col overflow-hidden", className)} data-slot="translation-docx-preview">
+      <style>{`[data-slot="translation-docx-preview"] .docx-wrapper{background:transparent;padding:0;gap:1rem;}[data-slot="translation-docx-preview"] .docx-wrapper>section.docx{margin-bottom:0;box-shadow:0 0 0 1px var(--border),0 1px 2px 0 rgb(0 0 0 / 0.05);}`}</style>
+      <div className="min-h-0 flex-1 overflow-auto p-4" data-slot="translation-docx-preview-content" ref={hostRef} />
+      {status !== "ready" ? (
+        <div className="absolute inset-0 grid place-items-center bg-muted/70 p-6 text-center text-sm text-muted-foreground">
+          {status === "error" ? errorLabel : loadingLabel}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function TranslationPreviewDialog({
   copy,
   fileName,
@@ -305,6 +518,7 @@ export function TranslationPreviewDialog({
   const [sourceBlob, setSourceBlob] = useState<Blob | null>(null);
   const [sourceFileName, setSourceFileName] = useState("");
   const [tables, setTables] = useState<EditableTable[]>([]);
+  const [highlightTables, setHighlightTables] = useState<EditableTable[]>([]);
   const [targetBlob, setTargetBlob] = useState<Blob | null>(null);
   const [targetFileName, setTargetFileName] = useState("");
   const [userId, setUserId] = useState("");
@@ -398,6 +612,7 @@ export function TranslationPreviewDialog({
           }));
 
         setTables(editableTables);
+        setHighlightTables(editableTables);
         setSelectedTableId(editableTables[0]?.id ?? null);
         setSourceBlob(sourceDocument);
         setSourceFileName(job.sourceDocumentName || fileName);
@@ -513,7 +728,7 @@ export function TranslationPreviewDialog({
   }, [open]);
 
   const saveAndRegenerate = async () => {
-    if (!translationId) return;
+    if (!translationId || isSaving) return;
 
     const changedTables = tables.filter(
       (table) =>
@@ -526,6 +741,8 @@ export function TranslationPreviewDialog({
     setError("");
 
     try {
+      // Yield once so the urgent loading state paints before DOCX work begins.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       await TranslationService.updateTranslationTables(translationId, {
         items: changedTables.map((table) => ({
           id: table.id,
@@ -536,15 +753,17 @@ export function TranslationPreviewDialog({
       const generated = await TranslationService.generateTranslation(translationId);
       const document = await DocumentService.downloadDocument(generated.targetDocument);
 
-      setTables((currentTables) =>
-        currentTables.map((table) => ({
-          ...table,
-          feedback: table.editedTarget || null,
-          isSkipped: !table.applyToFile,
-        })),
-      );
-      setTargetBlob(document);
+      const savedTables = tables.map((table) => ({
+        ...table,
+        feedback: table.editedTarget || null,
+        isSkipped: !table.applyToFile,
+      }));
+      setTables(savedTables);
+      setHighlightTables(savedTables);
       setActiveDocument("translated");
+      startTransition(() => {
+        setTargetBlob(document);
+      });
     } catch (saveError) {
       console.error("Failed to regenerate translation preview", saveError);
       setError(copy.previewError);
@@ -560,14 +779,17 @@ export function TranslationPreviewDialog({
   );
   const activeBlob = activeDocument === "translated" ? targetBlob : sourceBlob;
   const activeFileName = activeDocument === "translated" ? targetFileName : sourceFileName;
+  const isDocxPreview = activeFileName.toLocaleLowerCase().endsWith(".docx");
   const isXlsxPreview = activeFileName.toLocaleLowerCase().endsWith(".xlsx");
   const isPptxPreview = activeFileName.toLocaleLowerCase().endsWith(".pptx");
   const selectedTable = tables.find((table) => table.id === selectedTableId);
   const selectedTablePath = selectedTable?.path ?? "";
   const selectedPptxSlideIndex = isPptxPreview ? getPptxSlideIndex(selectedTablePath) : null;
-  const selectedTableText = activeDocument === "source"
-    ? selectedTable?.source
-    : selectedTable?.editedTarget || selectedTable?.target;
+  const highlightTable = highlightTables.find((table) => table.id === selectedTableId);
+  const highlightTablePath = highlightTable?.path ?? selectedTablePath;
+  const highlightTableText = highlightTable
+    ? getTablePreviewHighlightText(highlightTable, activeDocument)
+    : "";
   const xlsxTargetCell = xlsxSelectedCell ?? xlsxCellMaps.cellsByPath.get(selectedTablePath) ?? null;
   const selectTableForXlsxCell = (target: LuckysheetCellTarget) => {
     const cellKey = getXlsxCellKey(target);
@@ -583,6 +805,7 @@ export function TranslationPreviewDialog({
     if (filteredIndex >= 0) setPage(Math.floor(filteredIndex / pageSize) + 1);
   };
   const selectTable = (tableId: string) => {
+    setHighlightTables(tables);
     setXlsxSelectedCell(null);
     setSelectedTableId(tableId);
   };
@@ -598,9 +821,18 @@ export function TranslationPreviewDialog({
 
   useEffect(() => {
     if (isXlsxPreview || isPptxPreview) return;
-    const searchText = selectedTableText;
+    const searchText = highlightTableText;
     const root = viewerSectionRef.current;
     if (!root || !searchText?.trim() || !activeBlob) return;
+    const documentRoot = root.querySelector<HTMLElement>(
+      isDocxPreview
+        ? '[data-slot="translation-docx-preview-content"]'
+        : '[data-slot="file-viewer-viewport"]',
+    ) ?? root;
+    const docxTableIndex = isDocxPreview ? getDocxTableIndex(highlightTablePath) : null;
+    const scopedTables = docxTableIndex == null
+      ? highlightTables
+      : highlightTables.filter((table) => getDocxTableIndex(table.path) === docxTableIndex);
 
     let attempts = 0;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -613,12 +845,35 @@ export function TranslationPreviewDialog({
     };
     const locateMatch = () => {
       if (!isActive) return;
-      const range = findTextRange(root, searchText);
-      if (range) {
+      const searchRoot = docxTableIndex == null
+        ? documentRoot
+        : documentRoot.querySelectorAll<HTMLTableElement>("table")[docxTableIndex];
+      if (!searchRoot) {
+        attempts += 1;
+        if (attempts < 12) timeoutId = setTimeout(locateMatch, 100);
+        return;
+      }
+
+      const searchIndex = createTextSearchIndex(searchRoot);
+      const matches = findTextMatches(searchIndex, searchText);
+      const selectedTableIndex = scopedTables.findIndex((table) => table.id === selectedTableId);
+      const match = matches.length > 1 && selectedTableIndex >= 0
+        ? selectAnchorGuidedTextMatch({
+            anchors: findTextAnchors({
+              activeDocument,
+              searchIndex,
+              selectedTableIndex,
+              tables: scopedTables,
+            }),
+            matches,
+            selectedTableIndex,
+          })
+        : matches[0] ?? null;
+      if (match) {
         if (typeof CSS !== "undefined" && "highlights" in CSS && typeof Highlight !== "undefined") {
-          CSS.highlights.set("translation-preview-match", new Highlight(range));
+          CSS.highlights.set("translation-preview-match", new Highlight(match.range));
         }
-        range.startContainer.parentElement?.scrollIntoView({behavior: "smooth", block: "center"});
+        match.range.startContainer.parentElement?.scrollIntoView({behavior: "smooth", block: "center"});
         return;
       }
       attempts += 1;
@@ -633,7 +888,7 @@ export function TranslationPreviewDialog({
       if (timeoutId) clearTimeout(timeoutId);
       clearHighlight();
     };
-  }, [activeBlob, isPptxPreview, isXlsxPreview, selectedTableId, selectedTableText]);
+  }, [activeBlob, activeDocument, highlightTablePath, highlightTableText, highlightTables, isDocxPreview, isPptxPreview, isXlsxPreview, selectedTableId]);
   useEffect(() => {
     if (!isPptxPreview || selectedPptxSlideIndex == null || selectedPptxSlideIndex < 0) return;
     const root = viewerSectionRef.current;
@@ -654,8 +909,8 @@ export function TranslationPreviewDialog({
       if (!slide) return false;
 
       slide.scrollIntoView({behavior: "smooth", block: "center"});
-      if (selectedTableText?.trim()) {
-        const range = findTextRange(slide, selectedTableText);
+      if (highlightTableText?.trim()) {
+        const range = findTextRange(slide, highlightTableText);
         if (range && typeof CSS !== "undefined" && "highlights" in CSS && typeof Highlight !== "undefined") {
           CSS.highlights.set("translation-preview-match", new Highlight(range));
         }
@@ -675,7 +930,7 @@ export function TranslationPreviewDialog({
       observer.disconnect();
       clearHighlight();
     };
-  }, [activeBlob, isPptxPreview, selectedPptxSlideIndex, selectedTableText]);
+  }, [activeBlob, highlightTableText, isPptxPreview, selectedPptxSlideIndex]);
   const formatLanguageCode = (code: string) => {
     const normalizedCode = code.toLowerCase() === "vn" || code.toLowerCase() === "vi" ? "VI" :
       code.toLowerCase() === "jp" || code.toLowerCase() === "ja" ? "JA" : code.toUpperCase();
@@ -887,7 +1142,7 @@ export function TranslationPreviewDialog({
                                   {table.editedTarget !== (table.target ?? "") ? (
                                     <button
                                       aria-label={copy.discard}
-                                      className="absolute top-1/2 right-1.5 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-md bg-card/80 text-primary/65 transition-colors hover:bg-accent hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                      className="absolute top-1/2 right-1.5 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-md text-primary/65 transition-colors hover:bg-accent hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                       onClick={(event) => {
                                         event.stopPropagation();
                                         setTables((currentTables) => currentTables.map((item) => item.id === table.id ? { ...item, editedTarget: item.target ?? "" } : item));
@@ -1000,7 +1255,7 @@ export function TranslationPreviewDialog({
                 <div
                   className={cn(
                     "relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-3",
-                    !isXlsxPreview && "lg:absolute lg:top-0 lg:left-0 lg:border-b-0",
+                    !isXlsxPreview && !isDocxPreview && "lg:absolute lg:top-0 lg:left-0 lg:border-b-0",
                   )}
                   role="tablist"
                 >
@@ -1047,6 +1302,13 @@ export function TranslationPreviewDialog({
                     loadingLabel={copy.previewLoading}
                     onCellSelect={selectTableForXlsxCell}
                     targetCell={xlsxTargetCell}
+                  />
+                ) : activeBlob && isDocxPreview ? (
+                  <DocxPreview
+                    blob={activeBlob}
+                    className="bg-muted/70"
+                    errorLabel={copy.previewError}
+                    loadingLabel={copy.previewLoading}
                   />
                 ) : activeBlob ? (
                   <FileViewerPreview
