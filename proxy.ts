@@ -1,9 +1,22 @@
 import createMiddleware from 'next-intl/middleware';
-import {routing} from './i18n/routing';
+import {NextRequest, NextResponse} from 'next/server';
+import {getBrowserLocale, routing} from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-export const proxy = intlMiddleware;
+export function proxy(request: NextRequest) {
+  const firstSegment = request.nextUrl.pathname.split('/')[1];
+
+  if (!firstSegment || !routing.locales.some((locale) => locale === firstSegment)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${getBrowserLocale(request.headers.get('accept-language'))}/dashboard/`;
+    url.search = '';
+
+    return NextResponse.redirect(url);
+  }
+
+  return intlMiddleware(request);
+}
 
 export const config = {
   // Match all pathnames except for the ones starting with:

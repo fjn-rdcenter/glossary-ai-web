@@ -6,7 +6,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { authClient } from "./auth-client";
 import { ACCESS_TOKEN_STORAGE_KEY, clearAuthSession, storeAccessToken } from "./auth-session";
-import { API_CONFIG, BASE_PATH } from "./config";
+import { API_CONFIG } from "./config";
 import { AppError } from "@/lib/error-utils";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
@@ -62,9 +62,7 @@ function isAuthEndpoint(url?: string): boolean {
 function getLoginUrl(): string {
   const currentPath = window.location.pathname;
   const locale = currentPath.match(/\/(en|vi|ja)(?:\/|$)/)?.[1] ?? "vi";
-  const basePath = BASE_PATH || (currentPath.startsWith("/new/") ? "/new" : "");
-
-  return `${basePath}/${locale}/login/`;
+  return `/${locale}/login/`;
 }
 
 function clearDefaultAuthorization(): void {
