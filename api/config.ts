@@ -6,34 +6,21 @@
 export const USE_LEGACY_EXTRACTION_MEDIA = process.env.NEXT_PUBLIC_USE_LEGACY_EXTRACTION_MEDIA !== "false";
 
 export const MEDIA_BASE_URL = process.env.MEDIA_BASE_URL || "http://172.16.6.10:28888";
+export const MEDIA_STORAGE = process.env.MEDIA_STORAGE || "http://172.16.6.10:28888/GlossaryAI";
 
 export const getApiBaseUrl = (): string => {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  const envUrl = process.env.API_BASE_URL;
+
+  if (envUrl) return envUrl;
 
   if (typeof window === "undefined") {
-    return envUrl || "http://172.16.6.10:18000";
+    return "http://localhost:18000";
   }
 
-  const { hostname, host } = window.location;
+  const apiUrl = new URL(window.location.origin);
+  apiUrl.port = window.location.port === "23000" ? "28000" : "18000";
 
-  if (envUrl) {
-    return envUrl;
-  }
-
-  if (hostname.includes("translatesphere.fujinet.net")) {
-    return "https://translatesphere.fujinet.net";
-  }
-
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    // SameSite=Lax refresh cookies must use the same site as the frontend.
-    return `http://${hostname}:18000`;
-  }
-
-  if (host === "172.16.6.10:23000") {
-    return "http://172.16.6.10:28000";
-  }
-
-  return "http://172.16.6.10:18000";
+  return apiUrl.origin;
 };
 
 export const API_CONFIG = {

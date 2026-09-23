@@ -329,12 +329,12 @@ const dashboardCopy: Record<AppLocale, DashboardCopy> = {
   },
 };
 
-const publicAssetPath = (path: `/${string}`) => path;
+const publicAssetPath = (path: `/${string}`) => `${process.env.NEXT_PUBLIC_BASE_PATH}${path}`;
 
 type DashboardLocalePath = "dashboard" | `dashboard/${string}` | "user-guidance";
 
 const localizedDashboardPath = (locale: AppLocale, path: DashboardLocalePath = "dashboard") => {
-  return `/${locale}/${path}/`;
+  return `${process.env.NEXT_PUBLIC_BASE_PATH}/${locale}/${path}/`;
 };
 
 const navItems: Array<{key: NavKey; href: string}> = [

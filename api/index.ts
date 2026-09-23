@@ -11,7 +11,7 @@
  */
 
 // Export configuration
-export { API_CONFIG, MEDIA_BASE_URL, USE_LEGACY_EXTRACTION_MEDIA } from "./config";
+export { API_CONFIG, MEDIA_BASE_URL, MEDIA_STORAGE, USE_LEGACY_EXTRACTION_MEDIA } from "./config";
 
 // Export client
 export { default as apiClient } from "./client";

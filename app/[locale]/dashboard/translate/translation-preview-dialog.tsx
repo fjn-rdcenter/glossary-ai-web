@@ -664,18 +664,8 @@ export function TranslationPreviewDialog({
           );
 
           try {
-            const response = await apiClient.get(mediaEndpoint);
-
-            const redirectPath = response.headers["x-accel-redirect"];
-
-            if (!redirectPath) {
-              throw new Error("Missing X-Accel-Redirect header");
-            }
-
-            const url = new URL(
-              redirectPath,
-              MEDIA_BASE_URL
-            ).href;
+            const response = await apiClient.get<Blob>(mediaEndpoint, {responseType: "blob"});
+            const url = URL.createObjectURL(response.data);
 
             return [path, url] as const;
           } catch (error) {
@@ -685,12 +675,18 @@ export function TranslationPreviewDialog({
         })
       );
 
+      const resolvedEntries = entries.filter(
+        (entry): entry is readonly [string, string] => entry !== null,
+      );
+      const urls = resolvedEntries.map(([, url]) => url);
+
       if (!isMounted) {
-        createdUrls.forEach((url) => URL.revokeObjectURL(url));
+        urls.forEach((url) => URL.revokeObjectURL(url));
         return;
       }
 
-      setImageUrls(Object.fromEntries(entries.filter((entry): entry is readonly [string, string] => entry !== null)));
+      createdUrls = urls;
+      setImageUrls(Object.fromEntries(resolvedEntries));
     };
 
     void loadImageMedia();

@@ -21,6 +21,7 @@ import {
   DashboardHeader,
   FileFormatBadgeBackground,
 } from "../dashboard/dashboard-shell";
+import {useMediaUrl} from "@/components/ui/use-media-url";
 import {userGuidanceMedia} from "./user-guidance-media";
 
 type GuideLocale = "en" | "vi" | "ja";
@@ -638,36 +639,6 @@ const sectionItems: Array<{icon: LucideIcon; key: GuideSectionKey}> = [
 
 const glossaryTopicKeys: GlossaryTopicKey[] = ["create", "edit", "share"];
 
-const isAbsoluteMediaSource = (src: string) =>
-  src.startsWith("http://") ||
-  src.startsWith("https://") ||
-  src.startsWith("//") ||
-  src.startsWith("data:") ||
-  src.startsWith("blob:");
-
-const resolveMediaSrc = (mediaStorage: string, src?: string) => {
-  if (!src) {
-    return undefined;
-  }
-
-  if (isAbsoluteMediaSource(src) || src.startsWith("/")) {
-    return src;
-  }
-
-  let root = mediaStorage;
-  let path = src;
-
-  while (root.endsWith("/")) {
-    root = root.slice(0, -1);
-  }
-
-  while (path.startsWith("/")) {
-    path = path.slice(1);
-  }
-
-  return root + "/" + path;
-};
-
 function MediaPlaceholder({
   isLarge = false,
   label,
@@ -681,7 +652,7 @@ function MediaPlaceholder({
   placeholder: string;
   src?: string;
 }) {
-  const mediaSrc = resolveMediaSrc(mediaStorage, src);
+  const mediaSrc = useMediaUrl(mediaStorage, src);
   const frameSizeClass = isLarge ? "min-h-[220px] sm:min-h-[320px] lg:min-h-[400px]" : "min-h-[128px]";
 
   return (
@@ -868,6 +839,69 @@ function StepCarousel({
   );
 }
 
+function VideoTemplate({
+  copy,
+  index,
+  mediaStorage,
+  onOpen,
+  video,
+}: {
+  copy: GuideCopy["common"];
+  index: number;
+  mediaStorage: string;
+  onOpen: (video: GuideVideo) => void;
+  video: GuideVideo;
+}) {
+  const videoSrc = useMediaUrl(mediaStorage, video.src);
+
+  return (
+    <button
+      aria-label={video.title}
+      className="content-reveal group overflow-hidden rounded-[8px] border border-[#ddd8e5] bg-white/94 text-left shadow-[0_8px_24px_rgba(33,23,92,0.05)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-[#cfc5dc] hover:shadow-[0_14px_30px_rgba(33,23,92,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-65"
+      disabled={!videoSrc}
+      onClick={() => onOpen({...video, src: videoSrc})}
+      style={{animationDelay: String(index * 70) + "ms"}}
+      type="button"
+    >
+      <span className="relative flex aspect-video items-center justify-center overflow-hidden border-b border-[#e3dee8] bg-[#21175c]">
+        {videoSrc ? (
+          <video
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+            muted
+            onLoadedMetadata={(event) => {
+              const duration = event.currentTarget.duration;
+              event.currentTarget.currentTime = Number.isFinite(duration) ? Math.min(0.1, duration) : 0.1;
+              event.currentTarget.pause();
+            }}
+            playsInline
+            preload="metadata"
+            src={videoSrc}
+          />
+        ) : null}
+        <span className="absolute inset-0 bg-[#21175c]/25" />
+        <span className="relative z-10 grid size-16 place-items-center rounded-full border border-white/35 bg-white text-[#f06317] shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-200 group-hover:scale-105">
+          <Play aria-hidden="true" className="ml-1 size-6 fill-current" />
+        </span>
+        {!videoSrc ? (
+          <span className="absolute bottom-3 left-3 rounded-[5px] bg-white/92 px-2 py-1 text-[9px] font-semibold text-[#716b79]">
+            {copy.videoPlaceholder}
+          </span>
+        ) : null}
+      </span>
+      <span className="block p-5">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="shrink-0 text-[24px] font-bold leading-none text-[#f06317]">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="min-w-0 text-[16px] font-bold text-[#21175c]">{video.title}</span>
+        </span>
+        <span className="mt-3 block text-[11px] leading-5 text-[#6f6878]">{video.description}</span>
+      </span>
+    </button>
+  );
+}
+
 function VideoTemplates({
   copy,
   mediaStorage,
@@ -879,57 +913,16 @@ function VideoTemplates({
 }) {
   return (
     <section className="grid gap-5 lg:grid-cols-3">
-      {copy.videos.items.map((video, index) => {
-        const videoSrc = resolveMediaSrc(mediaStorage, video.src);
-
-        return (
-          <button
-            aria-label={video.title}
-            className="content-reveal group overflow-hidden rounded-[8px] border border-[#ddd8e5] bg-white/94 text-left shadow-[0_8px_24px_rgba(33,23,92,0.05)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-[#cfc5dc] hover:shadow-[0_14px_30px_rgba(33,23,92,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f06317] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-65"
-            disabled={!videoSrc}
-            key={video.title}
-            onClick={() => onOpen({...video, src: videoSrc})}
-            style={{animationDelay: String(index * 70) + "ms"}}
-            type="button"
-          >
-            <span className="relative flex aspect-video items-center justify-center overflow-hidden border-b border-[#e3dee8] bg-[#21175c]">
-              {videoSrc ? (
-                <video
-                  aria-hidden="true"
-                  className="absolute inset-0 h-full w-full object-cover"
-                  muted
-                  onLoadedMetadata={(event) => {
-                    const duration = event.currentTarget.duration;
-                    event.currentTarget.currentTime = Number.isFinite(duration) ? Math.min(0.1, duration) : 0.1;
-                    event.currentTarget.pause();
-                  }}
-                  playsInline
-                  preload="metadata"
-                  src={videoSrc}
-                />
-              ) : null}
-              <span className="absolute inset-0 bg-[#21175c]/25" />
-              <span className="relative z-10 grid size-16 place-items-center rounded-full border border-white/35 bg-white text-[#f06317] shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-200 group-hover:scale-105">
-                <Play aria-hidden="true" className="ml-1 size-6 fill-current" />
-              </span>
-              {!videoSrc ? (
-                <span className="absolute bottom-3 left-3 rounded-[5px] bg-white/92 px-2 py-1 text-[9px] font-semibold text-[#716b79]">
-                  {copy.common.videoPlaceholder}
-                </span>
-              ) : null}
-            </span>
-            <span className="block p-5">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="shrink-0 text-[24px] font-bold leading-none text-[#f06317]">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="min-w-0 text-[16px] font-bold text-[#21175c]">{video.title}</span>
-              </span>
-              <span className="mt-3 block text-[11px] leading-5 text-[#6f6878]">{video.description}</span>
-            </span>
-          </button>
-        );
-      })}
+      {copy.videos.items.map((video, index) => (
+        <VideoTemplate
+          copy={copy.common}
+          index={index}
+          key={video.title}
+          mediaStorage={mediaStorage}
+          onOpen={onOpen}
+          video={video}
+        />
+      ))}
     </section>
   );
 }

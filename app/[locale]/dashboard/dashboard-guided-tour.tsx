@@ -21,6 +21,7 @@ import {
   type TooltipRenderProps,
 } from "react-joyride";
 import {AuthService} from "@/api";
+import {useMediaUrl} from "@/components/ui/use-media-url";
 import {
   GUIDED_TOUR_FADE_IN_TRANSITION,
   GUIDED_TOUR_START_DELAY_MS,
@@ -45,6 +46,7 @@ type DashboardTourCopy = {
 
 type DashboardTourMedia = {
   alt: string;
+  mediaStorage: string;
   src: string;
 };
 
@@ -225,32 +227,6 @@ const dashboardTourStepMedia: Record<number, {src: string}> = {
   5: {src: "GuidedTour/Step5.gif"},
 };
 
-const isAbsoluteDashboardTourMediaSource = (src: string) =>
-  src.startsWith("http://") ||
-  src.startsWith("https://") ||
-  src.startsWith("//") ||
-  src.startsWith("data:") ||
-  src.startsWith("blob:");
-
-const resolveDashboardTourMediaSrc = (mediaStorage: string, src: string) => {
-  if (isAbsoluteDashboardTourMediaSource(src) || src.startsWith("/")) {
-    return src;
-  }
-
-  let root = mediaStorage;
-  let path = src;
-
-  while (root.endsWith("/")) {
-    root = root.slice(0, -1);
-  }
-
-  while (path.startsWith("/")) {
-    path = path.slice(1);
-  }
-
-  return root + "/" + path;
-};
-
 function scrollDashboardTourTargetIntoView(index: number) {
   const target = tourTargets[index]?.target;
 
@@ -299,6 +275,7 @@ function DashboardTourTooltip({
   const data = step.data as DashboardTourStepData;
   const labels = data.labels;
   const media = data.media;
+  const mediaSrc = useMediaUrl(media?.mediaStorage ?? "", media?.src);
 
 
   const runWithCrossfade = useCallback((
@@ -334,14 +311,16 @@ function DashboardTourTooltip({
       {media ? (
         <div className="mx-6 mb-4 overflow-hidden rounded-[10px] border border-[#ded8e6] bg-[#f8f6fb] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
           <div className="relative aspect-video min-h-[132px] overflow-hidden rounded-[8px] bg-white">
-            <Image
-              alt={media.alt}
-              className="object-contain"
-              fill
-              sizes="(min-width: 768px) 500px, calc(100vw - 80px)"
-              src={media.src}
-              unoptimized
-            />
+            {mediaSrc ? (
+              <Image
+                alt={media.alt}
+                className="object-contain"
+                fill
+                sizes="(min-width: 768px) 500px, calc(100vw - 80px)"
+                src={mediaSrc}
+                unoptimized
+              />
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -443,7 +422,8 @@ export function DashboardGuidedTour({locale, mediaStorage}: {locale: DashboardTo
         media: stepMedia
           ? {
               alt: stepCopy.title,
-              src: resolveDashboardTourMediaSrc(mediaStorage, stepMedia.src),
+              mediaStorage,
+              src: stepMedia.src,
             }
           : undefined,
       } satisfies DashboardTourStepData,

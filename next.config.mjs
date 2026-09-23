@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename)
 const withNextIntl = createNextIntlPlugin(
   './i18n/request.ts' 
 );
+const basePath = "/glossaryai";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -20,6 +21,11 @@ const nextConfig = {
 
   turbopack: {
     root: path.resolve(process.cwd()),
+  },
+  basePath,
+  env: {
+    API_BASE_URL: process.env.API_BASE_URL,
+    NEXT_PUBLIC_BASE_PATH: basePath,
   },
   webpack(config) {
     const fileLoaderRule = config.module.rules.find((rule) =>
