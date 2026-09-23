@@ -9,8 +9,6 @@ export const USE_LEGACY_EXTRACTION_MEDIA = process.env.NEXT_PUBLIC_USE_LEGACY_EX
 export const MEDIA_BASE_URL = process.env.MEDIA_BASE_URL || "http://172.16.6.10:28888";
 
 export const getApiBaseUrl = (): string => {
-  return "http://172.16.6.10:28000";
-  // return "http://127.0.0.1:18000";
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (typeof window === "undefined") {
@@ -19,19 +17,24 @@ export const getApiBaseUrl = (): string => {
 
   const { hostname, host } = window.location;
 
+  if (envUrl) {
+    return envUrl;
+  }
+
   if (hostname.includes("translatesphere.fujinet.net")) {
     return "https://translatesphere.fujinet.net";
   }
 
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return "http://localhost:18000";
+    // SameSite=Lax refresh cookies must use the same site as the frontend.
+    return `http://${hostname}:18000`;
   }
 
   if (host === "172.16.6.10:23000") {
     return "http://172.16.6.10:28000";
   }
 
-  return envUrl || "http://172.16.6.10:18000";
+  return "http://172.16.6.10:18000";
 };
 
 export const API_CONFIG = {

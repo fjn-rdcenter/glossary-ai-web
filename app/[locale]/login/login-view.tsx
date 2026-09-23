@@ -66,9 +66,13 @@ export function LoginView() {
         const token = localStorage.getItem("auth_token");
         const wasLoggedOut = localStorage.getItem("user_logged_out") === "true";
 
-        if (!token || wasLoggedOut) {
+        if (wasLoggedOut) {
           if (isMounted) setIsRestoringSession(false);
           return;
+        }
+
+        if (!token) {
+          await AuthService.refreshToken();
         }
 
         await AuthService.getCurrentUser();

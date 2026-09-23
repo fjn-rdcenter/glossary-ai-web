@@ -1,175 +1,185 @@
 /**
- * API Client
- * Axios instance with interceptors for authentication and error handling
+ * Authenticated API client with a single refresh-and-retry flow for expired
+ * access tokens. Refresh tokens remain HttpOnly cookies managed by the API.
  */
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { authClient } from "./auth-client";
+import { ACCESS_TOKEN_STORAGE_KEY, clearAuthSession, storeAccessToken } from "./auth-session";
 import { API_CONFIG, BASE_PATH } from "./config";
 import { AppError } from "@/lib/error-utils";
 
-// Create axios instance
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _accessToken?: string | null;
+};
+
+type TokenResponse = {
+  access_token?: string;
+  data?: {
+    access_token?: string;
+  };
+};
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor - Add auth token to requests
+let refreshPromise: Promise<string> | null = null;
+let forcedLogout: Promise<void> | null = null;
+
+function getAppError(error: AxiosError): AppError {
+  const data = error.response?.data as {
+    detail?: string | { message?: string };
+    message?: string;
+    error?: { code?: string };
+    code?: string;
+  } | undefined;
+  const detailMessage = typeof data?.detail === "string" ? data.detail : data?.detail?.message;
+
+  return new AppError(
+    detailMessage || data?.message || "An unexpected error occurred",
+    error.response?.status ?? (error.request ? 0 : 0),
+    data?.error?.code || data?.code || (error.request ? "NETWORK_ERROR" : "UNKNOWN_ERROR"),
+    data?.detail ?? null,
+    error,
+  );
+}
+
+function isAuthEndpoint(url?: string): boolean {
+  return [
+    API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+    API_CONFIG.ENDPOINTS.AUTH.REFRESH,
+    API_CONFIG.ENDPOINTS.AUTH.LOGOUT,
+  ].some((endpoint) => url?.includes(endpoint));
+}
+
+function getLoginUrl(): string {
+  const currentPath = window.location.pathname;
+  const locale = currentPath.match(/\/(en|vi|ja)(?:\/|$)/)?.[1] ?? "vi";
+  const basePath = BASE_PATH || (currentPath.startsWith("/new/") ? "/new" : "");
+
+  return `${basePath}/${locale}/login/`;
+}
+
+function clearDefaultAuthorization(): void {
+  delete apiClient.defaults.headers.common.Authorization;
+}
+
+function resetForcedLogout(): void {
+  forcedLogout = null;
+}
+
+async function forceLogout(): Promise<void> {
+  if (forcedLogout) return forcedLogout;
+
+  forcedLogout = (async () => {
+    clearAuthSession();
+    clearDefaultAuthorization();
+
+    try {
+      // The API owns the HttpOnly refresh cookie and clears it on logout.
+      await authClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {});
+    } catch {
+      // Local state must still be cleared when the refresh cookie is invalid.
+    }
+
+    if (typeof window !== "undefined" && !/\/login\/?$/.test(window.location.pathname)) {
+      window.location.replace(getLoginUrl());
+    }
+  })();
+
+  return forcedLogout;
+}
+
+async function refreshAccessToken(): Promise<string> {
+  const response = await authClient.post<TokenResponse>(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {});
+  const accessToken = response.data.data?.access_token ?? response.data.access_token;
+
+  if (!accessToken) {
+    throw new Error("Refresh response did not include an access token");
+  }
+
+  storeAccessToken(accessToken);
+  return accessToken;
+}
+
+function refreshAccessTokenOnce(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+}
+
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage or your auth store
-    const token = localStorage.getItem("auth_token");
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window === "undefined" || !config.headers) return config;
+
+    const request = config as RetriableRequestConfig;
+    const accessToken = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+    request._accessToken = accessToken;
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    } else {
+      delete config.headers.Authorization;
     }
-    
+
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (error: AxiosError) => Promise.reject(error),
 );
 
-// Queue for managing concurrent refresh requests
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (error: any) => void;
-}> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
-    }
-  });
-
-  failedQueue = [];
-};
-
-// Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Handle 401 Unauthorized - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Avoid infinite loops
-      if (originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN) || 
-          originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH)) {
-          // Backend returned an error response
-          const data = error.response.data as any;
-          const message = data?.detail?.message || data?.message || data?.detail || "Authentication failed";
-          const statusCode = error.response.status;
-          const code = data?.error?.code || data?.code;
-          const details = data?.detail;
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+    const isUnauthorized = error.response?.status === 401;
 
-          return Promise.reject(new AppError(message, statusCode, code, details, error));
-      }
+    if (!isUnauthorized || !originalRequest || isAuthEndpoint(originalRequest.url)) {
+      return Promise.reject(getAppError(error));
+    }
 
-      if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return apiClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
+    if (typeof window !== "undefined" && localStorage.getItem("user_logged_out") === "true") {
+      return Promise.reject(getAppError(error));
+    }
 
+    const currentAccessToken = typeof window === "undefined"
+      ? null
+      : localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+
+    // A sibling request may have already refreshed while this stale 401 was in flight.
+    if (!originalRequest._retry && currentAccessToken && currentAccessToken !== originalRequest._accessToken) {
       originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Attempt to refresh token
-        // We use a fresh axios instance or explicit call to avoid interceptor cycles, 
-        // but since we check url above, reusing apiClient is risky if it triggers this same interceptor 
-        // on a different failure mode, though specific check for REFRESH url should prevent loop.
-        // However, standard practice is to use a separate call or carefully managed state.
-        
-        // Using fetch to bypass axios interceptors completely involves manual cookie handling which is complex.
-        // Safest: Use axios but ensure the refresh endpoint is excluded from 401 trap (checked above).
-        
-        // Note: We need to import API_CONFIG here, which is already imported.
-        // We cannot use AuthService.refreshToken() directly if it uses apiClient, 
-        // unless we export a "raw" client or handle it here. 
-        // To avoid circular dependency, we implement the refresh call here.
-        
-        const response = await axios.post(
-            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH}`,
-            {}, 
-            { withCredentials: true } // Send cookies
-        );
-
-        const newToken = response.data?.data?.access_token || response.data?.access_token || response.data?.token;
-
-        if (newToken) {
-            localStorage.setItem("auth_token", newToken);
-            apiClient.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-            
-            processQueue(null, newToken);
-            
-            if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            }
-            return apiClient(originalRequest);
-        } else {
-            throw new Error("No token returned from refresh");
-        }
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        
-        // Logout user on failed refresh
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem("auth_token");
-            // Clear cookie loosely if possible specific to client logic
-            document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            const currentPath = window.location.pathname;
-            const isLoginPage = /\/login\/?$/.test(currentPath);
-
-            if (!isLoginPage) {
-                window.location.replace(`${BASE_PATH}/`);
-            }
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      originalRequest.headers.Authorization = `Bearer ${currentAccessToken}`;
+      return apiClient(originalRequest);
     }
-    
-    // Handle other errors
-    if (error.response) {
-      // Backend returned an error response
-      const data = error.response.data as any;
-      // Prioritize detail if it's a string (common in FastAPI/Pydantic)
-      // data.detail.message usually for complex objects
-      // data.message is often just the status text (e.g. "Conflict")
-      const message = data?.detail?.message || (typeof data?.detail === 'string' ? data.detail : null) || data?.message || "An unexpected error occurred";
-      const statusCode = error.response.status;
-      const code = data?.error?.code || data?.code; // Adjust based on actual backend error format
-      const details = data?.detail;
 
-      return Promise.reject(new AppError(message, statusCode, code, details, error));
-    } else if (error.request) {
-      // Request was made but no response received (Network error)
-      return Promise.reject(new AppError("Network error. Please check your connection.", 0, "NETWORK_ERROR", null, error));
+    if (originalRequest._retry) {
+      await forceLogout();
+      return Promise.reject(getAppError(error));
     }
-    
-    return Promise.reject(new AppError(error.message, 0, "UNKNOWN_ERROR", null, error));
-  }
+
+    originalRequest._retry = true;
+
+    try {
+      const accessToken = await refreshAccessTokenOnce();
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      await forceLogout();
+      return Promise.reject(refreshError);
+    }
+  },
 );
 
+export { clearDefaultAuthorization, forceLogout, refreshAccessToken, resetForcedLogout };
 export default apiClient;
