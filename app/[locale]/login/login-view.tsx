@@ -35,7 +35,7 @@ const languages = [
   },
 ] as const;
 
-const publicAssetPath = (path: `/${string}`) => path;
+const publicAssetPath = (path: `/${string}`) => `${process.env.NEXT_PUBLIC_BASE_PATH}${path}`;
 
 type AppLocale = (typeof languages)[number]["code"];
 

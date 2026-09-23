@@ -62,7 +62,7 @@ function isAuthEndpoint(url?: string): boolean {
 function getLoginUrl(): string {
   const currentPath = window.location.pathname;
   const locale = currentPath.match(/\/(en|vi|ja)(?:\/|$)/)?.[1] ?? "vi";
-  return `/${locale}/login/`;
+  return `${process.env.NEXT_PUBLIC_BASE_PATH}/${locale}/login/`;
 }
 
 function clearDefaultAuthorization(): void {
