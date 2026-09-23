@@ -3,7 +3,6 @@
  * Central configuration for API endpoints and settings
  */
 
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 export const USE_LEGACY_EXTRACTION_MEDIA = process.env.NEXT_PUBLIC_USE_LEGACY_EXTRACTION_MEDIA !== "false";
 
 export const MEDIA_BASE_URL = process.env.MEDIA_BASE_URL || "http://172.16.6.10:28888";

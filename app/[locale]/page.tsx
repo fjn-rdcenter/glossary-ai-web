@@ -7,5 +7,5 @@ type HomePageProps = {
 export default async function HomePage({params}: HomePageProps) {
   const {locale} = await params;
 
-  redirect({href: "/login", locale});
+  redirect({href: "/dashboard", locale});
 }
