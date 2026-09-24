@@ -1061,7 +1061,7 @@ export function HistoryView() {
           textContent: copy.textContent,
           translatedFile: copy.translatedFile,
         }}
-        fileName={previewJob ? getTranslatedFileName(getDocumentName(previewJob), previewJob.targetLanguage) : ""}
+        fileName={previewJob ? getDocumentName(previewJob) : ""}
         onOpenChange={(open) => {
           if (!open) setPreviewJob(null);
         }}
