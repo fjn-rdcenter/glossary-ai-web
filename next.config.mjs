@@ -14,15 +14,20 @@ const basePath = "/glossaryai";
 const nextConfig = {
   output: "standalone",
 
-  // Cho phép máy khác trong LAN truy cập Next.js dev resources / HMR
-  allowedDevOrigins: [
-    '172.16.1.169',
-  ],
-
   turbopack: {
     root: path.resolve(process.cwd()),
   },
   basePath,
+  async redirects() {
+    return [
+      {
+        source: '/new/:path*',
+        destination: basePath,
+        basePath: false,
+        permanent: true,
+      },
+    ]
+  },
   env: {
     API_BASE_URL: process.env.API_BASE_URL,
     NEXT_PUBLIC_BASE_PATH: basePath,
