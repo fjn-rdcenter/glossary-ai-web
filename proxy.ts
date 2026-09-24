@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
 
   if (!firstSegment || !routing.locales.some((locale) => locale === firstSegment)) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${getBrowserLocale(request.headers.get('accept-language'))}/dashboard/`;
+    url.pathname = `/${getBrowserLocale(request.headers.get('accept-language'))}/login/`;
     url.search = '';
 
     return NextResponse.redirect(url);

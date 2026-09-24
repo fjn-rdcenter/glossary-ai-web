@@ -1,15 +1,18 @@
-version: '3.8'
-
 services:
-  glossary-ai-web-frontend-stage:
+  glossary-ai-web-staging:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        TS_WEBAPP_BUILD_VARIANT: ${TS_WEBAPP_BUILD_VARIANT}
-        TS_WEBAPP_PROXY_CONNECTION_STRING: ${TS_WEBAPP_PROXY_CONNECTION_STRING}
-    container_name: ts-v2-webapp-stage
+        GLOSSARYAI_WEBAPP_BUILD_VARIANT: ${GLOSSARYAI_WEBAPP_BUILD_VARIANT:-build_without_proxy}
+        GLOSSARYAI_WEBAPP_PROXY_CONNECTION_STRING: ${GLOSSARYAI_WEBAPP_PROXY_CONNECTION_STRING:-}
+    image: glossary-ai-web-staging:latest
+    container_name: glossary-ai-web-staging
+    env_file:
+      - .env
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
     ports:
-      - "23000:3000" 
-    image: glossary-ai-web-frontend-stage:2026.07.22.1
+      - "23000:3000"
     restart: unless-stopped
