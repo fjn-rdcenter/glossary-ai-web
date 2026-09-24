@@ -2822,7 +2822,7 @@ export function TranslateConfigure() {
 
       <TranslationPreviewDialog
         copy={workflow}
-        fileName={previewFileId ? getTranslatedFileName(pendingFiles.find((file) => file.id === previewFileId)?.metadata.name ?? "", (fileConfigs[previewFileId] ?? createDefaultFileConfig()).targetLanguage) : ""}
+        fileName={previewFileId ? pendingFiles.find((file) => file.id === previewFileId)?.metadata.name ?? "" : ""}
         onOpenChange={(open) => {
           if (!open) setPreviewFileId(null);
         }}

@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { LuckysheetPreview, type LuckysheetCellTarget } from "@/components/ui/luckysheet-preview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getTranslatedFileName } from "@/lib/translation-file-name";
 import type { TranslationTableResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -615,9 +616,11 @@ export function TranslationPreviewDialog({
         setHighlightTables(editableTables);
         setSelectedTableId(editableTables[0]?.id ?? null);
         setSourceBlob(sourceDocument);
-        setSourceFileName(job.sourceDocumentName || fileName);
+        setSourceFileName(
+          fileName || job.sourceDocumentName || getTranslatedFileName(fileName, sourceLanguage),
+        );
         setTargetBlob(targetDocument);
-        setTargetFileName(job.targetDocumentName || fileName);
+        setTargetFileName(job.targetDocumentName || getTranslatedFileName(fileName, targetLanguage));
         setUserId(storedUserId);
         setXlsxCellMaps(xlsxCells);
       } catch (loadError) {
