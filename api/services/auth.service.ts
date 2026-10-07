@@ -3,6 +3,7 @@
  * is never read, stored, or cleared directly by browser JavaScript.
  */
 
+import {isAxiosError} from "axios";
 import apiClient, {
   clearDefaultAuthorization,
   forceLogout,
@@ -26,6 +27,13 @@ type AuthResponse<T> = T | ApiResponse<T>;
 
 function unwrapAuthResponse<T extends object>(response: AuthResponse<T>): T {
   return "data" in response ? response.data : response;
+}
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super("Invalid username or password");
+    this.name = "InvalidCredentialsError";
+  }
 }
 
 export class AuthService {
@@ -57,6 +65,11 @@ export class AuthService {
       return loginData;
     } catch (error) {
       ApiErrorHandler.logError(error, "AuthService.login");
+
+      if (isAxiosError(error) && error.response?.status === 401) {
+        throw new InvalidCredentialsError();
+      }
+
       throw new Error(ApiErrorHandler.parseError(error));
     }
   }

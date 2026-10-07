@@ -5,7 +5,7 @@ import type {FormEvent} from "react";
 import {useEffect, useState} from "react";
 import {AlertCircle, LoaderCircle} from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
-import {AuthService} from "@/api";
+import {AuthService, InvalidCredentialsError} from "@/api";
 import {usePathname, useRouter} from "@/i18n/routing";
 import {
   DropdownMenu,
@@ -102,7 +102,11 @@ export function LoginView() {
       router.replace("/dashboard");
     } catch (error) {
       setErrorMessage(
-        error instanceof Error && error.message ? error.message : t("loginError"),
+        error instanceof InvalidCredentialsError
+          ? t("invalidCredentials")
+          : error instanceof Error && error.message
+            ? error.message
+            : t("loginError"),
       );
     } finally {
       setIsSubmitting(false);

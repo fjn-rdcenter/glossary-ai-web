@@ -279,7 +279,7 @@ export function GlossaryShareDialog({
         await GlossaryService.createGlossaryPermission(glossary.id, {
           principalType: "user",
           principalId: normalizedUsername,
-          permission: "view",
+          permission: "clone",
           expiresAt: normalizedExpiration,
         });
         await loadPermissions();
@@ -429,7 +429,6 @@ export function GlossaryShareDialog({
                         <PermissionAvatar index={index + 1} value={principal} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[12px] font-bold">{principal}</p>
-                          <p className="mt-0.5 text-[10px] text-[#797280]">{permission.permission}</p>
                         </div>
                         <button
                           aria-label={copy.share.remove}
