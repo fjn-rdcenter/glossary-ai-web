@@ -109,6 +109,7 @@
         "footer": "Developed by AI Innovation Center",
         "loginSuccess": "Login successful!",
         "loginError": "Login failed. Please check your credentials.",
+        "invalidCredentials": "Invalid username or password.",
         "restoringSession": "Restoring your session"
     },
     "Dashboard": {

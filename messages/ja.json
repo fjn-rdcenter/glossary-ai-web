@@ -109,6 +109,7 @@
         "footer": "AI Innovation Center によって開発されました",
         "loginSuccess": "ログインに成功しました！",
         "loginError": "ログインに失敗しました。認証情報を確認してください。",
+        "invalidCredentials": "ユーザー名またはパスワードが正しくありません。",
         "restoringSession": "ログインセッションを復元しています"
     },
     "Dashboard": {

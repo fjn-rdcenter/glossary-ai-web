@@ -109,6 +109,7 @@
         "footer": "Phát triển bởi AI Innovation Center",
         "loginSuccess": "Đăng nhập thành công!",
         "loginError": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
+        "invalidCredentials": "Tên đăng nhập hoặc mật khẩu không chính xác.",
         "restoringSession": "Đang khôi phục phiên đăng nhập"
     },
     "Dashboard": {

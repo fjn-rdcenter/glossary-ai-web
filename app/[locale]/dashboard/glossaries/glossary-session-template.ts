@@ -238,7 +238,7 @@ export function inviteSessionGlossaryUser(principalId: string, expiresAt: string
     id: existing?.id ?? `session-permission-${Date.now()}`,
     principalType: "user",
     principalId: normalizedPrincipal,
-    permission: "view",
+    permission: "clone",
     expiresAt,
     status: "accepted",
     grantedBy: state.permissions.ownerId,
