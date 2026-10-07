@@ -87,7 +87,15 @@
         "Translate": "Dịch"
     },
     "Login": {
+        "brandTagline": "\u0110\u00FAng <highlight>thu\u1EADt ng\u1EEF</highlight> - \u0110\u00FAng <highlight>ng\u1EEF c\u1EA3nh</highlight>",
+        "brandDescriptionPreserve": "\u0110\u1EA3m b\u1EA3o gi\u1EEF thu\u1EADt ng\u1EEF, ng\u1EEF c\u1EA3nh v\u00E0 c\u1EA5u tr\u00FAc c\u1EE7a file khi d\u1ECBch.",
+        "brandDescriptionFormats": "H\u1ED7 tr\u1EE3 nhi\u1EC1u \u0111\u1ECBnh d\u1EA1ng file nh\u01B0 Office, PDF, HTML, Markdown v\u00E0 TXT.",
+        "brandDescriptionGlossary": "H\u1ED7 tr\u1EE3 t\u1EA1o Glossary t\u1EEB t\u00E0i li\u1EC7u.",
         "subtitle": "Tiếp tục đến GlossaryAI",
+        "tagline": "Quản lý dịch thuật thông minh.",
+        "signInSubtitle": "Đăng nhập vào tài khoản của bạn",
+        "languageMenu": "Chọn ngôn ngữ giao diện",
+        "copyright": "© GlossaryAI, ứng dụng dịch thuật thông minh được phát triển bởi AI Innovation Center.",
         "usernameLabel": "Tên đăng nhập",
         "usernamePlaceholder": "Nhập tên đăng nhập",
         "passwordLabel": "Mật khẩu",
@@ -100,7 +108,9 @@
         "noAccount": "Chưa có tài khoản?",
         "footer": "Phát triển bởi AI Innovation Center",
         "loginSuccess": "Đăng nhập thành công!",
-        "loginError": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập."
+        "loginError": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
+        "invalidCredentials": "Tên đăng nhập hoặc mật khẩu không chính xác.",
+        "restoringSession": "Đang khôi phục phiên đăng nhập"
     },
     "Dashboard": {
         "dashboard": "Dashboard",

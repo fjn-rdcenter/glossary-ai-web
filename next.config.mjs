@@ -8,14 +8,30 @@ const __dirname = path.dirname(__filename)
 const withNextIntl = createNextIntlPlugin(
   './i18n/request.ts' 
 );
+const basePath = "/glossaryai";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+
   turbopack: {
     root: path.resolve(process.cwd()),
   },
-  basePath: "/new",
+  basePath,
+  async redirects() {
+    return [
+      {
+        source: '/new/:path*',
+        destination: basePath,
+        basePath: false,
+        permanent: true,
+      },
+    ]
+  },
+  env: {
+    API_BASE_URL: process.env.API_BASE_URL,
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
   webpack(config) {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg'),

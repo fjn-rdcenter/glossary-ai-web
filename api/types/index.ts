@@ -178,7 +178,9 @@ export interface TranslationStatusResponse {
   sourceLanguage: string;
   targetLanguage: string;
   documentId: string;
+  sourceDocumentName?: string;
   targetDocument?: string; // ID of translated doc
+  targetDocumentName?: string;
   errorMessage?: string;
 }
 

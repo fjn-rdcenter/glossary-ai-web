@@ -87,7 +87,15 @@
         "Translate": "Translate"
     },
     "Login": {
+        "brandTagline": "Right <highlight>terminology</highlight> - Right <highlight>context</highlight>",
+        "brandDescriptionPreserve": "Preserve terminology, context, and file structure during translation.",
+        "brandDescriptionFormats": "Support multiple file formats such as Office, PDF, HTML, Markdown, and TXT.",
+        "brandDescriptionGlossary": "Support creating Glossaries from documents.",
         "subtitle": "Continue to GlossaryAI",
+        "tagline": "Intelligent translation management.",
+        "signInSubtitle": "Sign in to your account",
+        "languageMenu": "Choose interface language",
+        "copyright": "© GlossaryAI, an intelligent translation application developed by AI Innovation Center.",
         "usernameLabel": "Username",
         "usernamePlaceholder": "Enter your username",
         "passwordLabel": "Password",
@@ -100,7 +108,9 @@
         "noAccount": "Don't have an account?",
         "footer": "Developed by AI Innovation Center",
         "loginSuccess": "Login successful!",
-        "loginError": "Login failed. Please check your credentials."
+        "loginError": "Login failed. Please check your credentials.",
+        "invalidCredentials": "Invalid username or password.",
+        "restoringSession": "Restoring your session"
     },
     "Dashboard": {
         "dashboard": "Dashboard",
