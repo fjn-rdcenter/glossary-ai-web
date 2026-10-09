@@ -2402,9 +2402,9 @@ export function TranslateConfigure() {
 
                 return (
                   <article
-                    className={`relative isolate flex min-h-[68px] items-center gap-2 overflow-hidden rounded-[8px] border px-2.5 py-2 transition-colors ${
+                    className={`relative flex min-h-[68px] items-center gap-2 overflow-hidden rounded-[8px] border px-2.5 py-2 transition-[background-color,border-color,box-shadow] ${
                       isActiveFile
-                        ? "translate-source-file-active border-transparent"
+                        ? "border-[#21175c] bg-[#f7f5ff] shadow-[inset_4px_0_0_#f06317,0_5px_16px_rgba(33,23,92,0.10)]"
                         : "border-[#e1dce9] bg-white hover:border-[#b8acd3]"
                     }`}
                     key={item.id}
@@ -2839,14 +2839,14 @@ export function TranslateConfigure() {
           if (!open) setSelectedUploadedDocuments({});
         }}
       >
-        <DialogContent className="max-h-[88dvh] overflow-hidden rounded-[8px] border-[#d5d0dc] bg-white p-0 shadow-[0_24px_70px_rgba(33,23,92,0.2)] sm:max-w-[740px]">
-          <DialogHeader className="border-b border-[#ebe8ee] px-5 py-4 sm:px-6">
+        <DialogContent className="grid h-[calc(100dvh-1rem)] max-h-[760px] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-[8px] border-[#d5d0dc] bg-white p-0 shadow-[0_24px_70px_rgba(33,23,92,0.2)] sm:h-[88dvh] sm:max-w-[740px]">
+          <DialogHeader className="shrink-0 border-b border-[#ebe8ee] px-5 py-4 sm:px-6">
             <DialogTitle className="text-[18px] text-[#21175c]">{copy.uploadedFilesTitle}</DialogTitle>
             <DialogDescription className="text-[11px] text-[#77717f]">{copy.uploadedFilesDescription}</DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 px-5 py-4 sm:px-6">
-            <div className="relative">
+          <div className="flex min-h-0 flex-col overflow-hidden px-5 py-4 sm:px-6">
+            <div className="relative shrink-0">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#827c89]" />
               <Input
                 aria-label={copy.searchUploadedFiles}
@@ -2857,7 +2857,7 @@ export function TranslateConfigure() {
               />
             </div>
 
-            <div className="mt-4 max-h-[390px] min-h-[230px] space-y-2 overflow-y-auto pr-1">
+            <div className="mt-4 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
               {isLoadingUploadedFiles ? (
                 <div aria-label={copy.loadingUploadedFiles} className="space-y-2" role="status">
                   <span className="sr-only">{copy.loadingUploadedFiles}</span>
@@ -2952,7 +2952,7 @@ export function TranslateConfigure() {
               )}
             </div>
 
-            <div className="mt-3 flex min-h-8 items-center justify-center gap-2">
+            <div className="mt-3 flex min-h-8 shrink-0 items-center justify-center gap-2">
               <button
                 aria-label={copy.previousPage}
                 className="grid size-7 place-items-center rounded-full border border-[#d5d0dc] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:opacity-35"
@@ -2979,30 +2979,32 @@ export function TranslateConfigure() {
             </div>
           </div>
 
-          <DialogFooter className="flex-row items-center justify-between gap-3 border-t border-[#ebe8ee] px-5 py-4 sm:px-6">
-            <span className="mr-auto text-[10px] font-semibold text-[#65508f]">
+          <DialogFooter className="relative z-10 shrink-0 flex-col gap-3 border-t border-[#ebe8ee] bg-white px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
+            <span className="w-full text-[10px] font-semibold text-[#65508f] sm:mr-auto sm:w-auto">
               {copy.uploadedSelectionSummary
                 .replace("{selected}", String(selectedUploadedFilesCount))
                 .replace("{available}", String(uploadedFilesAvailableSlots))}
             </span>
-            <button
-              className="h-9 rounded-[6px] border border-[#d5d0dc] bg-white px-4 text-[10px] font-bold text-[#5f5968] transition-colors hover:border-[#21175c] hover:text-[#21175c]"
-              onClick={() => setIsUploadedFilesOpen(false)}
-              type="button"
-            >
-              {copy.cancel}
-            </button>
-            <button
-              className="login-submit-button inline-flex h-9 items-center justify-center rounded-[6px] px-4 text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
-              disabled={selectedUploadedFilesCount === 0}
-              onClick={addSelectedUploadedFiles}
-              type="button"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <Plus aria-hidden="true" className="size-3.5" />
-                {copy.addSelectedFiles}
-              </span>
-            </button>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0">
+              <button
+                className="min-h-9 min-w-0 rounded-[6px] border border-[#d5d0dc] bg-white px-3 py-2 text-[10px] font-bold leading-4 text-[#5f5968] transition-colors hover:border-[#21175c] hover:text-[#21175c] sm:min-w-[76px] sm:px-4"
+                onClick={() => setIsUploadedFilesOpen(false)}
+                type="button"
+              >
+                {copy.cancel}
+              </button>
+              <button
+                className="login-submit-button inline-flex min-h-9 min-w-0 items-center justify-center rounded-[6px] px-3 py-2 text-[10px] font-bold leading-4 text-white disabled:cursor-not-allowed disabled:opacity-45 sm:px-4"
+                disabled={selectedUploadedFilesCount === 0}
+                onClick={addSelectedUploadedFiles}
+                type="button"
+              >
+                <span className="relative z-10 flex min-w-0 items-center justify-center gap-2 text-center">
+                  <Plus aria-hidden="true" className="size-3.5 shrink-0" />
+                  <span>{copy.addSelectedFiles}</span>
+                </span>
+              </button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
