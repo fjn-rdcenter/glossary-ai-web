@@ -10,7 +10,6 @@ export const MEDIA_STORAGE = process.env.MEDIA_STORAGE || "http://172.16.6.10:28
 
 export const getApiBaseUrl = (): string => {
   const envUrl = process.env.API_BASE_URL;
-  return "http://172.16.6.10:28000"
 
   if (envUrl) return envUrl;
 
