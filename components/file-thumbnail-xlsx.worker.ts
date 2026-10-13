@@ -17,7 +17,7 @@ ctx.onmessage = (event: MessageEvent<Req>) => {
     // SheetJS sniffs arbitrary bytes into a stub sheet; reject non-spreadsheet
     // input so a mislabeled file yields no thumbnail rather than junk cells.
     if (!isSpreadsheetContainer(buffer)) {
-      throw new Error("File is not a recognized spreadsheet (.xlsx or .xls).");
+      throw new Error("File is not a recognized spreadsheet (.xlsx, .xlsm, or .xls).");
     }
     const wb = XLSX.read(new Uint8Array(buffer), {
       type: "array",

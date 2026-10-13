@@ -98,9 +98,10 @@ const historyCopy = {
      filter: "Lọc bảng dịch",
      imageContent: "Ảnh",
      itemsPerPage: "Số mục mỗi trang",
-     noTableResults: "Không tìm thấy nội dung phù hợp.",
-    notApplied: "Không áp dụng",
-    nextPage: "Trang tiếp theo",
+      noTableResults: "Không tìm thấy nội dung phù hợp.",
+     notApplied: "Không áp dụng",
+     nextPage: "Trang tiếp theo",
+     previewNotSupported: "Chức năng xem trước chưa hỗ trợ cho định dạng này.",
     previousPage: "Trang trước",
     previewError: "Không thể tải bản xem trước. Vui lòng thử lại.",
     previewLoading: "Đang tải bản xem trước...",
@@ -175,9 +176,10 @@ const historyCopy = {
      filter: "Filter translations",
      imageContent: "Images",
      itemsPerPage: "Items per page",
-     noTableResults: "No matching content found.",
-    notApplied: "Not applied",
-    nextPage: "Next page",
+      noTableResults: "No matching content found.",
+     notApplied: "Not applied",
+     nextPage: "Next page",
+     previewNotSupported: "Preview is not supported for this file format.",
     previousPage: "Previous page",
     previewError: "Unable to load the preview. Please try again.",
     previewLoading: "Loading preview...",
@@ -252,9 +254,10 @@ const historyCopy = {
      filter: "翻訳を絞り込む",
      imageContent: "画像",
      itemsPerPage: "1ページあたりの項目数",
-     noTableResults: "一致するコンテンツがありません。",
-    notApplied: "適用しない",
-    nextPage: "次のページ",
+      noTableResults: "一致するコンテンツがありません。",
+     notApplied: "適用しない",
+     nextPage: "次のページ",
+     previewNotSupported: "このファイル形式のプレビューはサポートされていません。",
     previousPage: "前のページ",
     previewError: "プレビューを読み込めません。もう一度お試しください。",
     previewLoading: "プレビューを読み込んでいます...",
@@ -871,7 +874,8 @@ export function HistoryView() {
                       const documentSize = getDocumentSize(job);
                       const sourceActionKey = "source:" + job.id;
                       const targetActionKey = "target:" + job.id;
-                      const isTranslatedReady = job.status === "completed";
+                       const isTranslatedReady = job.status === "completed";
+                       const hasExtractionId = !!job.extractionId;
                       const canCancel = job.status === "pending" || job.status === "translating";
 
                       return (
@@ -957,17 +961,17 @@ export function HistoryView() {
                               >
                                <Info aria-hidden="true" className="size-[17px]" />
                               </button>
-                              <button
-                                aria-label={copy.preview + ": " + documentName}
-                                className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:bg-[#f5f3f7] disabled:text-[#a29ca8]"
-                                data-history-tour={isTourItem ? "preview" : undefined}
-                                disabled={!isTranslatedReady}
-                                onClick={() => {
-                                  setPreviewJob(job);
-                                }}
-                                title={isTranslatedReady ? copy.preview : copy.notReady}
-                                type="button"
-                              >
+                               <button
+                                 aria-label={copy.preview + ": " + documentName}
+                                 className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:bg-[#f5f3f7] disabled:text-[#a29ca8]"
+                                 data-history-tour={isTourItem ? "preview" : undefined}
+                                 disabled={!isTranslatedReady || !hasExtractionId}
+                                 onClick={() => {
+                                   setPreviewJob(job);
+                                 }}
+                                 title={isTranslatedReady && hasExtractionId ? copy.preview : copy.notReady}
+                                 type="button"
+                               >
                                 <Eye aria-hidden="true" className="size-[17px]" />
                               </button>
                               <button
@@ -1042,10 +1046,11 @@ export function HistoryView() {
            filter: copy.filter,
           imageContent: copy.imageContent,
           itemsPerPage: copy.itemsPerPage,
-          noTableResults: copy.noTableResults,
+           noTableResults: copy.noTableResults,
           notApplied: copy.notApplied,
           nextPage: copy.nextPage,
           page: copy.page,
+          previewNotSupported: copy.previewNotSupported,
           preview: copy.preview,
           previewError: copy.previewError,
           previewLoading: copy.previewLoading,
