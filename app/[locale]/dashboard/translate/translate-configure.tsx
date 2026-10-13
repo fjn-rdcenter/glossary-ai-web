@@ -70,7 +70,7 @@ import {TranslationPreviewDialog} from "./translation-preview-dialog";
 const MAX_FILES = 5;
 const GLOSSARIES_PER_PAGE = 4;
 const UPLOADED_FILES_PER_PAGE = 8;
-const PIPELINE_FILE_EXTENSIONS = new Set(["docx", "xlsx", "pptx"]);
+const PIPELINE_FILE_EXTENSIONS = new Set(["docx", "xlsx", "xlsm", "pptx"]);
 
 const usesTranslationPipeline = (fileName: string) => {
   const extension = fileName.split(".").pop()?.toLocaleLowerCase();
@@ -519,6 +519,7 @@ type WorkflowCopy = {
   notApplied: string;
   nextPage: string;
   page: string;
+  previewNotSupported: string;
   previewError: string;
   previewLoading: string;
   previousPage: string;
@@ -587,10 +588,11 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
      filter: "Lọc bảng dịch",
      imageContent: "Ảnh",
      itemsPerPage: "Số mục mỗi trang",
-     noTableResults: "Không tìm thấy nội dung phù hợp.",
-    notApplied: "Không áp dụng",
-    nextPage: "Trang tiếp theo",
-    page: "Trang",
+      noTableResults: "Không tìm thấy nội dung phù hợp.",
+     notApplied: "Không áp dụng",
+     nextPage: "Trang tiếp theo",
+     page: "Trang",
+     previewNotSupported: "Chức năng xem trước chưa hỗ trợ cho định dạng này.",
     previewError: "Không thể tải bản xem trước. Vui lòng thử lại.",
     previewLoading: "Đang tải bản xem trước...",
     previousPage: "Trang trước",
@@ -657,10 +659,11 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
      filter: "Filter translations",
      imageContent: "Images",
      itemsPerPage: "Items per page",
-     noTableResults: "No matching content found.",
-    notApplied: "Not applied",
-    nextPage: "Next page",
-    page: "Page",
+      noTableResults: "No matching content found.",
+     notApplied: "Not applied",
+     nextPage: "Next page",
+     page: "Page",
+     previewNotSupported: "Preview is not supported for this file format.",
     previewError: "Unable to load the preview. Please try again.",
     previewLoading: "Loading preview...",
     previousPage: "Previous page",
@@ -727,10 +730,11 @@ const workflowCopy: Record<TranslateLocale, WorkflowCopy> = {
      filter: "翻訳を絞り込む",
      imageContent: "画像",
      itemsPerPage: "1ページあたりの項目数",
-     noTableResults: "一致するコンテンツがありません。",
-    notApplied: "適用しない",
-    nextPage: "次のページ",
-    page: "ページ",
+      noTableResults: "一致するコンテンツがありません。",
+     notApplied: "適用しない",
+     nextPage: "次のページ",
+     page: "ページ",
+     previewNotSupported: "このファイル形式のプレビューはサポートされていません。",
     previewError: "プレビューを読み込めません。もう一度お試しください。",
     previewLoading: "プレビューを読み込んでいます...",
     previousPage: "前のページ",
@@ -1512,6 +1516,7 @@ export function TranslateConfigure() {
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-excel.sheet.macroenabled.12": [".xlsm"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
       "image/*": [".png", ".jpeg", ".jpg"],
       "text/html": [".html", ".htm"],

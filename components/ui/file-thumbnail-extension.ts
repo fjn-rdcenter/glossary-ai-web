@@ -32,6 +32,7 @@ const MIME_EXTENSION: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     "pptx",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel.sheet.macroenabled.12": "xlsm",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     "docx",
   "image/jpeg": "jpg",

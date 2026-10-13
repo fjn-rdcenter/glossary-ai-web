@@ -366,7 +366,7 @@ const dashboardStatusLabels: Record<AppLocale, Record<StatusEnum, string>> = {
   },
 };
 
-const dashboardAcceptedFileExtensions = new Set(["pdf", "docx", "pptx", "xlsx", "html", "htm", "md", "txt", "png", "jpeg", "jpg"]);
+const dashboardAcceptedFileExtensions = new Set(["pdf", "docx", "pptx", "xlsx", "xlsm", "html", "htm", "md", "txt", "png", "jpeg", "jpg"]);
 
 function isSupportedDashboardFile(file: File) {
   const extension = file.name.split(".").pop()?.toLowerCase();
@@ -795,6 +795,7 @@ function DashboardHeroDropzone({
       "application/pdf": [".pdf"],
       "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-excel.sheet.macroenabled.12": [".xlsm"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
       "image/*": [".png", ".jpeg", ".jpg"],
       "text/html": [".html", ".htm"],

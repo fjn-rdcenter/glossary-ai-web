@@ -4,6 +4,16 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const LUCKYSHEET_MESSAGE_SCOPE = "luckysheet-preview";
+const XLSX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+async function createLuckysheetPreviewBlob(blob: Blob): Promise<Blob> {
+  const XLSX = await import("@e965/xlsx");
+  const workbook = XLSX.read(await blob.arrayBuffer(), { type: "array" });
+  const xlsxData = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+
+  return new Blob([xlsxData], { type: XLSX_MIME_TYPE });
+}
 
 function createFrameDocument(frameId: string) {
   const serializedFrameId = JSON.stringify(frameId);
@@ -232,7 +242,15 @@ function createFrameDocument(frameId: string) {
           navigationId += 1;
           sheetActivationId += 1;
           cancelControlledNavigation();
-          var file = new File([message.blob], message.fileName, { type: message.blob.type });
+          var isMacroEnabledWorkbook = /\.xlsm$/i.test(message.fileName);
+          var previewFileName = isMacroEnabledWorkbook
+            ? message.fileName.replace(/\.xlsm$/i, ".xlsx")
+            : message.fileName;
+          var file = new File([message.blob], previewFileName, {
+            type: isMacroEnabledWorkbook
+              ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              : message.blob.type
+          });
 
           if (!window.LuckyExcel || !window.luckysheet) {
             notify("error", requestId);
@@ -380,16 +398,30 @@ export function LuckysheetPreview({
     const requestId = requestIdRef.current;
     setStatus("loading");
 
+    const isMacroEnabledWorkbook = /\.xlsm$/i.test(fileName);
+    let previewBlobPromise: Promise<Blob> | null = null;
     const sendFile = () => {
-      frameWindow.postMessage({
-        blob,
-        fileName,
-        frameId,
-        requestId,
-        scope: LUCKYSHEET_MESSAGE_SCOPE,
-        target: readTargetCell(),
-        type: "load",
-      }, "*");
+      const pendingBlob = isMacroEnabledWorkbook
+        ? (previewBlobPromise ??= createLuckysheetPreviewBlob(blob))
+        : Promise.resolve(blob);
+
+      void pendingBlob
+        .then((previewBlob) => {
+          if (requestIdRef.current !== requestId) return;
+          frameWindow.postMessage({
+            blob: previewBlob,
+            fileName,
+            frameId,
+            requestId,
+            scope: LUCKYSHEET_MESSAGE_SCOPE,
+            target: readTargetCell(),
+            type: "load",
+          }, "*");
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to prepare spreadsheet for Luckysheet", error);
+          if (requestIdRef.current === requestId) setStatus("error");
+        });
     };
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== frameWindow) return;
