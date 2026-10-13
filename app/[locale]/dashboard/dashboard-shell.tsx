@@ -21,7 +21,7 @@ import {
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import {useLocale} from "next-intl";
-import {type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useDropzone} from "react-dropzone";
 import {AuthService, DocumentService, GlossaryService, releaseNotesService, TranslationService, type ReleaseNote} from "@/api";
 import {
@@ -92,15 +92,6 @@ const GlossaryShareDialog = dynamic<DashboardGlossaryShareDialogProps>(
 type NavKey = "home" | "glossaries" | "history" | "guidance";
 type StatKey = "translations" | "glossaries" | "documents" | "processing";
 type DashboardStats = Record<StatKey, number | null>;
-type FileFormatBadgePosition = {
-  bottom?: string;
-  delay?: string;
-  duration: string;
-  left?: string;
-  right?: string;
-  top?: string;
-};
-
 type DashboardCopy = {
   nav: Record<NavKey, string>;
   heroTitle: string;
@@ -375,8 +366,6 @@ const dashboardStatusLabels: Record<AppLocale, Record<StatusEnum, string>> = {
   },
 };
 
-const fileFormatTypes = ["PDF", "DOCX", "PPTX", "XLSX", "HTML", "MD", "TXT", "PNG", "JPEG"] as const;
-const FILE_FORMAT_BADGE_LAYOUT_HEIGHT = 1440;
 const dashboardAcceptedFileExtensions = new Set(["pdf", "docx", "pptx", "xlsx", "html", "htm", "md", "txt", "png", "jpeg", "jpg"]);
 
 function isSupportedDashboardFile(file: File) {
@@ -384,98 +373,6 @@ function isSupportedDashboardFile(file: File) {
 
   return Boolean(extension && dashboardAcceptedFileExtensions.has(extension));
 }
-const fileFormatColors: Record<(typeof fileFormatTypes)[number], string> = {
-  PDF: "#E53935",
-  DOCX: "#1B65C2",
-  PPTX: "#D83B01",
-  XLSX: "#107C41",
-  HTML: "#E34F26",
-  MD: "#6B46C1",
-  TXT: "#64748B",
-  PNG: "#0891B2",
-  JPEG: "#D97706",
-};
-
-const fileFormatBadgePositions: FileFormatBadgePosition[] = [
-  {top: "12%", left: "8%", duration: "8.5s"},
-  {top: "18%", right: "17%", duration: "9.4s", delay: "-1.4s"},
-  {top: "34%", left: "23%", duration: "10.2s", delay: "-3s"},
-  {top: "42%", right: "9%", duration: "8.8s", delay: "-2.2s"},
-  {top: "58%", left: "12%", duration: "11s", delay: "-4.6s"},
-  {top: "66%", right: "28%", duration: "9.8s", delay: "-5.2s"},
-  {bottom: "16%", left: "36%", duration: "10.8s", delay: "-6.2s"},
-  {bottom: "11%", right: "12%", duration: "9.2s", delay: "-3.8s"},
-  {bottom: "28%", left: "5%", duration: "12s", delay: "-7s"},
-  {top: "8%", left: "38%", duration: "9.6s", delay: "-2.8s"},
-  {top: "27%", left: "5%", duration: "11.4s", delay: "-5.5s"},
-  {top: "30%", right: "34%", duration: "10.6s", delay: "-1.8s"},
-  {top: "51%", left: "31%", duration: "9.4s", delay: "-7.4s"},
-  {top: "54%", right: "41%", duration: "12.4s", delay: "-4.2s"},
-  {bottom: "34%", right: "4%", duration: "10.4s", delay: "-8.1s"},
-  {bottom: "23%", left: "18%", duration: "9.7s", delay: "-3.4s"},
-  {bottom: "6%", left: "57%", duration: "11.8s", delay: "-6.7s"},
-  {top: "72%", right: "19%", duration: "10.9s", delay: "-9.1s"},
-  {top: "6%", right: "38%", duration: "11.2s", delay: "-10.1s"},
-  {top: "23%", left: "52%", duration: "9.9s", delay: "-6.4s"},
-  {top: "38%", left: "47%", duration: "12.2s", delay: "-8.8s"},
-  {top: "46%", left: "3%", duration: "10.1s", delay: "-11.3s"},
-  {top: "63%", left: "49%", duration: "11.7s", delay: "-5.9s"},
-  {bottom: "7%", right: "36%", duration: "9.3s", delay: "-12.1s"},
-  {bottom: "43%", right: "22%", duration: "10.7s", delay: "-7.9s"},
-  {bottom: "37%", left: "20%", duration: "12.8s", delay: "-4.7s"},
-  {bottom: "4%", left: "8%", duration: "10.5s", delay: "-13.2s"},
-  {top: "14%", left: "64%", duration: "9.1s", delay: "-14.2s"},
-  {top: "21%", left: "28%", duration: "11.1s", delay: "-8.3s"},
-  {top: "35%", right: "2%", duration: "10.3s", delay: "-6.9s"},
-  {top: "49%", right: "54%", duration: "12.1s", delay: "-10.7s"},
-  {top: "57%", right: "16%", duration: "9.5s", delay: "-12.8s"},
-  {bottom: "19%", right: "47%", duration: "10.6s", delay: "-15.1s"},
-  {bottom: "30%", left: "59%", duration: "11.5s", delay: "-9.4s"},
-  {bottom: "13%", left: "25%", duration: "9.8s", delay: "-11.9s"},
-  {bottom: "3%", right: "6%", duration: "12.6s", delay: "-7.2s"},
-] as const;
-
-const backgroundFileFormats = fileFormatBadgePositions.map((position, index) => ({
-  label: fileFormatTypes[index % fileFormatTypes.length],
-  color: fileFormatColors[fileFormatTypes[index % fileFormatTypes.length]],
-  ...position,
-}));
-
-function getFileFormatBadgeTop(position: FileFormatBadgePosition) {
-  const ratio = position.top
-    ? Number.parseFloat(position.top) / 100
-    : 1 - Number.parseFloat(position.bottom ?? "0") / 100;
-
-  return Math.round(FILE_FORMAT_BADGE_LAYOUT_HEIGHT * ratio) + "px";
-}
-export function FileFormatBadgeBackground() {
-  return (
-    <div aria-hidden="true" className="auth-file-format-background">
-      {backgroundFileFormats.map((fileFormat, index) => (
-        <span
-          className="auth-file-format-token"
-          key={`${fileFormat.label}-${index}`}
-          style={
-            {
-              "--badge-animation-delay": fileFormat.delay ?? "0s",
-              "--badge-animation-duration": fileFormat.duration,
-              "--badge-color": fileFormat.color,
-              backgroundColor: `${fileFormat.color}14`,
-              borderColor: fileFormat.color,
-              color: fileFormat.color,
-              left: fileFormat.left,
-              right: fileFormat.right,
-              top: getFileFormatBadgeTop(fileFormat),
-            } as CSSProperties
-          }
-        >
-          {fileFormat.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 const initialStats: DashboardStats = {
   translations: null,
   glossaries: null,
@@ -757,7 +654,6 @@ export function DashboardShell({mediaStorage}: {mediaStorage: string}) {
 
   return (
     <div className="login-shell relative isolate flex min-h-dvh overflow-hidden flex-col text-[#1f2537]">
-      <FileFormatBadgeBackground />
 
       <DashboardHeader activeNav="home" />
 

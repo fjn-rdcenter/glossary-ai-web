@@ -59,7 +59,7 @@ import {usePendingUploadStore} from "@/lib/pending-upload-store";
 import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {GlossaryResponse, SourceDocumentResponse, StatusEnum} from "@/lib/types";
 import {formatBytes} from "@/lib/utils";
-import {DashboardFooter, DashboardHeader, FileFormatBadgeBackground} from "../dashboard-shell";
+import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
 import {
   GlossaryFormView,
   type GlossaryFormInitialValues,
@@ -2246,7 +2246,6 @@ export function TranslateConfigure() {
 
   return (
     <div {...getRootProps()} className="login-shell relative isolate flex min-h-dvh flex-col overflow-x-hidden text-[#21175c]">
-      <FileFormatBadgeBackground />
       <DashboardHeader localePath="dashboard/translate" />
 
       {workflowStep === "configure" && isDragActive ? (

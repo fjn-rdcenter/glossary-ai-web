@@ -19,7 +19,6 @@ import {useEffect, useState} from "react";
 import {
   DashboardFooter,
   DashboardHeader,
-  FileFormatBadgeBackground,
 } from "../dashboard/dashboard-shell";
 import {useMediaUrl} from "@/components/ui/use-media-url";
 import {userGuidanceMedia} from "./user-guidance-media";
@@ -1017,7 +1016,6 @@ export function UserGuidanceView({mediaStorage}: {mediaStorage: string}) {
 
   return (
     <div className="login-shell relative isolate flex min-h-dvh flex-col overflow-x-hidden text-[#1f2537]">
-      <FileFormatBadgeBackground />
       <DashboardHeader activeNav="guidance" localePath="user-guidance" />
 
       <main

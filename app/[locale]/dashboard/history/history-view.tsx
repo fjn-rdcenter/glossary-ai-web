@@ -25,7 +25,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger} from "@/components/ui/
 import {Skeleton} from "@/components/ui/skeleton";
 import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {StatusEnum, TranslationHistoryResponse} from "@/lib/types";
-import {DashboardFooter, DashboardHeader, FileFormatBadgeBackground} from "../dashboard-shell";
+import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
 import {TranslationPreviewDialog} from "../translate/translation-preview-dialog";
 
 type HistoryLocale = "en" | "vi" | "ja";
@@ -677,7 +677,6 @@ export function HistoryView() {
 
   return (
     <div className="login-shell relative isolate flex min-h-dvh flex-col overflow-x-hidden text-[#1f2537]">
-      <FileFormatBadgeBackground />
       <DashboardHeader activeNav="history" localePath="dashboard/history" />
 
       <main
