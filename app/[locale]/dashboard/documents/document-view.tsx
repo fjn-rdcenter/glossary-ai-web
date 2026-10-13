@@ -29,7 +29,7 @@ import {
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Skeleton} from "@/components/ui/skeleton";
 import type {SourceDocumentResponse} from "@/lib/types";
-import {DashboardFooter, DashboardHeader, FileFormatBadgeBackground} from "../dashboard-shell";
+import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
 
 type DocumentLocale = "en" | "vi" | "ja";
 
@@ -316,7 +316,6 @@ export function DocumentView() {
 
   return (
     <div className="login-shell relative isolate flex min-h-dvh flex-col overflow-x-hidden text-[#1f2537]">
-      <FileFormatBadgeBackground />
       <DashboardHeader localePath="dashboard/documents" />
 
       <main

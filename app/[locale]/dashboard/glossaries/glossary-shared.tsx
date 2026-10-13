@@ -18,7 +18,7 @@ import type {
   GlossaryPermissionBaseResponse,
   GlossaryResponse,
 } from "@/lib/types";
-import {DashboardFooter, DashboardHeader, FileFormatBadgeBackground} from "../dashboard-shell";
+import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
 import {
   getGlossaryLanguageFlag,
   getGlossaryLanguageLabel,
@@ -44,7 +44,6 @@ export function GlossaryPageFrame({
 }) {
   return (
     <div className="login-shell relative isolate flex min-h-dvh flex-col overflow-x-hidden text-[#1f2537]">
-      <FileFormatBadgeBackground />
       <DashboardHeader activeNav="glossaries" localePath={localePath} />
       <main
         className="dashboard-page-body relative z-10 mx-auto w-full max-w-[1540px] flex-1 px-4 pb-14 pt-8 sm:px-8 lg:px-10 lg:pt-10"
