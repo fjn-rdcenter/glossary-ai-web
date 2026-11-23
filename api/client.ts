@@ -5,7 +5,7 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { authClient } from "./auth-client";
-import { ACCESS_TOKEN_STORAGE_KEY, clearAuthSession, storeAccessToken } from "./auth-session";
+import { clearAuthSession, getStoredAccessToken, isLoggedOut, storeAccessToken } from "./auth-session";
 import { API_CONFIG } from "./config";
 import { AppError } from "@/lib/error-utils";
 
@@ -122,7 +122,7 @@ apiClient.interceptors.request.use(
     if (typeof window === "undefined" || !config.headers) return config;
 
     const request = config as RetriableRequestConfig;
-    const accessToken = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+    const accessToken = getStoredAccessToken();
     request._accessToken = accessToken;
 
     if (accessToken) {
@@ -146,13 +146,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(getAppError(error));
     }
 
-    if (typeof window !== "undefined" && localStorage.getItem("user_logged_out") === "true") {
+    if (isLoggedOut()) {
       return Promise.reject(getAppError(error));
     }
 
-    const currentAccessToken = typeof window === "undefined"
-      ? null
-      : localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+    const currentAccessToken = getStoredAccessToken();
 
     // A sibling request may have already refreshed while this stale 401 was in flight.
     if (!originalRequest._retry && currentAccessToken && currentAccessToken !== originalRequest._accessToken) {

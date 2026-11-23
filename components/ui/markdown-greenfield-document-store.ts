@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import {MARKDOWN_DOCUMENT_WORKER_DEBUG_STORAGE_KEY} from "@/lib/storage-keys";
+
 import {
   createMarkdownGreenfieldDocument,
   freezeMarkdownGreenfieldDocument,
@@ -10,8 +12,6 @@ import {
 } from "./markdown-greenfield-document";
 
 export const MARKDOWN_GREENFIELD_ASYNC_DOCUMENT_MIN_CHARS = 60_000;
-export const MARKDOWN_GREENFIELD_DOCUMENT_WORKER_LOCAL_STORAGE_KEY =
-  "retab:markdown-document-worker";
 export const MARKDOWN_GREENFIELD_DOCUMENT_WORKER_SEARCH_PARAM =
   "markdownDocumentWorker";
 
@@ -288,9 +288,7 @@ function readMarkdownDocumentWorkerSearchFlag(search: string) {
 function readMarkdownDocumentWorkerStorageFlag() {
   try {
     return markdownDocumentWorkerFlagValue(
-      window.localStorage.getItem(
-        MARKDOWN_GREENFIELD_DOCUMENT_WORKER_LOCAL_STORAGE_KEY,
-      ),
+      window.localStorage.getItem(MARKDOWN_DOCUMENT_WORKER_DEBUG_STORAGE_KEY),
     );
   } catch {
     return null;

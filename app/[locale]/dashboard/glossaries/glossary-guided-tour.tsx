@@ -21,6 +21,7 @@ import {
   type TooltipRenderProps,
 } from "react-joyride";
 import {AuthService} from "@/api";
+import {getGlossaryTourStageStorageKey} from "@/lib/storage-keys";
 import {
   GUIDED_TOUR_FADE_IN_TRANSITION,
   GUIDED_TOUR_START_DELAY_MS,
@@ -332,14 +333,9 @@ const phaseTargets: Record<
   ],
 };
 
-const STAGE_STORAGE_PREFIX = "glossary-ai:glossary-tour:";
-function getStageStorageKey(userId: string) {
-  return STAGE_STORAGE_PREFIX + userId + ":stage";
-}
-
 function readStage(userId: string) {
   try {
-    return window.localStorage.getItem(getStageStorageKey(userId));
+    return window.localStorage.getItem(getGlossaryTourStageStorageKey(userId));
   } catch {
     return null;
   }
@@ -347,7 +343,7 @@ function readStage(userId: string) {
 
 function writeCreateStage(userId: string) {
   try {
-    window.localStorage.setItem(getStageStorageKey(userId), "create");
+    window.localStorage.setItem(getGlossaryTourStageStorageKey(userId), "create");
   } catch {
     // The tour still works in the current page when browser storage is unavailable.
   }
@@ -355,7 +351,7 @@ function writeCreateStage(userId: string) {
 
 function clearStage(userId: string) {
   try {
-    window.localStorage.removeItem(getStageStorageKey(userId));
+    window.localStorage.removeItem(getGlossaryTourStageStorageKey(userId));
   } catch {
     // Ignore unavailable browser storage after the backend status is saved.
   }

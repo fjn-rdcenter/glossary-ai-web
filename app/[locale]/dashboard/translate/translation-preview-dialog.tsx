@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
 import { API_CONFIG, apiClient, DocumentService, MEDIA_BASE_URL, TranslationService, USE_LEGACY_EXTRACTION_MEDIA } from "@/api";
+import { USER_INFO_STORAGE_KEY } from "@/lib/storage-keys";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -562,7 +563,7 @@ export function TranslationPreviewDialog({
 
       let storedUserId = "";
       try {
-        const storedUser = localStorage.getItem("glossaryai_user_info");
+        const storedUser = localStorage.getItem(USER_INFO_STORAGE_KEY);
         storedUserId = storedUser ? (JSON.parse(storedUser) as { id?: string }).id ?? "" : "";
       } catch {
         storedUserId = "";

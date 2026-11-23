@@ -5,7 +5,10 @@ export const routing = defineRouting({
   locales: ['en', 'vi', 'ja'],
   defaultLocale: 'vi',
   localeDetection: true,
-  localePrefix: 'always'
+  localePrefix: 'always',
+  // proxy.ts always resolves the locale from the URL or Accept-Language, so the
+  // NEXT_LOCALE cookie would only add state on a domain shared with other products.
+  localeCookie: false
 });
 
 export const {Link, redirect, usePathname, useRouter} = createNavigation(routing);
