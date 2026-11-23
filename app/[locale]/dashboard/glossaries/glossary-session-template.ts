@@ -3,11 +3,11 @@ import type {
   GlossaryPermissionAdminResponse,
   GlossaryPermissionBaseResponse,
 } from "@/lib/types";
+import {SESSION_GLOSSARY_TEMPLATE_STORAGE_KEY as STORAGE_KEY} from "@/lib/storage-keys";
 import type {GlossaryLocale} from "./glossary-copy";
 
 export const SESSION_GLOSSARY_TEMPLATE_ID = "__glossary-session-template__";
 
-const STORAGE_KEY = "glossary-ai:session-glossary-template:v2";
 const STORAGE_VERSION = 2;
 
 type SessionGlossaryState = {

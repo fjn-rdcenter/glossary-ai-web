@@ -6,6 +6,8 @@ import {useEffect, useState} from "react";
 import {AlertCircle, LoaderCircle} from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
 import {AuthService, InvalidCredentialsError} from "@/api";
+import {getStoredAccessToken, isLoggedOut} from "@/api/auth-session";
+import {USERNAME_STORAGE_KEY} from "@/lib/storage-keys";
 import {usePathname, useRouter} from "@/i18n/routing";
 import {
   DropdownMenu,
@@ -59,10 +61,9 @@ export function LoginView() {
 
     const restoreSession = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        const wasLoggedOut = localStorage.getItem("user_logged_out") === "true";
+        const token = getStoredAccessToken();
 
-        if (wasLoggedOut) {
+        if (isLoggedOut()) {
           if (isMounted) setIsRestoringSession(false);
           return;
         }
@@ -98,7 +99,7 @@ export function LoginView() {
         password,
       });
 
-      localStorage.setItem("glossaryai_username", normalizedUsername);
+      localStorage.setItem(USERNAME_STORAGE_KEY, normalizedUsername);
       router.replace("/dashboard");
     } catch (error) {
       setErrorMessage(

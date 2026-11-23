@@ -11,7 +11,7 @@ import apiClient, {
   resetForcedLogout,
 } from "../client";
 import { authClient } from "../auth-client";
-import { clearAuthSession, clearLegacyRefreshCookie, storeAccessToken } from "../auth-session";
+import { clearAuthSession, storeAccessToken } from "../auth-session";
 import { API_CONFIG } from "../config";
 import {
   ApiResponse,
@@ -39,8 +39,6 @@ export class InvalidCredentialsError extends Error {
 export class AuthService {
   static async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      clearLegacyRefreshCookie();
-
       const formData = new URLSearchParams();
       formData.append("username", credentials.username);
       formData.append("password", credentials.password);

@@ -1,5 +1,5 @@
-const FILE_VIEWER_DIAGNOSTIC_STORAGE_KEY = "retab-file-viewer-debug";
-const PDF_DIAGNOSTIC_STORAGE_KEY = "retab-pdf-debug";
+import {FILE_VIEWER_DEBUG_STORAGE_KEY} from "./storage-keys";
+
 const PDF_HEADER = [0x25, 0x50, 0x44, 0x46, 0x2d];
 const T0 = typeof performance !== "undefined" ? performance.now() : 0;
 const seqRef = { n: 0 };
@@ -18,13 +18,9 @@ function isTruthyDiagnosticFlag(value: string | null): boolean {
 export function isFileViewerDiagnosticsEnabled(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const explicit = window.localStorage.getItem(
-      FILE_VIEWER_DIAGNOSTIC_STORAGE_KEY,
+    return isTruthyDiagnosticFlag(
+      window.localStorage.getItem(FILE_VIEWER_DEBUG_STORAGE_KEY),
     );
-    if (explicit !== null) return isTruthyDiagnosticFlag(explicit);
-    const legacyPdf = window.localStorage.getItem(PDF_DIAGNOSTIC_STORAGE_KEY);
-    if (legacyPdf !== null) return isTruthyDiagnosticFlag(legacyPdf);
-    return false;
   } catch {
     return false;
   }

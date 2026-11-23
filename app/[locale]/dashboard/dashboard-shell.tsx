@@ -47,12 +47,11 @@ import {LanguageDisplay} from "@/components/language-display";
 import {TranslationDetailDialog, type TranslationDetailJob} from "@/components/translation-detail-dialog";
 import {Link, useRouter} from "@/i18n/routing";
 import {usePendingUploadStore} from "@/lib/pending-upload-store";
+import {USERNAME_STORAGE_KEY, USER_INFO_STORAGE_KEY} from "@/lib/storage-keys";
 import type {GlossaryResponse, StatusEnum, TranslationHistoryResponse, UserResponse} from "@/lib/types";
 import {getGlossaryLanguageFlag, glossaryCopy} from "./glossaries/glossary-copy";
 import {DashboardGuidedTour} from "./dashboard-guided-tour";
 
-const USERNAME_STORAGE_KEY = "glossaryai_username";
-const USER_INFO_STORAGE_KEY = "glossaryai_user_info";
 const FALLBACK_USERNAME = "User";
 
 const languages = [

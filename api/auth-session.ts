@@ -1,36 +1,38 @@
-export const ACCESS_TOKEN_STORAGE_KEY = "auth_token";
-export const USERNAME_STORAGE_KEY = "glossaryai_username";
-export const USER_INFO_STORAGE_KEY = "glossaryai_user_info";
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  LOGGED_OUT_STORAGE_KEY,
+  USERNAME_STORAGE_KEY,
+  USER_INFO_STORAGE_KEY,
+} from "@/lib/storage-keys";
 
 const USER_STORAGE_KEYS = [
   ACCESS_TOKEN_STORAGE_KEY,
   USERNAME_STORAGE_KEY,
   USER_INFO_STORAGE_KEY,
-  "onboardingTourCompleted",
-  "documentTourCompleted",
-  "glossaryTourCompleted",
-  "createGlossaryTourCompleted",
-  "firstLoginCompleted",
 ];
 
-export function clearLegacyRefreshCookie(): void {
-  if (typeof document === "undefined") return;
+export function getStoredAccessToken(): string | null {
+  if (typeof window === "undefined") return null;
 
-  // Versions before cookie-based refresh wrote this non-HttpOnly cookie at /.
-  document.cookie = "refresh_token=; Max-Age=0; Path=/; SameSite=Lax";
+  return localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+}
+
+export function isLoggedOut(): boolean {
+  if (typeof window === "undefined") return false;
+
+  return localStorage.getItem(LOGGED_OUT_STORAGE_KEY) === "true";
 }
 
 export function storeAccessToken(accessToken: string): void {
   if (typeof window === "undefined") return;
 
   localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
-  localStorage.removeItem("user_logged_out");
+  localStorage.removeItem(LOGGED_OUT_STORAGE_KEY);
 }
 
 export function clearAuthSession(): void {
   if (typeof window === "undefined") return;
 
   USER_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-  localStorage.setItem("user_logged_out", "true");
-  clearLegacyRefreshCookie();
+  localStorage.setItem(LOGGED_OUT_STORAGE_KEY, "true");
 }
