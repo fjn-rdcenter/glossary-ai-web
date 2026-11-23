@@ -11,6 +11,7 @@ const fileTypeStyles: Record<string, CSSProperties> = {
   PPTX: {backgroundColor: "#fff3ed", borderColor: "#efaa84", color: "#c94f16"},
   TXT: {backgroundColor: "#f4f6f8", borderColor: "#aeb8c5", color: "#526174"},
   XLSX: {backgroundColor: "#edf9f1", borderColor: "#8ac8a1", color: "#177442"},
+  XLSM: {backgroundColor: "#edf9f1", borderColor: "#8ac8a1", color: "#177442"},
 };
 
 const fallbackFileTypeStyle: CSSProperties = {

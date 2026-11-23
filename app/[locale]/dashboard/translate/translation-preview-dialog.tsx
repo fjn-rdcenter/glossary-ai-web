@@ -68,6 +68,7 @@ type PreviewCopy = {
   itemsPerPage: string;
   noTableResults: string;
   notApplied: string;
+  previewNotSupported: string;
   nextPage: string;
   page: string;
   preview: string;
@@ -574,7 +575,7 @@ export function TranslationPreviewDialog({
         ]);
         if (!job.targetDocument) throw new Error("Translated document is unavailable");
 
-        const isXlsxJob = (job.sourceDocumentName || fileName).toLocaleLowerCase().endsWith(".xlsx");
+        const isXlsxJob = /\.(xlsx|xlsm)$/i.test(job.sourceDocumentName || fileName);
         const xlsxCellsPromise = job.extractionId && isXlsxJob
           ? loadMedia<XlsxExtraction>(`${job.extractionId}/extraction.json`, storedUserId)
               .then(buildXlsxCellMaps)
@@ -779,7 +780,7 @@ export function TranslationPreviewDialog({
   const activeBlob = activeDocument === "translated" ? targetBlob : sourceBlob;
   const activeFileName = activeDocument === "translated" ? targetFileName : sourceFileName;
   const isDocxPreview = activeFileName.toLocaleLowerCase().endsWith(".docx");
-  const isXlsxPreview = activeFileName.toLocaleLowerCase().endsWith(".xlsx");
+  const isXlsxPreview = /\.(xlsx|xlsm)$/i.test(activeFileName);
   const isPptxPreview = activeFileName.toLocaleLowerCase().endsWith(".pptx");
   const selectedTable = tables.find((table) => table.id === selectedTableId);
   const selectedTablePath = selectedTable?.path ?? "";
@@ -1168,8 +1169,8 @@ export function TranslationPreviewDialog({
                             </div>
                           </div>
                         );
-                      }) : (
-                        <div className="grid h-full min-h-40 place-items-center px-6 text-center text-sm text-muted-foreground">{copy.noTableResults}</div>
+                       }) : (
+                         <div className="grid h-full min-h-40 place-items-center px-6 text-center text-sm text-muted-foreground">{!isDocxPreview && !isXlsxPreview && !isPptxPreview ? copy.previewNotSupported : copy.noTableResults}</div>
                       )}
                     </div>
                   </div>
@@ -1309,7 +1310,7 @@ export function TranslationPreviewDialog({
                     errorLabel={copy.previewError}
                     loadingLabel={copy.previewLoading}
                   />
-                ) : activeBlob ? (
+                ) : activeBlob && isPptxPreview ? (
                   <FileViewerPreview
                     key={`${activeDocument}:${activeBlob.size}:${activeBlob.type}`}
                      className="min-h-0 flex-1 border-0 bg-muted/70 [&_[data-slot=viewer-controls]]:relative [&_[data-slot=viewer-controls]]:h-12 [&_[data-slot=viewer-controls]]:border-border/60 [&_[data-slot=viewer-controls]]:bg-card lg:[&_[data-slot=viewer-controls]]:h-14 lg:[&_[data-slot=viewer-controls-skeleton]]:h-14 lg:[&_[data-slot=viewer-position]]:absolute lg:[&_[data-slot=viewer-position]]:top-1/2 lg:[&_[data-slot=viewer-position]]:left-1/2 lg:[&_[data-slot=viewer-position]]:-translate-x-1/2 lg:[&_[data-slot=viewer-position]]:-translate-y-1/2 [&_[data-slot=file-viewer-viewport]]:bg-muted/70"
@@ -1320,6 +1321,8 @@ export function TranslationPreviewDialog({
                       identityKey: `${translationId}:${activeDocument}:${activeBlob.size}:${activeBlob.type}`,
                     }}
                   />
+                ) : !isDocxPreview && !isXlsxPreview && !isPptxPreview ? (
+                  <div className="grid h-full min-h-[400px] place-items-center px-6 text-center text-sm text-muted-foreground">{copy.previewNotSupported}</div>
                 ) : null}
               </section>
             </div>

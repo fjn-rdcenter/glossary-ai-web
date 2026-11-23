@@ -29,7 +29,7 @@ ctx.onmessage = (event: MessageEvent<XlsxWorkerRequest>) => {
     if (!isSpreadsheetContainer(event.data.buffer)) {
       throw new XlsxWorkerError(
         "parse_failed",
-        "File is not a recognized spreadsheet (.xlsx or .xls).",
+        "File is not a recognized spreadsheet (.xlsx, .xlsm, or .xls).",
       );
     }
 
