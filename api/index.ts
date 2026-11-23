@@ -22,5 +22,5 @@ export * from "./services";
 // Export types
 export * from "./types";
 
-// Export utilities
-export * from "./utils/error-handler";
+// Export error handling
+export { ApiError, isAbortError, isApiError } from "@/lib/api-error";

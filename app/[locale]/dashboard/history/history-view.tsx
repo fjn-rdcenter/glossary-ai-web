@@ -27,6 +27,9 @@ import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {StatusEnum, TranslationHistoryResponse} from "@/lib/types";
 import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
 import {TranslationPreviewDialog} from "../translate/translation-preview-dialog";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {UiError} from "@/lib/error-message";
 
 type HistoryLocale = "en" | "vi" | "ja";
 type HistoryJob = TranslationHistoryResponse & {
@@ -413,8 +416,9 @@ export function HistoryView() {
   const [totalPages, setTotalPages] = useState(1);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [downloadError, setDownloadError] = useState("");
+  const [loadError, setLoadError] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
+  const [downloadError, setDownloadError] = useState<UiError | null>(null);
   const [downloadKey, setDownloadKey] = useState<string | null>(null);
   const [cancelJobId, setCancelJobId] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<HistoryJob | null>(null);
@@ -463,7 +467,7 @@ export function HistoryView() {
 
     if (!silent) {
       setIsLoading(true);
-      setLoadError("");
+      setLoadError(null);
     }
 
     try {
@@ -582,7 +586,7 @@ export function HistoryView() {
     } catch (error) {
       if (requestId !== historyRequestIdRef.current) return;
       console.error("Failed to load translation history", error);
-      if (!silent) setLoadError(copy.loadError);
+      if (!silent) setLoadError(describeError(error, copy.loadError));
     } finally {
       if (requestId === historyRequestIdRef.current) setIsLoading(false);
     }
@@ -618,14 +622,14 @@ export function HistoryView() {
   const handleDownloadOriginal = async (job: HistoryJob) => {
     const actionKey = "source:" + job.id;
     setDownloadKey(actionKey);
-    setDownloadError("");
+    setDownloadError(null);
 
     try {
       const blob = await TranslationService.downloadOriginalDocument(job.sourceDocument || job.id);
       triggerBlobDownload(blob, getDocumentName(job));
     } catch (error) {
       console.error("Failed to download original document", error);
-      setDownloadError(copy.downloadError);
+      setDownloadError(describeError(error, copy.downloadError));
     } finally {
       setDownloadKey(null);
     }
@@ -635,14 +639,14 @@ export function HistoryView() {
     if (job.status !== "completed") return;
     const actionKey = "target:" + job.id;
     setDownloadKey(actionKey);
-    setDownloadError("");
+    setDownloadError(null);
 
     try {
       const blob = await TranslationService.downloadTranslatedDocument(job.id);
       triggerBlobDownload(blob, getTranslatedFileName(getDocumentName(job), job.targetLanguage));
     } catch (error) {
       console.error("Failed to download translated document", error);
-      setDownloadError(copy.downloadError);
+      setDownloadError(describeError(error, copy.downloadError));
     } finally {
       setDownloadKey(null);
     }
@@ -652,7 +656,7 @@ export function HistoryView() {
     if (job.status !== "pending" && job.status !== "translating") return;
 
     setCancelJobId(job.id);
-    setDownloadError("");
+    setDownloadError(null);
 
     try {
       await TranslationService.cancelTranslation(job.id);
@@ -667,7 +671,7 @@ export function HistoryView() {
       await fetchHistory(true);
     } catch (error) {
       console.error("Failed to cancel translation", error);
-      setDownloadError(copy.cancelError);
+      setDownloadError(describeError(error, copy.cancelError));
     } finally {
       setCancelJobId(null);
     }
@@ -805,7 +809,7 @@ export function HistoryView() {
 
           {loadError || downloadError ? (
             <div className="mt-4 rounded-[6px] border border-[#ffc9c2] bg-[#fff3f1] px-4 py-3 text-[11px] font-medium text-[#b42318]" role="alert">
-              {downloadError || loadError}
+              <ErrorDetails error={(downloadError ?? loadError)!} />
             </div>
           ) : null}
 
@@ -885,13 +889,13 @@ export function HistoryView() {
                           data-history-tour={isTourItem ? "item" : undefined}
                           key={job.id}
                           onClick={() => {
-                            setDownloadError("");
+                            setDownloadError(null);
                             setSelectedJob(job);
                           }}
                           onKeyDown={(event) => {
                             if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
                             event.preventDefault();
-                            setDownloadError("");
+                            setDownloadError(null);
                             setSelectedJob(job);
                           }}
                           tabIndex={0}
@@ -953,7 +957,7 @@ export function HistoryView() {
                                 className="flex size-9 shrink-0 items-center justify-center rounded-[6px] border border-[#d7d0e0] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:opacity-55"
                                 data-history-tour={isTourItem ? "info" : undefined}
                                 onClick={() => {
-                                  setDownloadError("");
+                                  setDownloadError(null);
                                   setSelectedJob(job);
                                 }}
                                 title={copy.viewDetails}

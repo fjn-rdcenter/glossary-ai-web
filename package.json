@@ -6,6 +6,7 @@
     "build": "next build && cp -r public .next/standalone/ && mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/",
     "dev": "next dev",
     "lint": "eslint .",
+    "check:error-codes": "node scripts/check-error-codes.mjs",
     "start": "HOSTNAME=0.0.0.0 PORT=13000 node --env-file=.env .next/standalone/server.js"
   },
   "dependencies": {

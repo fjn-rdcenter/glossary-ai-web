@@ -56,14 +56,6 @@ export interface PaginatedResponse<T> {
   pages: number;
 }
 
-export interface ApiError {
-  message: string;
-  status_code?: number;
-  detail?: any;
-  error_code?: string;
-  code?: string; // backwards compatibility
-}
-
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -181,7 +173,9 @@ export interface TranslationStatusResponse {
   sourceDocumentName?: string;
   targetDocument?: string; // ID of translated doc
   targetDocumentName?: string;
-  errorMessage?: string;
+  /** Failure reason of a failed job (an error code); translate it with `Errors.<code>`. */
+  errorCode?: string | null;
+  errorParams?: Record<string, string | number | boolean | null> | null;
 }
 
 export interface TranslationHistoryResponse {

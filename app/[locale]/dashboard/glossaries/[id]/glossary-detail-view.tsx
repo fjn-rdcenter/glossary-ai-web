@@ -22,6 +22,9 @@ import {
   getOrCreateSessionGlossaryTemplate,
   isSessionGlossaryTemplate,
 } from "../glossary-session-template";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import {uiError, type UiError} from "@/lib/error-message";
 
 const FETCH_SIZE = 100;
 const TERMS_PER_PAGE = 10;
@@ -90,14 +93,15 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
   const [termPage, setTermPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
 
   useEffect(() => {
     let isMounted = true;
 
     const loadGlossary = async () => {
       setIsLoading(true);
-      setErrorMessage("");
+      setErrorMessage(null);
 
       try {
         if (isSessionGlossaryTemplate(glossaryId)) {
@@ -146,7 +150,7 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
         console.error("Failed to load glossary details", error);
         if (isMounted) {
           setGlossary(null);
-          setErrorMessage(copy.detail.loadError);
+          setErrorMessage(describeError(error, copy.detail.loadError));
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -193,7 +197,7 @@ export function GlossaryDetailView({glossaryId}: {glossaryId: string}) {
         <GlossaryDetailSkeleton label={copy.detail.loading} />
       ) : errorMessage || !glossary ? (
         <div className="rounded-[8px] border border-[#f4b4ae] bg-[#fff4f2] px-4 py-4 text-[12px] text-[#b42318]">
-          {errorMessage || copy.detail.loadError}
+          <ErrorDetails error={errorMessage ?? uiError(copy.detail.loadError)} />
         </div>
       ) : (
         <section aria-labelledby="glossary-detail-title" className="content-reveal">

@@ -33,6 +33,9 @@ import {
   updateSessionGlossaryTemplate,
 } from "./glossary-session-template";
 import {GlossaryLanguage, GlossaryPageFrame} from "./glossary-shared";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import {uiError, type UiError} from "@/lib/error-message";
 
 type GlossaryFormMode = "create" | "edit";
 
@@ -258,7 +261,8 @@ export function GlossaryFormView({
   const [importedCount, setImportedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSaving, setIsSaving] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
   const [fileError, setFileError] = useState("");
   const [isGlobalDragActive, setIsGlobalDragActive] = useState(false);
   const [pendingScrollTermKey, setPendingScrollTermKey] = useState<string | null>(null);
@@ -279,7 +283,7 @@ export function GlossaryFormView({
 
     const loadGlossary = async () => {
       setIsLoading(true);
-      setErrorMessage("");
+      setErrorMessage(null);
 
       try {
         const sessionGlossary = isSessionGlossaryTemplate(glossaryId)
@@ -335,7 +339,7 @@ export function GlossaryFormView({
         }));
       } catch (error) {
         console.error("Failed to load glossary form", error);
-        if (isMounted) setErrorMessage(copy.form.loadError);
+        if (isMounted) setErrorMessage(describeError(error, copy.form.loadError));
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -395,7 +399,7 @@ export function GlossaryFormView({
     const target = draftTarget.trim();
 
     if (!source || !target) {
-      setErrorMessage(copy.form.incompleteTermsError);
+      setErrorMessage(uiError(copy.form.incompleteTermsError));
       return;
     }
 
@@ -413,7 +417,7 @@ export function GlossaryFormView({
     setDraftSource("");
     setDraftTarget("");
     draftTargetWasEditedRef.current = false;
-    setErrorMessage("");
+    setErrorMessage(null);
   };
 
   const handleRemoveTerm = (term: EditableTerm) => {
@@ -589,12 +593,12 @@ export function GlossaryFormView({
 
     const normalizedName = name.trim();
     if (!normalizedName || !sourceLanguage || !targetLanguage) {
-      setErrorMessage(copy.form.requiredError);
+      setErrorMessage(uiError(copy.form.requiredError));
       return;
     }
 
     if (sourceLanguage === targetLanguage) {
-      setErrorMessage(copy.form.sameLanguageError);
+      setErrorMessage(uiError(copy.form.sameLanguageError));
       return;
     }
 
@@ -605,12 +609,12 @@ export function GlossaryFormView({
     }));
 
     if (normalizedTerms.some((term) => !term.source || !term.target)) {
-      setErrorMessage(copy.form.incompleteTermsError);
+      setErrorMessage(uiError(copy.form.incompleteTermsError));
       return;
     }
 
     setIsSaving(true);
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       let savedGlossaryId = glossaryId;
@@ -677,7 +681,7 @@ export function GlossaryFormView({
       }
     } catch (error) {
       console.error("Failed to save glossary", error);
-      setErrorMessage(copy.form.saveError);
+      setErrorMessage(describeError(error, copy.form.saveError));
     } finally {
       setIsSaving(false);
     }
@@ -1048,7 +1052,7 @@ export function GlossaryFormView({
 
           {errorMessage ? (
             <p className="mt-4 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[14px] text-[#b42318]">
-              {errorMessage}
+              <ErrorDetails error={errorMessage} />
             </p>
           ) : null}
 

@@ -3,7 +3,6 @@
  * is never read, stored, or cleared directly by browser JavaScript.
  */
 
-import {isAxiosError} from "axios";
 import apiClient, {
   clearDefaultAuthorization,
   forceLogout,
@@ -21,7 +20,6 @@ import {
   UserResponse,
   UserUpdateRequest,
 } from "@/lib/types";
-import { ApiErrorHandler } from "../utils/error-handler";
 
 type AuthResponse<T> = T | ApiResponse<T>;
 
@@ -29,47 +27,31 @@ function unwrapAuthResponse<T extends object>(response: AuthResponse<T>): T {
   return "data" in response ? response.data : response;
 }
 
-export class InvalidCredentialsError extends Error {
-  constructor() {
-    super("Invalid username or password");
-    this.name = "InvalidCredentialsError";
-  }
-}
-
 export class AuthService {
+  /** Rejects with an `ApiError`, e.g. `AUTH_INVALID_CREDENTIALS` or `AUTH_DIRECTORY_UNAVAILABLE`. */
   static async login(credentials: LoginRequest): Promise<LoginResponse> {
-    try {
-      const formData = new URLSearchParams();
-      formData.append("username", credentials.username);
-      formData.append("password", credentials.password);
+    const formData = new URLSearchParams();
+    formData.append("username", credentials.username);
+    formData.append("password", credentials.password);
 
-      const response = await authClient.post<AuthResponse<LoginResponse>>(
-        API_CONFIG.ENDPOINTS.AUTH.LOGIN,
-        formData.toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+    const response = await authClient.post<AuthResponse<LoginResponse>>(
+      API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+      formData.toString(),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-      );
-      const loginData = unwrapAuthResponse(response.data);
+      },
+    );
+    const loginData = unwrapAuthResponse(response.data);
 
-      if (!loginData.access_token) {
-        throw new Error("Login response did not include an access token");
-      }
-
-      storeAccessToken(loginData.access_token);
-      resetForcedLogout();
-      return loginData;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "AuthService.login");
-
-      if (isAxiosError(error) && error.response?.status === 401) {
-        throw new InvalidCredentialsError();
-      }
-
-      throw new Error(ApiErrorHandler.parseError(error));
+    if (!loginData.access_token) {
+      throw new Error("Login response did not include an access token");
     }
+
+    storeAccessToken(loginData.access_token);
+    resetForcedLogout();
+    return loginData;
   }
 
   static async logout(): Promise<void> {
@@ -79,7 +61,8 @@ export class AuthService {
     try {
       await authClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {});
     } catch (error) {
-      ApiErrorHandler.logError(error, "AuthService.logout");
+      // Local state is already cleared; an expired refresh cookie makes this call fail harmlessly.
+      console.warn("Logout request failed", error);
     }
   }
 
@@ -94,25 +77,15 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<UserResponse> {
-    try {
-      const response = await apiClient.get<UserResponse>(API_CONFIG.ENDPOINTS.AUTH.ME);
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "AuthService.getCurrentUser");
-      throw error;
-    }
+    const response = await apiClient.get<UserResponse>(API_CONFIG.ENDPOINTS.AUTH.ME);
+    return response.data;
   }
 
   static async updateUserProfile(updates: UserUpdateRequest): Promise<UserResponse> {
-    try {
-      const response = await apiClient.patch<UserResponse>(
-        API_CONFIG.ENDPOINTS.AUTH.UPDATE_ME,
-        updates,
-      );
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "AuthService.updateUserProfile");
-      throw error;
-    }
+    const response = await apiClient.patch<UserResponse>(
+      API_CONFIG.ENDPOINTS.AUTH.UPDATE_ME,
+      updates,
+    );
+    return response.data;
   }
 }

@@ -30,6 +30,9 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {Skeleton} from "@/components/ui/skeleton";
 import type {SourceDocumentResponse} from "@/lib/types";
 import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {UiError} from "@/lib/error-message";
 
 type DocumentLocale = "en" | "vi" | "ja";
 
@@ -209,8 +212,9 @@ export function DocumentView() {
   const [totalPages, setTotalPages] = useState(1);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [actionError, setActionError] = useState("");
+  const [loadError, setLoadError] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
+  const [actionError, setActionError] = useState<UiError | null>(null);
   const [downloadId, setDownloadId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SourceDocumentResponse | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -226,7 +230,7 @@ export function DocumentView() {
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
-    setLoadError("");
+    setLoadError(null);
 
     try {
       const response = await DocumentService.getSourceDocuments(
@@ -253,7 +257,7 @@ export function DocumentView() {
       setItems([]);
       setTotal(0);
       setTotalPages(1);
-      setLoadError(copy.loadError);
+      setLoadError(describeError(error, copy.loadError));
     } finally {
       setIsLoading(false);
     }
@@ -273,14 +277,14 @@ export function DocumentView() {
 
   const handleDownload = async (item: SourceDocumentResponse) => {
     setDownloadId(item.id);
-    setActionError("");
+    setActionError(null);
 
     try {
       const blob = await DocumentService.downloadDocument(item.id);
       triggerBlobDownload(blob, item.name);
     } catch (error) {
       console.error("Failed to download source document", error);
-      setActionError(copy.downloadError);
+      setActionError(describeError(error, copy.downloadError));
     } finally {
       setDownloadId(null);
     }
@@ -290,7 +294,7 @@ export function DocumentView() {
     if (!deleteTarget || deletingId) return;
 
     setDeletingId(deleteTarget.id);
-    setActionError("");
+    setActionError(null);
 
     try {
       await DocumentService.deleteDocument(deleteTarget.id);
@@ -303,7 +307,7 @@ export function DocumentView() {
       }
     } catch (error) {
       console.error("Failed to delete source document", error);
-      setActionError(copy.deleteError);
+      setActionError(describeError(error, copy.deleteError));
     } finally {
       setDeletingId(null);
     }
@@ -412,7 +416,7 @@ export function DocumentView() {
 
           {loadError || actionError ? (
             <div className="mt-4 rounded-[6px] border border-[#ffc9c2] bg-[#fff3f1] px-4 py-3 text-[11px] font-medium text-[#b42318]" role="alert">
-              {actionError || loadError}
+              <ErrorDetails error={(actionError ?? loadError)!} />
             </div>
           ) : null}
 
@@ -496,7 +500,7 @@ export function DocumentView() {
                               className="inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-[6px] border border-[#f4aaa2] bg-white px-3 text-[12px] font-bold text-[#b42318] transition-colors hover:bg-[#fff1ef] disabled:cursor-wait disabled:opacity-55"
                               disabled={downloadId !== null || deletingId !== null}
                               onClick={() => {
-                                setActionError("");
+                                setActionError(null);
                                 setDeleteTarget(item);
                               }}
                               type="button"
