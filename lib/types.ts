@@ -198,7 +198,9 @@ export interface TranslationJobResponse {
   progress: number;
   startedAt: string; // datetime
   completedAt?: string; // datetime
-  errorMessage?: string;
+  /** Failure reason of a failed job (an error code); translate it with `Errors.<code>`. */
+  errorCode?: string | null;
+  errorParams?: Record<string, string | number | boolean | null> | null;
 }
 
 export interface TranslationJobPaginatedResponse {
@@ -239,15 +241,6 @@ export interface BBox {
 
 // --- Common API Types ---
 // Keeping some utility types that might be needed by services
-export interface ApiError {
-    error?: {
-      message: string;
-      code?: string;
-    };
-    message?: string;
-    detail?: string | { msg: string }[];
-  }
-  
 export interface ApiResponse<T> {
     data: T;
     message?: string;

@@ -5,7 +5,6 @@ import {
   SourceDocumentSortField,
   ApiResponse,
 } from "@/lib/types";
-import { ApiErrorHandler } from "../utils/error-handler";
 
 export class DocumentService {
   /**
@@ -20,40 +19,30 @@ export class DocumentService {
     uploadedFrom?: string,
     uploadedTo?: string
   ): Promise<SourceDocumentPaginatedResponse> {
-    try {
-      const response = await apiClient.get<SourceDocumentPaginatedResponse>(
-        API_CONFIG.ENDPOINTS.DOCUMENTS.SOURCE,
-        {
-          params: {
-            page,
-            size,
-            sort: `${sortBy}:${sortOrder}`,
-            search,
-            uploadedFrom,
-            uploadedTo,
-          },
-        }
-      );
+    const response = await apiClient.get<SourceDocumentPaginatedResponse>(
+      API_CONFIG.ENDPOINTS.DOCUMENTS.SOURCE,
+      {
+        params: {
+          page,
+          size,
+          sort: `${sortBy}:${sortOrder}`,
+          search,
+          uploadedFrom,
+          uploadedTo,
+        },
+      }
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "DocumentService.getSourceDocuments");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   /**
    * Delete a document
    */
   static async deleteDocument(documentId: string): Promise<void> {
-    try {
-      await apiClient.delete(
-        API_CONFIG.ENDPOINTS.DOCUMENTS.DELETE(documentId)
-      );
-    } catch (error) {
-      ApiErrorHandler.logError(error, "DocumentService.deleteDocument");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    await apiClient.delete(
+      API_CONFIG.ENDPOINTS.DOCUMENTS.DELETE(documentId)
+    );
   }
 
   /**
@@ -61,17 +50,12 @@ export class DocumentService {
    * Returns a blob which can be used to create a download link
    */
   static async downloadDocument(documentId: string): Promise<Blob> {
-    try {
-      const response = await apiClient.get(
-        API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(documentId),
-        {
-          responseType: "blob",
-        }
-      );
-      return response.data;
-    } catch (error) {
-        ApiErrorHandler.logError(error, "DocumentService.downloadDocument");
-        throw new Error(ApiErrorHandler.parseError(error));
-    }
+    const response = await apiClient.get(
+      API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(documentId),
+      {
+        responseType: "blob",
+      }
+    );
+    return response.data;
   }
 }

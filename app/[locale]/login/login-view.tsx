@@ -5,8 +5,11 @@ import type {FormEvent} from "react";
 import {useEffect, useState} from "react";
 import {AlertCircle, LoaderCircle} from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
-import {AuthService, InvalidCredentialsError} from "@/api";
+import {AuthService} from "@/api";
 import {getStoredAccessToken, isLoggedOut} from "@/api/auth-session";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {UiError} from "@/lib/error-message";
 import {USERNAME_STORAGE_KEY} from "@/lib/storage-keys";
 import {usePathname, useRouter} from "@/i18n/routing";
 import {
@@ -51,7 +54,8 @@ export function LoginView() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
 
   const currentLanguage =
     languages.find((language) => language.code === locale) ?? languages[0];
@@ -102,13 +106,8 @@ export function LoginView() {
       localStorage.setItem(USERNAME_STORAGE_KEY, normalizedUsername);
       router.replace("/dashboard");
     } catch (error) {
-      setErrorMessage(
-        error instanceof InvalidCredentialsError
-          ? t("invalidCredentials")
-          : error instanceof Error && error.message
-            ? error.message
-            : t("loginError"),
-      );
+      console.error("Login failed", error);
+      setErrorMessage(describeError(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -149,9 +148,9 @@ export function LoginView() {
 
       {errorMessage ? (
         <div className="pointer-events-none fixed left-1/2 top-6 z-50 w-[calc(100%-2rem)] max-w-[520px] -translate-x-1/2" role="alert">
-          <div className="content-reveal flex items-start gap-3 rounded-[7px] border border-[#f2aaa4] bg-[#fff5f3]/95 px-4 py-3 text-[#a5271d] shadow-[0_14px_36px_rgba(126,37,27,0.16)] backdrop-blur-md">
+          <div className="content-reveal pointer-events-auto flex items-start gap-3 rounded-[7px] border border-[#f2aaa4] bg-[#fff5f3]/95 px-4 py-3 text-[#a5271d] shadow-[0_14px_36px_rgba(126,37,27,0.16)] backdrop-blur-md">
             <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <p className="min-w-0 text-[13px] font-medium leading-5">{errorMessage}</p>
+            <p className="min-w-0 text-[13px] font-medium leading-5"><ErrorDetails error={errorMessage} /></p>
           </div>
         </div>
       ) : null}

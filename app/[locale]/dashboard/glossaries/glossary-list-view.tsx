@@ -49,6 +49,9 @@ import {
   getOrCreateSessionGlossaryTemplate,
   isSessionGlossaryTemplate,
 } from "./glossary-session-template";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {UiError} from "@/lib/error-message";
 
 type GlossaryTab = "mine" | "public" | "shared";
 
@@ -134,7 +137,8 @@ export function GlossaryListView() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [shareGlossary, setShareGlossary] = useState<GlossaryResponse | null>(null);
   const [sessionTemplate, setSessionTemplate] = useState<GlossaryResponse | null>(null);
@@ -195,7 +199,7 @@ export function GlossaryListView() {
     }
 
     setIsLoading(true);
-    setErrorMessage("");
+    setErrorMessage(null);
     setFeedbackMessage("");
 
     try {
@@ -246,7 +250,7 @@ export function GlossaryListView() {
       if (requestId !== glossaryRequestIdRef.current) return;
       console.error("Failed to load glossaries", error);
       setSelectedIds(new Set());
-      setErrorMessage(copy.list.loadError);
+      setErrorMessage(describeError(error, copy.list.loadError));
     } finally {
       if (requestId === glossaryRequestIdRef.current) setIsLoading(false);
     }
@@ -320,7 +324,7 @@ export function GlossaryListView() {
     if (activeTab !== "mine" || selectedIds.size === 0 || isDeleting) return;
 
     setIsDeleting(true);
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       const ids = Array.from(selectedIds);
@@ -343,7 +347,7 @@ export function GlossaryListView() {
       setRefreshVersion((version) => version + 1);
     } catch (error) {
       console.error("Failed to delete selected glossaries", error);
-      setErrorMessage(copy.list.deleteError);
+      setErrorMessage(describeError(error, copy.list.deleteError));
     } finally {
       setIsDeleting(false);
     }
@@ -353,7 +357,7 @@ export function GlossaryListView() {
     if (busyId) return;
 
     setBusyId(glossary.id);
-    setErrorMessage("");
+    setErrorMessage(null);
     setFeedbackMessage("");
 
     try {
@@ -364,7 +368,7 @@ export function GlossaryListView() {
       setFeedbackMessage(copy.list.cloneSuccess);
     } catch (error) {
       console.error("Failed to clone glossary", error);
-      setErrorMessage(copy.list.cloneError);
+      setErrorMessage(describeError(error, copy.list.cloneError));
     } finally {
       setBusyId(null);
     }
@@ -470,7 +474,7 @@ export function GlossaryListView() {
 
           {errorMessage ? (
             <p className="mt-3 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[12px] text-[#b42318]">
-              {errorMessage}
+              <ErrorDetails error={errorMessage} />
             </p>
           ) : null}
 

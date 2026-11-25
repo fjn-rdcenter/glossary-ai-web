@@ -66,6 +66,10 @@ import {
 } from "../glossaries/glossary-form-view";
 import {TranslateGuidedTour} from "./translate-guided-tour";
 import {TranslationPreviewDialog} from "./translation-preview-dialog";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {ErrorParams} from "@/lib/api-error";
+import {uiError, type UiError} from "@/lib/error-message";
 
 const MAX_FILES = 5;
 const GLOSSARIES_PER_PAGE = 4;
@@ -99,7 +103,7 @@ type WorkflowStep = "configure" | "processing" | "complete";
 type TranslationRunStatus = StatusEnum | "uploading";
 type TranslationRunState = {
   documentId?: string;
-  errorMessage?: string;
+  failure?: UiError;
   fileId: string;
   jobId?: string;
   progress: number;
@@ -1123,7 +1127,10 @@ export function TranslateConfigure() {
   const [glossaryPages, setGlossaryPages] = useState(1);
   const [isLoadingGlossaries, setIsLoadingGlossaries] = useState(true);
   const [glossaryLoadError, setGlossaryLoadError] = useState(false);
-  const [glossaryNotice, setGlossaryNotice] = useState("");
+  const [glossaryNotice, setGlossaryNotice] = useState<UiError | null>(null);
+  const {describeError, describeFailureReason} = useDescribeError();
+  const jobFailure = (job: {status: string; errorCode?: string | null; errorParams?: ErrorParams | null}) =>
+    job.status === "failed" ? uiError(describeFailureReason(job.errorCode, job.errorParams)) : undefined;
   const [reloadGlossaries, setReloadGlossaries] = useState(0);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1134,7 +1141,7 @@ export function TranslateConfigure() {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [workflowStep, setWorkflowStep] = useState<WorkflowStep>("configure");
   const [translationRuns, setTranslationRuns] = useState<Record<string, TranslationRunState>>({});
-  const [workflowNotice, setWorkflowNotice] = useState("");
+  const [workflowNotice, setWorkflowNotice] = useState<UiError | null>(null);
   const [detailsFileId, setDetailsFileId] = useState<string | null>(null);
   const [activeFileAction, setActiveFileAction] = useState<string | null>(null);
   const [previewFileId, setPreviewFileId] = useState<string | null>(null);
@@ -1530,7 +1537,7 @@ export function TranslateConfigure() {
   });
 
   const changeSourceLanguage = (nextLanguage: SupportedLanguageCode) => {
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
     setGlossaryPage(1);
     updateActiveFileConfig((currentConfig) => ({
       ...currentConfig,
@@ -1540,7 +1547,7 @@ export function TranslateConfigure() {
   };
 
   const changeTargetLanguage = (nextLanguage: SupportedLanguageCode) => {
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
     setGlossaryPage(1);
     updateActiveFileConfig((currentConfig) => ({
       ...currentConfig,
@@ -1550,7 +1557,7 @@ export function TranslateConfigure() {
   };
 
   const swapLanguages = () => {
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
     setGlossaryPage(1);
     updateActiveFileConfig((currentConfig) => ({
       ...currentConfig,
@@ -1560,7 +1567,7 @@ export function TranslateConfigure() {
   };
 
   const toggleGlossary = (glossaryId: string) => {
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
     updateActiveFileConfig((currentConfig) => {
       const nextSelection = new Set(currentConfig.selectedGlossaryIds);
       if (nextSelection.has(glossaryId)) nextSelection.delete(glossaryId);
@@ -1641,7 +1648,7 @@ export function TranslateConfigure() {
         .replace("{count}", String(targetFiles.length)),
     });
     setBulkApplySection(null);
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
   };
 
   const undoBulkApply = () => {
@@ -1666,7 +1673,7 @@ export function TranslateConfigure() {
   };
 
   const openCreateGlossary = () => {
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
     openGlossaryForm({
       sourceLanguage,
       targetLanguage,
@@ -1690,7 +1697,7 @@ export function TranslateConfigure() {
     if (!activeFile) return;
 
     setIsSuggesting(true);
-    setGlossaryNotice("");
+    setGlossaryNotice(null);
 
     try {
       let recommendationFileId = activeFile.documentId;
@@ -1715,7 +1722,7 @@ export function TranslateConfigure() {
       );
 
       if (suggestedTerms.length === 0) {
-        setGlossaryNotice(copy.noSuggestion);
+        setGlossaryNotice(uiError(copy.noSuggestion));
         return;
       }
 
@@ -1728,7 +1735,7 @@ export function TranslateConfigure() {
       });
     } catch (error) {
       console.error("Failed to recommend glossary terms", error);
-      setGlossaryNotice(copy.glossaryError);
+      setGlossaryNotice(describeError(error, copy.glossaryError));
     } finally {
       setIsSuggesting(false);
     }
@@ -1764,7 +1771,7 @@ export function TranslateConfigure() {
 
     patchTranslationRun(fileId, {
       documentId,
-      errorMessage: undefined,
+      failure: undefined,
       jobId: undefined,
       progress: documentId ? 10 : 2,
       status: "uploading",
@@ -1802,7 +1809,7 @@ export function TranslateConfigure() {
       let status = translation.status;
       patchTranslationRun(fileId, {
         documentId,
-        errorMessage: translation.errorMessage,
+        failure: jobFailure(translation),
         jobId: translation.id,
         progress: clampProgress(translation.progress),
         status,
@@ -1818,7 +1825,7 @@ export function TranslateConfigure() {
 
         status = latestTranslation.status;
         patchTranslationRun(fileId, {
-          errorMessage: latestTranslation.errorMessage,
+          failure: jobFailure(latestTranslation),
           progress: clampProgress(latestTranslation.progress),
           status,
           targetDocument: latestTranslation.targetDocument,
@@ -1829,7 +1836,7 @@ export function TranslateConfigure() {
 
       console.error("Failed to translate file", error);
       patchTranslationRun(fileId, {
-        errorMessage: error instanceof Error && error.message ? error.message : workflow.genericError,
+        failure: describeError(error),
         status: "failed",
       });
     }
@@ -1853,13 +1860,13 @@ export function TranslateConfigure() {
 
     translationRunsRef.current = initialRuns;
     setTranslationRuns(initialRuns);
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
     setWorkflowStep("processing");
     pendingFiles.forEach((file) => void runFileTranslation(file.id));
   };
 
   const retryTranslation = (fileId: string) => {
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
     setWorkflowStep("processing");
     void runFileTranslation(fileId);
   };
@@ -1867,7 +1874,7 @@ export function TranslateConfigure() {
   const retryAllTranslations = () => {
     if (retryableFileIds.length === 0) return;
 
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
     setWorkflowStep("processing");
     retryableFileIds.forEach((fileId) => void runFileTranslation(fileId));
   };
@@ -1877,7 +1884,7 @@ export function TranslateConfigure() {
     if (!run?.jobId || TERMINAL_TRANSLATION_STATUSES.has(run.status)) return;
 
     setCancellingFileId(fileId);
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
 
     try {
       await TranslationService.cancelTranslation(run.jobId);
@@ -1890,7 +1897,7 @@ export function TranslateConfigure() {
       patchTranslationRun(fileId, {status: "cancelled"});
     } catch (error) {
       console.error("Failed to cancel file translation", error);
-      if (isWorkflowMountedRef.current) setWorkflowNotice(workflow.cancelFileError);
+      if (isWorkflowMountedRef.current) setWorkflowNotice(describeError(error, workflow.cancelFileError));
     } finally {
       if (isWorkflowMountedRef.current) setCancellingFileId(null);
     }
@@ -1932,7 +1939,7 @@ export function TranslateConfigure() {
 
     const actionKey = fileId + ":" + mode;
     setActiveFileAction(actionKey);
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
 
     try {
       const blob = await TranslationService.downloadTranslatedDocument(run.jobId);
@@ -1954,7 +1961,7 @@ export function TranslateConfigure() {
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), mode === "preview" ? 60000 : 1000);
     } catch (error) {
       console.error("Failed to open translated document", error);
-      setWorkflowNotice(workflow.actionError);
+      setWorkflowNotice(describeError(error, workflow.actionError));
     } finally {
       setActiveFileAction(null);
     }
@@ -1965,7 +1972,7 @@ export function TranslateConfigure() {
   };
 
   const startReconfigureMode = () => {
-    setWorkflowNotice("");
+    setWorkflowNotice(null);
     setReconfigureFileIds(new Set());
     setIsReconfigureMode(true);
   };
@@ -2002,8 +2009,8 @@ export function TranslateConfigure() {
     setPendingFiles(selectedFiles);
     setFileConfigs(selectedConfigs);
     setActiveFileId(selectedFiles[0]?.id ?? null);
-    setGlossaryNotice("");
-    setWorkflowNotice("");
+    setGlossaryNotice(null);
+    setWorkflowNotice(null);
     setReconfigureFileIds(new Set());
     setIsReconfigureMode(false);
     setWorkflowStep("configure");
@@ -2418,7 +2425,7 @@ export function TranslateConfigure() {
                       className="relative z-[2] flex min-w-0 flex-1 items-center gap-3 rounded-[6px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c]"
                       onClick={() => {
                         setActiveFileId(item.id);
-                        setGlossaryNotice("");
+                        setGlossaryNotice(null);
                       }}
                       title={`${copy.selectFileToConfigure}: ${item.metadata.name}`}
                       type="button"
@@ -2642,7 +2649,7 @@ export function TranslateConfigure() {
                 <span className="min-w-[66px] text-center text-[11px] font-semibold text-[#5f5968]">{copy.page} {glossaryPage} {copy.of} {glossaryPages}</span>
                 <button aria-label={copy.nextPage} className="grid size-7 place-items-center rounded-full border border-[#d5d0dc] bg-white text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] disabled:cursor-not-allowed disabled:opacity-35" disabled={glossaryPage >= glossaryPages || isLoadingGlossaries} onClick={() => setGlossaryPage((currentPage) => Math.min(glossaryPages, currentPage + 1))} title={copy.nextPage} type="button"><ChevronRight aria-hidden="true" className="size-3.5" /></button>
               </div>
-              <p aria-live="polite" className="mt-2 min-h-4 text-[11px] font-medium text-[#b24a00]">{glossaryNotice}</p>
+              <p aria-live="polite" className="mt-2 min-h-4 text-[11px] font-medium text-[#b24a00]">{glossaryNotice ? <ErrorDetails error={glossaryNotice} /> : null}</p>
             </div>
 
             <div className="mt-auto flex items-center justify-end border-t border-[#e5e1e9] pt-5">
@@ -2674,7 +2681,7 @@ export function TranslateConfigure() {
             </div>
 
             <p aria-live="polite" className="mt-3 min-h-4 text-[10px] font-medium text-[#b42318]">
-              {workflowNotice}
+              {workflowNotice ? <ErrorDetails error={workflowNotice} /> : null}
             </p>
 
             <div className="mt-4 border-t border-[#ebe8ee] pt-4">
@@ -2722,7 +2729,7 @@ export function TranslateConfigure() {
             </div>
 
             <p aria-live="polite" className="mt-3 min-h-4 text-[10px] font-medium text-[#b42318]">
-              {workflowNotice}
+              {workflowNotice ? <ErrorDetails error={workflowNotice} /> : null}
             </p>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3 border-t border-[#e1eee5] bg-white px-4 pt-4">
@@ -3063,7 +3070,7 @@ export function TranslateConfigure() {
           <div className="px-6 py-5">
             <p className="text-[10px] font-bold text-[#4c4655]">{workflow.errorDetails}</p>
             <p className="mt-2 rounded-[7px] border border-[#f0c4c0] bg-[#fff7f6] px-3 py-3 text-[11px] leading-5 text-[#9d2822]">
-              {detailsRun?.errorMessage || workflow.genericError}
+              <ErrorDetails error={detailsRun?.failure ?? uiError(workflow.genericError)} />
             </p>
           </div>
           <DialogFooter className="border-t border-[#ebe8ee] px-6 py-4">

@@ -32,6 +32,9 @@ import {
   removeSessionGlossaryPermission,
   setSessionGlossaryPublic,
 } from "./glossary-session-template";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import {uiError, type UiError} from "@/lib/error-message";
 
 export function GlossaryPageFrame({
   children,
@@ -187,13 +190,14 @@ export function GlossaryShareDialog({
   const [expiresAt, setExpiresAt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
 
   const loadPermissions = useCallback(async () => {
     if (!glossary) return;
 
     setIsLoading(true);
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       if (isSessionGlossaryTemplate(glossary)) {
@@ -206,7 +210,7 @@ export function GlossaryShareDialog({
     } catch (error) {
       console.error("Failed to load glossary permissions", error);
       setPermissions(null);
-      setErrorMessage(copy.share.loadError);
+      setErrorMessage(describeError(error, copy.share.loadError));
     } finally {
       setIsLoading(false);
     }
@@ -227,7 +231,7 @@ export function GlossaryShareDialog({
     if (!glossary || busyKey) return;
 
     setBusyKey("public");
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       if (isSessionGlossaryTemplate(glossary)) {
@@ -250,7 +254,7 @@ export function GlossaryShareDialog({
       }
     } catch (error) {
       console.error("Failed to update public glossary permission", error);
-      setErrorMessage(copy.share.publicError);
+      setErrorMessage(describeError(error, copy.share.publicError));
     } finally {
       setBusyKey(null);
     }
@@ -261,12 +265,12 @@ export function GlossaryShareDialog({
     if (!glossary || isPublic || busyKey) return;
 
     if (!normalizedUsername) {
-      setErrorMessage(copy.share.usernameRequired);
+      setErrorMessage(uiError(copy.share.usernameRequired));
       return;
     }
 
     setBusyKey("invite");
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       const normalizedExpiration = expiresAt ? new Date(expiresAt + "T23:59:59").toISOString() : null;
@@ -287,7 +291,7 @@ export function GlossaryShareDialog({
       setExpiresAt("");
     } catch (error) {
       console.error("Failed to invite glossary user", error);
-      setErrorMessage(copy.share.inviteError);
+      setErrorMessage(describeError(error, copy.share.inviteError));
     } finally {
       setBusyKey(null);
     }
@@ -297,7 +301,7 @@ export function GlossaryShareDialog({
     if (!glossary || busyKey) return;
 
     setBusyKey(permission.id);
-    setErrorMessage("");
+    setErrorMessage(null);
 
     try {
       if (isSessionGlossaryTemplate(glossary)) {
@@ -310,7 +314,7 @@ export function GlossaryShareDialog({
       }
     } catch (error) {
       console.error("Failed to remove glossary permission", error);
-      setErrorMessage(copy.share.removeError);
+      setErrorMessage(describeError(error, copy.share.removeError));
     } finally {
       setBusyKey(null);
     }
@@ -451,7 +455,7 @@ export function GlossaryShareDialog({
 
           {errorMessage ? (
             <p className="mt-4 rounded-[7px] border border-[#f4b4ae] bg-[#fff4f2] px-3 py-2 text-[12px] text-[#b42318]">
-              {errorMessage}
+              <ErrorDetails error={errorMessage} />
             </p>
           ) : null}
         </div>

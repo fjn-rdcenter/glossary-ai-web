@@ -22,7 +22,6 @@ import {
   PaginatedResponse,
   ApiResponse,
 } from "@/lib/types";
-import { ApiErrorHandler } from "../utils/error-handler";
 
 export class TranslationService {
   /**
@@ -33,75 +32,55 @@ export class TranslationService {
     sourceLanguage: string,
     targetLanguage: string
   ): Promise<UploadDocumentResponse> {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("sourceLanguage", sourceLanguage);
-      formData.append("targetLanguage", targetLanguage);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("sourceLanguage", sourceLanguage);
+    formData.append("targetLanguage", targetLanguage);
 
-      const response = await apiClient.post<UploadDocumentResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.UPLOAD,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    const response = await apiClient.post<UploadDocumentResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.UPLOAD,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.uploadDocument");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async startTranslation(
     params: StartTranslationRequest
   ): Promise<StartTranslationResponse> {
-    try {
-      const response = await apiClient.post<StartTranslationResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.START,
-        params
-      );
+    const response = await apiClient.post<StartTranslationResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.START,
+      params
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.startTranslation");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async createTranslation(
     params: StartTranslationRequest
   ): Promise<StartTranslationResponse> {
-    try {
-      const response = await apiClient.post<StartTranslationResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.CREATE,
-        params
-      );
+    const response = await apiClient.post<StartTranslationResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.CREATE,
+      params
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.createTranslation");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async startCreatedTranslation(
     params: StartTranslationJobRequest
   ): Promise<StartTranslationResponse> {
-    try {
-      const response = await apiClient.post<StartTranslationResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.START_PIPELINE,
-        params
-      );
+    const response = await apiClient.post<StartTranslationResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.START_PIPELINE,
+      params
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.startCreatedTranslation");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async getTranslationTables(
@@ -109,34 +88,24 @@ export class TranslationService {
     page = 1,
     size = 100,
   ): Promise<PaginatedResponse<TranslationTableResponse>> {
-    try {
-      const response = await apiClient.get<PaginatedResponse<TranslationTableResponse>>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES(translationId),
-        {params: {page, size, sort: "path:asc"}},
-      );
+    const response = await apiClient.get<PaginatedResponse<TranslationTableResponse>>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES(translationId),
+      {params: {page, size, sort: "path:asc"}},
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.getTranslationTables");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async updateTranslationTables(
     translationId: string,
     data: TranslationTableBatchUpdate,
   ): Promise<TranslationTableResponse[]> {
-    try {
-      const response = await apiClient.patch<TranslationTableResponse[]>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES_BATCH(translationId),
-        data,
-      );
+    const response = await apiClient.patch<TranslationTableResponse[]>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLES_BATCH(translationId),
+      data,
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.updateTranslationTables");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async updateTranslationTable(
@@ -144,87 +113,56 @@ export class TranslationService {
     tableId: string,
     data: TranslationTableUpdate,
   ): Promise<TranslationTableResponse> {
-    try {
-      const response = await apiClient.patch<TranslationTableResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLE(translationId, tableId),
-        data,
-      );
+    const response = await apiClient.patch<TranslationTableResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.TABLE(translationId, tableId),
+      data,
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.updateTranslationTable");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async generateTranslation(
     translationId: string,
   ): Promise<GenerateTranslationResponse> {
-    try {
-      const response = await apiClient.post<GenerateTranslationResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.GENERATE,
-        {translationId},
-      );
+    const response = await apiClient.post<GenerateTranslationResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.GENERATE,
+      {translationId},
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.generateTranslation");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async getTranslationStatus(
     jobId: string
   ): Promise<TranslationStatusResponse> {
-    try {
-      const response = await apiClient.get<TranslationStatusResponse>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.STATUS(jobId)
-      );
+    const response = await apiClient.get<TranslationStatusResponse>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.STATUS(jobId)
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(
-        error,
-        "TranslationService.getTranslationStatus"
-      );
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 
   static async cancelTranslation(jobId: string): Promise<void> {
-    try {
-      await apiClient.get(API_CONFIG.ENDPOINTS.TRANSLATIONS.CANCEL(jobId));
-    } catch (error) {
-      ApiErrorHandler.logError(error, "TranslationService.cancelTranslation");
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    await apiClient.get(API_CONFIG.ENDPOINTS.TRANSLATIONS.CANCEL(jobId));
   }
 
   static async downloadTranslatedDocument(jobId: string): Promise<Blob> {
-    try {
-      // 1. Get job details to find the target document ID
-      const job = await this.getTranslationStatus(jobId);
-      
-      if (!job.targetDocument) {
-        throw new Error("Translation not yet completed or no target document available");
-      }
-
-      // 2. Download the document
-      const response = await apiClient.get(
-        API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(job.targetDocument),
-        {
-          responseType: "blob",
-        }
-      );
-
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(
-        error,
-        "TranslationService.downloadTranslatedDocument"
-      );
-      throw new Error(ApiErrorHandler.parseError(error));
+    // 1. Get job details to find the target document ID
+    const job = await this.getTranslationStatus(jobId);
+    
+    if (!job.targetDocument) {
+      throw new Error("Translation not yet completed or no target document available");
     }
+
+    // 2. Download the document
+    const response = await apiClient.get(
+      API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(job.targetDocument),
+      {
+        responseType: "blob",
+      }
+    );
+
+    return response.data;
   }
 
   static async getTranslationHistory(): Promise<TranslationHistoryResponse[]>;
@@ -250,45 +188,29 @@ export class TranslationService {
       status?: string;
     }
   ): Promise<TranslationHistoryResponse[] | PaginatedResponse<TranslationHistoryResponse>> {
-    try {
-      const isPaginationRequest = !!params;
-      const requestParams = params || { size: 100 };
+    const isPaginationRequest = !!params;
+    const requestParams = params || { size: 100 };
 
-      const response = await apiClient.get<PaginatedResponse<TranslationHistoryResponse>>(
-        API_CONFIG.ENDPOINTS.TRANSLATIONS.HISTORY, {
-          params: requestParams
-        }
-      );
-
-      if (isPaginationRequest) {
-        return response.data;
+    const response = await apiClient.get<PaginatedResponse<TranslationHistoryResponse>>(
+      API_CONFIG.ENDPOINTS.TRANSLATIONS.HISTORY, {
+        params: requestParams
       }
+    );
 
-      return response.data.items || [];
-    } catch (error) {
-      ApiErrorHandler.logError(
-        error,
-        "TranslationService.getTranslationHistory"
-      );
-      throw new Error(ApiErrorHandler.parseError(error));
+    if (isPaginationRequest) {
+      return response.data;
     }
+
+    return response.data.items || [];
   }
   static async downloadOriginalDocument(documentId: string): Promise<Blob> {
-    try {
-      const response = await apiClient.get(
-        API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(documentId),
-        {
-          responseType: "blob",
-        }
-      );
+    const response = await apiClient.get(
+      API_CONFIG.ENDPOINTS.DOCUMENTS.DOWNLOAD(documentId),
+      {
+        responseType: "blob",
+      }
+    );
 
-      return response.data;
-    } catch (error) {
-      ApiErrorHandler.logError(
-        error,
-        "TranslationService.downloadOriginalDocument"
-      );
-      throw new Error(ApiErrorHandler.parseError(error));
-    }
+    return response.data;
   }
 }

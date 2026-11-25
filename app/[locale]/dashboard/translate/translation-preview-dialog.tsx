@@ -46,6 +46,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getTranslatedFileName } from "@/lib/translation-file-name";
 import type { TranslationTableResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {ErrorDetails} from "@/components/error-details";
+import {useDescribeError} from "@/hooks/use-describe-error";
+import type {UiError} from "@/lib/error-message";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const;
 const TEXT_ANCHOR_SEARCH_LIMIT = 50;
@@ -509,7 +512,8 @@ export function TranslationPreviewDialog({
   const [activeDocument, setActiveDocument] = useState<DocumentTab>("translated");
   const [applyFilter, setApplyFilter] = useState<ApplyFilter>("all");
   const [contentFilter, setContentFilter] = useState<ContentFilter>("all");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<UiError | null>(null);
+  const {describeError} = useDescribeError();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -541,7 +545,7 @@ export function TranslationPreviewDialog({
 
     const loadPreview = async () => {
       setIsLoading(true);
-      setError("");
+      setError(null);
       setActiveDocument("translated");
       setApplyFilter("all");
       setContentFilter("all");
@@ -627,7 +631,7 @@ export function TranslationPreviewDialog({
         setXlsxCellMaps(xlsxCells);
       } catch (loadError) {
         console.error("Failed to load translation preview", loadError);
-        if (isMounted) setError(copy.previewError);
+        if (isMounted) setError(describeError(loadError, copy.previewError));
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -739,7 +743,7 @@ export function TranslationPreviewDialog({
     if (changedTables.length === 0) return;
 
     setIsSaving(true);
-    setError("");
+    setError(null);
 
     try {
       // Yield once so the urgent loading state paints before DOCX work begins.
@@ -767,7 +771,7 @@ export function TranslationPreviewDialog({
       });
     } catch (saveError) {
       console.error("Failed to regenerate translation preview", saveError);
-      setError(copy.previewError);
+      setError(describeError(saveError, copy.previewError));
     } finally {
       setIsSaving(false);
     }
@@ -978,7 +982,7 @@ export function TranslationPreviewDialog({
           {isLoading ? (
             <TranslationPreviewSkeleton />
           ) : error && tables.length === 0 ? (
-            <div className="grid flex-1 place-items-center px-6 text-center text-sm text-destructive">{error}</div>
+            <div className="grid flex-1 place-items-center px-6 text-center text-sm text-destructive"><p><ErrorDetails error={error} /></p></div>
           ) : (
             <div className="grid min-h-0 flex-1 grid-rows-2 gap-3 overflow-hidden p-3 lg:grid-cols-2 lg:grid-rows-1 lg:gap-4 lg:p-4 lg:pr-0">
               <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[10px] border border-border/70 bg-card p-3 shadow-[0_2px_12px_rgba(33,23,92,0.05)]">
@@ -1248,7 +1252,7 @@ export function TranslationPreviewDialog({
                       {isSaving ? copy.regenerating : copy.regenerate}
                     </Button>
                   </div>
-                  {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
+                  {error ? <p className="mt-2 text-xs text-destructive"><ErrorDetails error={error} /></p> : null}
                 </div>
               </section>
 

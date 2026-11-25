@@ -4,10 +4,10 @@
  */
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { authClient } from "./auth-client";
+import { authClient, rejectAsApiError, setRequestId } from "./auth-client";
 import { clearAuthSession, getStoredAccessToken, isLoggedOut, storeAccessToken } from "./auth-session";
 import { API_CONFIG } from "./config";
-import { AppError } from "@/lib/error-utils";
+import { toApiError } from "@/lib/api-error";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -32,24 +32,6 @@ const apiClient: AxiosInstance = axios.create({
 
 let refreshPromise: Promise<string> | null = null;
 let forcedLogout: Promise<void> | null = null;
-
-function getAppError(error: AxiosError): AppError {
-  const data = error.response?.data as {
-    detail?: string | { message?: string };
-    message?: string;
-    error?: { code?: string };
-    code?: string;
-  } | undefined;
-  const detailMessage = typeof data?.detail === "string" ? data.detail : data?.detail?.message;
-
-  return new AppError(
-    detailMessage || data?.message || "An unexpected error occurred",
-    error.response?.status ?? (error.request ? 0 : 0),
-    data?.error?.code || data?.code || (error.request ? "NETWORK_ERROR" : "UNKNOWN_ERROR"),
-    data?.detail ?? null,
-    error,
-  );
-}
 
 function isAuthEndpoint(url?: string): boolean {
   return [
@@ -119,6 +101,7 @@ function refreshAccessTokenOnce(): Promise<string> {
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    setRequestId(config);
     if (typeof window === "undefined" || !config.headers) return config;
 
     const request = config as RetriableRequestConfig;
@@ -143,11 +126,11 @@ apiClient.interceptors.response.use(
     const isUnauthorized = error.response?.status === 401;
 
     if (!isUnauthorized || !originalRequest || isAuthEndpoint(originalRequest.url)) {
-      return Promise.reject(getAppError(error));
+      return rejectAsApiError(error);
     }
 
     if (isLoggedOut()) {
-      return Promise.reject(getAppError(error));
+      return rejectAsApiError(error);
     }
 
     const currentAccessToken = getStoredAccessToken();
@@ -161,7 +144,7 @@ apiClient.interceptors.response.use(
 
     if (originalRequest._retry) {
       await forceLogout();
-      return Promise.reject(getAppError(error));
+      return rejectAsApiError(error);
     }
 
     originalRequest._retry = true;
@@ -172,7 +155,7 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       await forceLogout();
-      return Promise.reject(refreshError);
+      return Promise.reject(toApiError(refreshError));
     }
   },
 );
