@@ -593,6 +593,8 @@
         "PERMISSION_ALREADY_EXISTS": "この共有設定は既に存在します。",
         "PERMISSION_ADMIN_GRANT_FORBIDDEN": "管理者権限を付与できるのは用語集の所有者のみです。",
         "PERMISSION_PUBLIC_ADMIN_NOT_ALLOWED": "公開用語集に管理者権限を付与することはできません。",
+        "PERMISSION_NOT_PENDING": "この招待にはもう回答できません。",
+        "NOTIFICATION_NOT_FOUND": "この通知は存在しません。",
         "DOCUMENT_NOT_FOUND": "このドキュメントは存在しません。",
         "UNSUPPORTED_FILE_TYPE": "このファイル形式はサポートされていません。",
         "TRANSLATION_JOB_NOT_FOUND": "この翻訳は存在しません。",
@@ -635,5 +637,40 @@
         "reference": "参照コード：{id}",
         "copyReference": "参照コードをすべてコピー",
         "referenceCopied": "コピーしました"
+    },
+    "Notifications": {
+        "open": "通知を開く",
+        "title": "通知",
+        "markAllRead": "すべて既読にする",
+        "loading": "通知を読み込んでいます...",
+        "empty": "新しい通知はありません。",
+        "loadError": "通知を読み込めません。",
+        "retry": "再試行",
+        "loadMore": "以前の通知を表示",
+        "loadingMore": "読み込み中...",
+        "accept": "承諾",
+        "decline": "辞退",
+        "openGlossary": "用語集を開く",
+        "answerError": "招待に回答できませんでした",
+        "unread": "未読",
+        "bellUnread": "通知、未読 {count} 件",
+        "accessLevel": "アクセス権: {level}",
+        "level": {
+            "view": "閲覧",
+            "clone": "閲覧とコピー",
+            "edit": "編集",
+            "admin": "管理"
+        },
+        "state": {
+            "accepted": "この招待を承諾しました。",
+            "declined": "この招待を辞退しました。",
+            "revoked": "この招待は取り消されました。",
+            "expired": "この招待は有効期限が切れました。"
+        },
+        "GLOSSARY_SHARED": "{actorName}さんが用語集「{glossaryName}」の利用に招待しました。",
+        "GLOSSARY_SHARE_ACCEPTED": "{actorName}さんが用語集「{glossaryName}」への招待を承諾しました。",
+        "GLOSSARY_SHARE_DECLINED": "{actorName}さんが用語集「{glossaryName}」への招待を辞退しました。",
+        "GLOSSARY_PERMISSION_CHANGED": "{actorName}さんが用語集「{glossaryName}」へのアクセス権を変更しました。",
+        "UNKNOWN": "新しい通知があります。"
     }
 }

@@ -5,6 +5,10 @@
  * Codes come from lib/error-codes.ts. When the backend repo sits next to this one
  * (../glossary-ai-backend), its ErrorCode enum is compared with that list as well.
  * See glossary-ai-backend/docs/adr/error-code-contract.md.
+ *
+ * Notification types follow the same contract: lib/notification-types.ts needs a message under
+ * `Notifications.<TYPE>` in every locale, the `Notifications` keys must match across locales, and the list
+ * is compared with the backend's NotificationType enum.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -52,8 +56,52 @@ if (existsSync(backendEnum)) {
   console.warn("Backend repo not found next to this one; skipped the comparison with its ErrorCode enum.");
 }
 
+// --- Notification types ---
+
+const typesSource = readFileSync(join(root, "lib/notification-types.ts"), "utf8");
+const notificationTypes = constArray(typesSource, "NOTIFICATION_TYPES");
+
+function flatKeys(value, prefix = "") {
+  return Object.entries(value).flatMap(([key, child]) =>
+    child && typeof child === "object" ? flatKeys(child, `${prefix}${key}.`) : [`${prefix}${key}`],
+  );
+}
+
+const notificationKeys = {};
+for (const locale of LOCALES) {
+  const notifications = JSON.parse(readFileSync(join(root, `messages/${locale}.json`), "utf8")).Notifications ?? {};
+  notificationKeys[locale] = new Set(flatKeys(notifications));
+  for (const key of [...notificationTypes, "UNKNOWN"]) {
+    if (typeof notifications[key] !== "string") problems.push(`messages/${locale}.json: missing Notifications.${key}`);
+  }
+}
+for (const locale of LOCALES.slice(1)) {
+  for (const key of notificationKeys[LOCALES[0]]) {
+    if (!notificationKeys[locale].has(key)) problems.push(`messages/${locale}.json: missing Notifications.${key}`);
+  }
+  for (const key of notificationKeys[locale]) {
+    if (!notificationKeys[LOCALES[0]].has(key)) problems.push(`messages/${LOCALES[0]}.json: missing Notifications.${key}`);
+  }
+}
+
+const backendModels = join(root, "../glossary-ai-backend/app/entities/models.py");
+if (existsSync(backendModels)) {
+  const python = readFileSync(backendModels, "utf8");
+  const enumBody = python.match(/class NotificationType\(str, enum\.Enum\):([\s\S]*?)\n\n\n/)?.[1] ?? "";
+  const backendTypes = [...enumBody.matchAll(/^\s{4}([A-Z_]+) = "/gm)].map((item) => item[1]);
+  for (const type of backendTypes.filter((type) => !notificationTypes.includes(type))) {
+    problems.push(`lib/notification-types.ts: backend type ${type} is missing from NOTIFICATION_TYPES`);
+  }
+  for (const type of notificationTypes.filter((type) => !backendTypes.includes(type))) {
+    problems.push(`lib/notification-types.ts: ${type} is not in the backend's NotificationType enum`);
+  }
+}
+
 if (problems.length) {
   console.error(problems.join("\n"));
   process.exit(1);
 }
-console.log(`Error codes OK: ${serverCodes.length + clientCodes.length} codes, ${fieldCodes.length} field codes, ${LOCALES.length} locales.`);
+console.log(
+  `Error codes OK: ${serverCodes.length + clientCodes.length} codes, ${fieldCodes.length} field codes, ` +
+    `${notificationTypes.length} notification types, ${LOCALES.length} locales.`,
+);

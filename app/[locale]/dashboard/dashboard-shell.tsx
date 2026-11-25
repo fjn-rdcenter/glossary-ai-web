@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import {useLocale} from "next-intl";
+import {useLocale, useTranslations} from "next-intl";
 import {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useDropzone} from "react-dropzone";
 import {AuthService, DocumentService, GlossaryService, releaseNotesService, TranslationService, type ReleaseNote} from "@/api";
@@ -43,6 +43,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {FileTypeTile} from "@/components/file-type-tile";
+import {NotificationList} from "@/components/notification-list";
+import {useNotificationCenter} from "@/hooks/use-notification-center";
+import {formatBadgeCount} from "@/lib/notifications";
 import {LanguageDisplay} from "@/components/language-display";
 import {TranslationDetailDialog, type TranslationDetailJob} from "@/components/translation-detail-dialog";
 import {Link, useRouter} from "@/i18n/routing";
@@ -120,7 +123,6 @@ type DashboardCopy = {
   releaseNotesEmpty: string;
   releaseNotesError: string;
   releaseNotesLatest: string;
-  releaseNotesOpen: string;
   workspaceEyebrow: string;
   workspaceGreeting: string;
   quickStart: string;
@@ -181,7 +183,6 @@ const dashboardCopy: Record<AppLocale, DashboardCopy> = {
     releaseNotesEmpty: "No release notes available.",
     releaseNotesError: "Unable to load release notes.",
     releaseNotesLatest: "Latest",
-    releaseNotesOpen: "Open release notes",
     workspaceEyebrow: "Workspace Dashboard",
     workspaceGreeting: "Welcome to GlossaryAI",
     quickStart: "Create New Translation",
@@ -240,7 +241,6 @@ const dashboardCopy: Record<AppLocale, DashboardCopy> = {
     releaseNotesEmpty: "Chưa có thông tin thay đổi.",
     releaseNotesError: "Không thể tải nhật ký thay đổi.",
     releaseNotesLatest: "Mới nhất",
-    releaseNotesOpen: "Mở nhật ký thay đổi",
     workspaceEyebrow: "Bảng điều khiển Workspace",
     workspaceGreeting: "Chào mừng đến với GlossaryAI",
     quickStart: "Tạo bản dịch mới",
@@ -299,7 +299,6 @@ const dashboardCopy: Record<AppLocale, DashboardCopy> = {
     releaseNotesEmpty: "表示できるリリースノートはありません。",
     releaseNotesError: "リリースノートを読み込めません。",
     releaseNotesLatest: "最新",
-    releaseNotesOpen: "リリースノートを開く",
     workspaceEyebrow: "ワークスペースダッシュボード",
     workspaceGreeting: "GlossaryAIへようこそ",
     quickStart: "新規翻訳を作成",
@@ -517,7 +516,7 @@ export function DashboardHeader({
           </Link>
         )}
         <span className="hidden sm:inline-flex">
-          <DashboardReleaseNotes copy={copy} locale={currentLocale} />
+          <DashboardNotifications copy={copy} locale={currentLocale} />
         </span>
         <DashboardLanguageSwitcher label={copy.languageLabel} locale={currentLocale} localePath={localePath} />
         <DashboardUserInfo greeting={copy.userGreeting} />
@@ -1230,8 +1229,15 @@ function getTranslationStatusClassName(status: string) {
   return "bg-[#f7f2f9] text-[#21175c]";
 }
 
-function DashboardReleaseNotes({copy, locale}: {copy: DashboardCopy; locale: AppLocale}) {
+type NotificationTab = "notifications" | "releases";
+
+/** The bell: the user's notifications, and the release notes everyone shares, in one popover. */
+function DashboardNotifications({copy, locale}: {copy: DashboardCopy; locale: AppLocale}) {
+  const t = useTranslations("Notifications");
+  const center = useNotificationCenter();
+  const unreadCount = center.state.unreadCount;
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<NotificationTab>("notifications");
   const [releases, setReleases] = useState<ReleaseNote[]>([]);
   const [latestReadRelease, setLatestReadRelease] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -1299,7 +1305,7 @@ function DashboardReleaseNotes({copy, locale}: {copy: DashboardCopy; locale: App
   }, [latestReleaseVersion]);
 
   useEffect(() => {
-    if (!open || !hasUnreadRelease || !latestReleaseVersion) {
+    if (!open || tab !== "releases" || !hasUnreadRelease || !latestReleaseVersion) {
       return;
     }
 
@@ -1322,19 +1328,41 @@ function DashboardReleaseNotes({copy, locale}: {copy: DashboardCopy; locale: App
     return () => {
       isMounted = false;
     };
-  }, [hasUnreadRelease, latestReleaseVersion, open]);
+  }, [hasUnreadRelease, latestReleaseVersion, open, tab]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    center.onOpenChange(nextOpen);
+
+    if (nextOpen) {
+      // Land on whatever is waiting: the user's own notifications first, then an unread release.
+      setTab(unreadCount === 0 && hasUnreadRelease ? "releases" : "notifications");
+    }
+  };
+
+  const tabs: {key: NotificationTab; label: string; hasUnread: boolean}[] = [
+    {key: "notifications", label: t("title"), hasUnread: unreadCount > 0},
+    {key: "releases", label: copy.releaseNotes, hasUnread: hasUnreadRelease},
+  ];
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
-          aria-label={copy.releaseNotesOpen}
+          aria-label={unreadCount > 0 ? t("bellUnread", {count: unreadCount}) : t("open")}
           className="relative flex size-8 items-center justify-center rounded-full border border-[#d5d0dc] bg-white/72 text-[#21175c] transition-colors hover:border-[#f06317] hover:text-[#f06317] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c]"
-          title={copy.releaseNotes}
+          title={t("title")}
           type="button"
         >
           <Bell aria-hidden="true" className="size-4" strokeWidth={2.2} />
-          {hasUnreadRelease ? (
+          {unreadCount > 0 ? (
+            <span
+              aria-hidden="true"
+              className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#f06317] px-1 text-[10px] font-bold leading-none text-white"
+            >
+              {formatBadgeCount(unreadCount)}
+            </span>
+          ) : hasUnreadRelease ? (
             <span className="absolute right-1 top-1 size-2 rounded-full bg-[#f06317]" />
           ) : null}
         </button>
@@ -1345,11 +1373,39 @@ function DashboardReleaseNotes({copy, locale}: {copy: DashboardCopy; locale: App
         className="z-[90] max-h-[520px] w-[380px] overflow-hidden rounded-[10px] border border-[#d5d0dc] bg-white/95 p-0 shadow-[0_18px_46px_rgba(33,23,92,0.18)] backdrop-blur-xl"
         sideOffset={12}
       >
-        <div className="border-b border-[#e4dfee] px-5 py-4">
-          <h2 className="text-[16px] font-bold text-[#21175c]">{copy.releaseNotes}</h2>
+        <div className="border-b border-[#e4dfee] px-5 py-3">
+          <div className="grid grid-cols-2 rounded-[7px] bg-[#f0edf4] p-1" role="tablist">
+            {tabs.map((item) => (
+              <button
+                aria-selected={tab === item.key}
+                className={`relative h-8 truncate rounded-[5px] px-2 text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] ${
+                  tab === item.key ? "bg-white text-[#21175c] shadow-sm" : "text-[#716b79] hover:text-[#21175c]"
+                }`}
+                key={item.key}
+                onClick={() => setTab(item.key)}
+                role="tab"
+                type="button"
+              >
+                {item.label}
+                {item.hasUnread ? (
+                  <span aria-hidden="true" className="ml-1.5 inline-block size-1.5 rounded-full bg-[#f06317] align-middle" />
+                ) : null}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="max-h-[455px] overflow-y-auto px-5 py-4 [scrollbar-gutter:stable]">
+        {tab === "notifications" ? (
+          <div className="max-h-[440px] overflow-y-auto [scrollbar-gutter:stable]" role="tabpanel">
+            <NotificationList center={center} onNavigate={() => handleOpenChange(false)} />
+          </div>
+        ) : null}
+
+        <div
+          className="max-h-[440px] overflow-y-auto px-5 py-4 [scrollbar-gutter:stable]"
+          hidden={tab !== "releases"}
+          role="tabpanel"
+        >
           {isLoading ? (
             <p className="text-sm text-[#625d6b]">{copy.releaseNotesLoading}</p>
           ) : errorMessage ? (

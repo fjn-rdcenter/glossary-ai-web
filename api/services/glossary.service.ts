@@ -284,6 +284,20 @@ export class GlossaryService {
   }
 
   /**
+   * Accept an invitation to use a glossary. Only the person it was sent to may call this.
+   */
+  static async acceptInvitation(id: string, permissionId: string): Promise<void> {
+    await apiClient.post(API_CONFIG.ENDPOINTS.GLOSSARIES.PERMISSION_ACCEPT(id, permissionId));
+  }
+
+  /**
+   * Decline an invitation to use a glossary.
+   */
+  static async declineInvitation(id: string, permissionId: string): Promise<void> {
+    await apiClient.post(API_CONFIG.ENDPOINTS.GLOSSARIES.PERMISSION_DECLINE(id, permissionId));
+  }
+
+  /**
    * Get current user's permission for a glossary
    */
   static async getMyPermission(id: string): Promise<MyGlossaryPermissionResponse> {

@@ -119,6 +119,8 @@ export interface GlossaryResponse extends GlossaryBase {
   id: string;
   termCount: number;
   matchedTermCount?: number;
+  /** Whose glossary it is. Set by the list endpoints; absent from a single glossary. */
+  ownerName?: string | null;
   createdAt: string; // datetime
   updatedAt: string; // datetime
   terms?: GlossaryTermPaginatedResponse;
@@ -299,7 +301,7 @@ export type StartTranslationResponse = TranslationJobResponse;
 
 // --- Glossary Permission Schemas ---
 
-export type PermissionStatus = "pending" | "accepted" | "revoked";
+export type PermissionStatus = "pending" | "accepted" | "revoked" | "declined";
 export type PermissionType = "view" | "clone" | "edit" | "admin";
 export type PrincipalType = "user" | "team" | "public" | "link";
 
@@ -312,12 +314,16 @@ export interface GlossaryPermissionBaseResponse {
   status: PermissionStatus;
   grantedBy: string;
   createdAt: string;
+  /** Display name of the person a user permission is for. Only the permissions listing sets it; empty without an account. */
+  principalDisplayName?: string | null;
 }
 
 export interface GlossaryPermissionAdminResponse {
   glossaryId: string;
   ownerId: string;
+  /** The owner's username. */
   ownerName: string;
+  ownerDisplayName?: string | null;
   publicPermission: GlossaryPermissionBaseResponse | null;
   userPermissions: GlossaryPermissionBaseResponse[];
 }
@@ -331,7 +337,6 @@ export interface GlossaryPermissionCreate {
 
 export interface GlossaryPermissionUpdate {
   permission?: PermissionType | null;
-  status?: PermissionStatus | null;
   expiresAt?: string | null;
 }
 
@@ -342,4 +347,40 @@ export interface MyGlossaryPermissionResponse {
 export interface GlossaryCloneCreate {
   name?: string | null;
   description?: string | null;
+}
+
+// --- Notification Schemas ---
+
+/** Live state of what a notification asks for (an invitation). `null` when it asks for nothing. */
+export type NotificationActionState = "pending" | "accepted" | "declined" | "revoked" | "expired";
+
+export interface NotificationResponse {
+  id: string;
+  /** A backend `NotificationType`; may be one this build does not know yet (see lib/notification-types.ts). */
+  type: string;
+  /** Values safe to show; interpolated into `Notifications.<type>`. */
+  params: Record<string, string | number | boolean | null>;
+  subjectType: string | null;
+  subjectId: string | null;
+  actionState: NotificationActionState | null;
+  readAt: string | null; // datetime
+  createdAt: string; // datetime
+}
+
+export interface NotificationListResponse {
+  items: NotificationResponse[];
+  nextCursor: string | null;
+}
+
+// --- User search (share dialog suggestions) ---
+
+export interface UserSuggestion {
+  username: string;
+  displayName: string | null;
+  /** What was typed is exactly this user's username or email, ignoring case. */
+  exact: boolean;
+}
+
+export interface UserSearchResponse {
+  items: UserSuggestion[];
 }

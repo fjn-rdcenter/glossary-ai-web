@@ -38,6 +38,11 @@ export const API_CONFIG = {
       UPDATE_ME: "/api/v2/users/me",
     },
 
+    // Users
+    USERS: {
+      SEARCH: "/api/v2/users/search",
+    },
+
     // Glossaries
     GLOSSARIES: {
       BASE: "/api/v2/glossaries",
@@ -51,6 +56,10 @@ export const API_CONFIG = {
       MY_PERMISSION: (id: string) => `/api/v2/glossaries/${id}/permissions/my-permission`,
       PERMISSION_BY_ID: (id: string, permissionId: string) =>
         `/api/v2/glossaries/${id}/permissions/${permissionId}`,
+      PERMISSION_ACCEPT: (id: string, permissionId: string) =>
+        `/api/v2/glossaries/${id}/permissions/${permissionId}/accept`,
+      PERMISSION_DECLINE: (id: string, permissionId: string) =>
+        `/api/v2/glossaries/${id}/permissions/${permissionId}/decline`,
       CLONE: (id: string) => `/api/v2/glossaries/${id}/clone`,
       RECOMMEND: "/api/v2/glossaries/recommend",
     },
@@ -79,6 +88,14 @@ export const API_CONFIG = {
       STATUS: (jobId: string) => `/api/v2/translations/${jobId}`,
       CANCEL: (jobId: string) => `/api/v2/translations/${jobId}/cancel`,
       HISTORY: "/api/v2/translations",
+    },
+
+    // Notifications
+    NOTIFICATIONS: {
+      BASE: "/api/v2/notifications",
+      UNREAD_COUNT: "/api/v2/notifications/unread-count",
+      READ_ALL: "/api/v2/notifications/read-all",
+      READ: (id: string) => `/api/v2/notifications/${id}/read`,
     },
 
     // Release Notes

@@ -60,6 +60,7 @@ import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {GlossaryResponse, SourceDocumentResponse, StatusEnum} from "@/lib/types";
 import {formatBytes} from "@/lib/utils";
 import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
+import {glossaryCopy} from "../glossaries/glossary-copy";
 import {
   GlossaryFormView,
   type GlossaryFormInitialValues,
@@ -73,6 +74,16 @@ import {uiError, type UiError} from "@/lib/error-message";
 
 const MAX_FILES = 5;
 const GLOSSARIES_PER_PAGE = 4;
+
+/** Whose glossaries the picker lists: the user's own, the ones shared with them (accepted), or public ones. */
+type GlossaryScope = "mine" | "shared" | "public";
+const GLOSSARY_SCOPES: readonly GlossaryScope[] = ["mine", "shared", "public"];
+
+function fetchGlossaryPage(scope: GlossaryScope, params: {search?: string; page: number; size: number}) {
+  if (scope === "public") return GlossaryService.getPublicGlossaries(params);
+  if (scope === "shared") return GlossaryService.getSharedWithMeGlossaries(params);
+  return GlossaryService.getGlossaries(params);
+}
 const UPLOADED_FILES_PER_PAGE = 8;
 const PIPELINE_FILE_EXTENSIONS = new Set(["docx", "xlsx", "xlsm", "pptx"]);
 
@@ -183,6 +194,7 @@ type TranslateCopy = {
   searchGlossary: string;
   loadingGlossaries: string;
   emptyGlossaries: string;
+  ownedBy: string;
   glossaryError: string;
   terms: string;
   createGlossary: string;
@@ -275,6 +287,7 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     searchGlossary: "Tìm theo tên glossary...",
     loadingGlossaries: "Đang tải glossary...",
     emptyGlossaries: "Không tìm thấy glossary phù hợp.",
+    ownedBy: "bởi",
     glossaryError: "Không thể tải danh sách glossary.",
     terms: "thuật ngữ",
     createGlossary: "Tạo mới glossary",
@@ -365,6 +378,7 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     searchGlossary: "Search glossaries...",
     loadingGlossaries: "Loading glossaries...",
     emptyGlossaries: "No matching glossaries found.",
+    ownedBy: "by",
     glossaryError: "Unable to load glossaries.",
     terms: "terms",
     createGlossary: "Create glossary",
@@ -455,6 +469,7 @@ const translateCopy: Record<TranslateLocale, TranslateCopy> = {
     searchGlossary: "用語集を検索...",
     loadingGlossaries: "用語集を読み込み中...",
     emptyGlossaries: "該当する用語集がありません。",
+    ownedBy: "作成者:",
     glossaryError: "用語集を読み込めません。",
     terms: "用語",
     createGlossary: "用語集を新規作成",
@@ -1123,6 +1138,7 @@ export function TranslateConfigure() {
   const [glossaries, setGlossaries] = useState<GlossaryResponse[]>([]);
   const [glossarySearch, setGlossarySearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [glossaryScope, setGlossaryScope] = useState<GlossaryScope>("mine");
   const [glossaryPage, setGlossaryPage] = useState(1);
   const [glossaryPages, setGlossaryPages] = useState(1);
   const [isLoadingGlossaries, setIsLoadingGlossaries] = useState(true);
@@ -1338,7 +1354,7 @@ export function TranslateConfigure() {
       setGlossaryLoadError(false);
 
       try {
-        const response = await GlossaryService.getGlossaries({
+        const response = await fetchGlossaryPage(glossaryScope, {
           page: glossaryPage,
           search: debouncedSearch || undefined,
           size: GLOSSARIES_PER_PAGE,
@@ -1369,7 +1385,7 @@ export function TranslateConfigure() {
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch, glossaryPage, reloadGlossaries]);
+  }, [debouncedSearch, glossaryPage, glossaryScope, reloadGlossaries]);
 
   useEffect(() => {
     document.body.classList.toggle("translate-language-select-open", openLanguageSelect !== null);
@@ -1681,12 +1697,20 @@ export function TranslateConfigure() {
     });
   };
 
+  const changeGlossaryScope = (scope: GlossaryScope) => {
+    if (scope === glossaryScope) return;
+    setGlossaryNotice(null);
+    setGlossaryScope(scope);
+    setGlossaryPage(1);
+  };
+
   const handleGlossarySaved = (createdGlossary: GlossaryResponse) => {
     updateActiveFileConfig((currentConfig) => ({
       ...currentConfig,
       selectedGlossaryIds: new Set([...currentConfig.selectedGlossaryIds, createdGlossary.id]),
     }));
     setGlossarySearch("");
+    setGlossaryScope("mine"); // a glossary just created is the user's own
     setGlossaryPage(1);
     setReloadGlossaries((currentValue) => currentValue + 1);
     setIsCreateOpen(false);
@@ -2608,7 +2632,15 @@ export function TranslateConfigure() {
                 </div>
               </div>
 
-              <div className="relative mt-4">
+              <div className="mt-4 inline-grid w-full grid-cols-3 rounded-[7px] bg-[#f0edf4] p-1 sm:w-[420px]" role="group">
+                {GLOSSARY_SCOPES.map((scope) => (
+                  <button aria-pressed={glossaryScope === scope} className={`h-8 truncate rounded-[5px] px-2 text-[12px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c] disabled:cursor-not-allowed disabled:opacity-45 ${glossaryScope === scope ? "bg-white text-[#21175c] shadow-sm" : "text-[#716b79] hover:text-[#21175c]"}`} disabled={!activeFile} key={scope} onClick={() => changeGlossaryScope(scope)} type="button">
+                    {glossaryCopy[currentLocale].list[scope]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative mt-3">
                 <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#827c89]" />
                 <Input aria-label={copy.searchGlossary} className="h-12 rounded-[8px] border-[#cfc9d8] bg-white pl-12 text-[13px] shadow-none focus-visible:border-[#8f7bc0] focus-visible:ring-[#c7bfff]/30" disabled={!activeFile} onChange={(event) => setGlossarySearch(event.target.value)} placeholder={copy.searchGlossary} value={glossarySearch} />
               </div>
@@ -2636,6 +2668,12 @@ export function TranslateConfigure() {
                             <span>{languageName(glossary.targetLanguage, currentLocale)}</span>
                             <span aria-hidden="true">&middot;</span>
                             <span>{new Intl.NumberFormat(currentLocale).format(glossary.termCount ?? 0)} {copy.terms}</span>
+                            {glossaryScope !== "mine" && glossary.ownerName ? (
+                              <>
+                                <span aria-hidden="true">&middot;</span>
+                                <span className="truncate" title={glossary.ownerName}>{copy.ownedBy} {glossary.ownerName}</span>
+                              </>
+                            ) : null}
                           </span>
                         </span>
                       </button>

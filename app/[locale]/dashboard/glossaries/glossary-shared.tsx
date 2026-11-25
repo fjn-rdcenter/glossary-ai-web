@@ -1,6 +1,6 @@
 "use client";
 
-import {ChevronLeft, ChevronRight, LoaderCircle, Plus, Trash2, UserRound, X} from "lucide-react";
+import {ChevronLeft, ChevronRight, LoaderCircle, Plus, Trash2, X} from "lucide-react";
 import type {ReactNode} from "react";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {GlossaryService} from "@/api";
@@ -33,8 +33,11 @@ import {
   setSessionGlossaryPublic,
 } from "./glossary-session-template";
 import {ErrorDetails} from "@/components/error-details";
+import {UsernameCombobox, UsernameNoticeLine} from "@/components/username-combobox";
 import {useDescribeError} from "@/hooks/use-describe-error";
+import {useUserSearch} from "@/hooks/use-user-search";
 import {uiError, type UiError} from "@/lib/error-message";
+import {describePerson, describeUsernameInput, fillName, selectableSuggestions} from "@/lib/user-suggestions";
 
 export function GlossaryPageFrame({
   children,
@@ -192,6 +195,9 @@ export function GlossaryShareDialog({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<UiError | null>(null);
   const {describeError} = useDescribeError();
+  // The guided tour's sample glossary has no real accounts behind it.
+  const userSearch = useUserSearch({enabled: !isSessionGlossaryTemplate(glossary)});
+  const resetUserSearch = userSearch.reset;
 
   const loadPermissions = useCallback(async () => {
     if (!glossary) return;
@@ -220,12 +226,37 @@ export function GlossaryShareDialog({
     if (open) {
       setUsername("");
       setExpiresAt("");
+      resetUserSearch();
       void loadPermissions();
     }
-  }, [loadPermissions, open]);
+  }, [loadPermissions, open, resetUserSearch]);
 
   const isPublic = Boolean(permissions?.publicPermission);
   const accessRows = useMemo(() => permissions?.userPermissions ?? [], [permissions]);
+  // Who needs no invitation: the owner, and everyone with access or an invitation still open.
+  // A declined invitation can be sent again.
+  const blockedUsernames = useMemo(() => {
+    const blocked = new Set<string>();
+    if (permissions?.ownerName) blocked.add(permissions.ownerName.toLowerCase());
+    for (const row of accessRows) {
+      if (row.principalId && (row.status === "pending" || row.status === "accepted")) {
+        blocked.add(row.principalId.toLowerCase());
+      }
+    }
+    return blocked;
+  }, [accessRows, permissions?.ownerName]);
+  const owner = describePerson(permissions?.ownerName ?? "", permissions?.ownerDisplayName);
+  const usernameNotice = describeUsernameInput({
+    typed: username,
+    items: userSearch.items,
+    status: userSearch.status,
+    searchedFor: userSearch.searchedFor,
+    blocked: blockedUsernames,
+  });
+  const suggestions = useMemo(
+    () => selectableSuggestions(userSearch.items, blockedUsernames),
+    [userSearch.items, blockedUsernames],
+  );
 
   const handlePublicChange = async (nextPublic: boolean) => {
     if (!glossary || busyKey) return;
@@ -279,9 +310,19 @@ export function GlossaryShareDialog({
         if (!sessionPermissions) throw new Error("Session glossary permissions are unavailable");
         setPermissions(sessionPermissions);
       } else {
+        // An account's username (not an email, not another letter case) is what permissions are matched on.
+        // A name nobody has used, or a lookup that failed, is invited as typed.
+        const resolution = await userSearch.resolve(normalizedUsername);
+        if (resolution.status === "found" && blockedUsernames.has(resolution.user.username.toLowerCase())) {
+          setErrorMessage(
+            uiError(fillName(copy.share.alreadyHasAccess, resolution.user.displayName || resolution.user.username)),
+          );
+          return;
+        }
+
         await GlossaryService.createGlossaryPermission(glossary.id, {
           principalType: "user",
-          principalId: normalizedUsername,
+          principalId: resolution.status === "found" ? resolution.user.username : normalizedUsername,
           permission: "clone",
           expiresAt: normalizedExpiration,
         });
@@ -289,6 +330,7 @@ export function GlossaryShareDialog({
       }
       setUsername("");
       setExpiresAt("");
+      userSearch.reset();
     } catch (error) {
       console.error("Failed to invite glossary user", error);
       setErrorMessage(describeError(error, copy.share.inviteError));
@@ -324,6 +366,13 @@ export function GlossaryShareDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
         className="max-h-[92vh] gap-0 overflow-hidden rounded-[8px] border-[#d8d2e1] bg-white p-0 text-[#21175c] sm:max-w-[620px]"
+        onEscapeKeyDown={(event) => {
+          // With the suggestion list open, Escape closes just the list (the field handles it).
+          const focused = document.activeElement;
+          if (focused?.getAttribute("role") === "combobox" && focused.getAttribute("aria-expanded") === "true") {
+            event.preventDefault();
+          }
+        }}
         showCloseButton={false}
       >
         <DialogHeader className="border-b border-[#e7e2ed] px-6 py-5">
@@ -367,19 +416,21 @@ export function GlossaryShareDialog({
           <section className="border-b border-[#e7e2ed] py-5">
             <h3 className="text-[13px] font-bold">{copy.share.inviteUsers}</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px_auto] sm:items-end">
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[11px] font-semibold">{copy.share.username}</span>
-                <span className="flex h-10 items-center gap-2 rounded-[7px] border border-[#d8d2e1] bg-white px-3 focus-within:border-[#21175c] focus-within:ring-2 focus-within:ring-[#21175c]/10 has-[:disabled]:bg-[#f1eff4] has-[:disabled]:opacity-60">
-                  <UserRound className="size-4 shrink-0 text-[#777080]" />
-                  <input
-                    className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-[#9a94a1]"
-                    disabled={isPublic || isLoading || Boolean(busyKey)}
-                    onChange={(event) => setUsername(event.target.value)}
-                    placeholder={copy.share.usernamePlaceholder}
-                    value={username}
-                  />
-                </span>
-              </label>
+              <UsernameCombobox
+                copy={{
+                  label: copy.share.username,
+                  placeholder: copy.share.usernamePlaceholder,
+                  suggestions: copy.share.suggestions,
+                }}
+                disabled={isPublic || isLoading || Boolean(busyKey)}
+                onChange={(value) => {
+                  setUsername(value);
+                  userSearch.search(value);
+                }}
+                onSubmit={() => void handleInvite()}
+                suggestions={suggestions}
+                value={username}
+              />
               <label className="block min-w-0">
                 <span className="mb-1.5 block text-[11px] font-semibold">{copy.share.expiration}</span>
                 <input
@@ -393,7 +444,7 @@ export function GlossaryShareDialog({
               </label>
               <button
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-[7px] bg-[#21175c] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#f06317] disabled:cursor-not-allowed disabled:opacity-45"
-                disabled={isPublic || isLoading || Boolean(busyKey)}
+                disabled={isPublic || isLoading || Boolean(busyKey) || usernameNotice.kind === "blocked"}
                 onClick={() => void handleInvite()}
                 type="button"
               >
@@ -401,6 +452,8 @@ export function GlossaryShareDialog({
                 {copy.share.invite}
               </button>
             </div>
+            <UsernameNoticeLine copy={copy.share} notice={usernameNotice} status={userSearch.status} />
+            <p className="mt-1 text-[11px] leading-4 text-[#716b79]">{copy.share.inviteNote}</p>
           </section>
 
           <section className="pt-5">
@@ -413,26 +466,48 @@ export function GlossaryShareDialog({
               </div>
             ) : permissions ? (
               <div className="content-reveal">
-                <div className="flex items-center gap-3 border-b border-[#ece8f0] py-3">
-                  <PermissionAvatar index={0} value={permissions.ownerName} />
-                  <div className="min-w-0">
-                    <p className="truncate text-[12px] font-bold">{permissions.ownerName}</p>
-                    <p className="mt-0.5 truncate text-[10px] text-[#797280]">
-                      {permissions.ownerId} ({copy.share.owner})
-                    </p>
+                <div className="flex items-center gap-3 py-3">
+                  <PermissionAvatar index={0} value={owner.primary} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-bold">{owner.primary}</p>
+                    <p className="mt-0.5 truncate text-[10px] text-[#797280]">{owner.secondary}</p>
                   </div>
+                  <span className="shrink-0 rounded-full bg-[#21175c] px-3 py-1 text-[11px] font-bold text-white">
+                    {copy.share.owner}
+                  </span>
                 </div>
+
+                <hr aria-hidden="true" className="my-1 w-1/2 border-0 border-t-1 border-[#d8d2e1]" />
 
                 {accessRows.length > 0 ? (
                   accessRows.map((permission, index) => {
-                    const principal = permission.principalId || permission.principalType;
+                    const person = describePerson(
+                      permission.principalId || permission.principalType,
+                      permission.principalDisplayName,
+                    );
+                    const levelLabel = permission.permission ? copy.share.levels[permission.permission] : null;
 
                     return (
-                      <div className="flex items-center gap-3 border-b border-[#ece8f0] py-3 last:border-b-0" key={permission.id}>
-                        <PermissionAvatar index={index + 1} value={principal} />
+                      <div className="flex items-center gap-3 py-3" key={permission.id}>
+                        <PermissionAvatar index={index + 1} value={person.primary} />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-bold">{principal}</p>
+                          <p className="truncate text-[12px] font-bold">{person.primary}</p>
+                          <p className="mt-0.5 truncate text-[10px] text-[#797280]">{person.secondary}</p>
                         </div>
+                        {permission.status === "pending" || permission.status === "declined" ? (
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              permission.status === "pending" ? "bg-[#fff4ef] text-[#f06317]" : "bg-[#f3f1f6] text-[#716b79]"
+                            }`}
+                          >
+                            {permission.status === "pending" ? copy.share.statusPending : copy.share.statusDeclined}
+                          </span>
+                        ) : null}
+                        {levelLabel ? (
+                          <span className="shrink-0 rounded-full border border-[#d8d2e1] bg-[#f6f4fa] px-3 py-1 text-[11px] font-bold text-[#21175c]">
+                            {levelLabel}
+                          </span>
+                        ) : null}
                         <button
                           aria-label={copy.share.remove}
                           className="grid size-8 place-items-center rounded-[6px] text-[#756e7d] transition-colors hover:bg-[#fff0ed] hover:text-[#d92d20] disabled:opacity-40"

@@ -8,3 +8,5 @@ export * from "./translation.service";
 export * from "./glossary.service";
 export * from "./document.service";
 export * from "./release-notes.service";
+export * from "./notification.service";
+export * from "./user.service";

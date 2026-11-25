@@ -593,6 +593,8 @@
         "PERMISSION_ALREADY_EXISTS": "This sharing permission already exists.",
         "PERMISSION_ADMIN_GRANT_FORBIDDEN": "Only the glossary owner can grant Admin permission.",
         "PERMISSION_PUBLIC_ADMIN_NOT_ALLOWED": "Admin permission cannot be granted to a public glossary.",
+        "PERMISSION_NOT_PENDING": "This invitation can no longer be answered.",
+        "NOTIFICATION_NOT_FOUND": "This notification no longer exists.",
         "DOCUMENT_NOT_FOUND": "This document no longer exists.",
         "UNSUPPORTED_FILE_TYPE": "This file type is not supported.",
         "TRANSLATION_JOB_NOT_FOUND": "This translation no longer exists.",
@@ -635,5 +637,40 @@
         "reference": "Reference: {id}",
         "copyReference": "Copy the full reference code",
         "referenceCopied": "Copied"
+    },
+    "Notifications": {
+        "open": "Open notifications",
+        "title": "Notifications",
+        "markAllRead": "Mark all as read",
+        "loading": "Loading notifications...",
+        "empty": "You’re all caught up.",
+        "loadError": "Unable to load notifications.",
+        "retry": "Try again",
+        "loadMore": "Show older",
+        "loadingMore": "Loading...",
+        "accept": "Accept",
+        "decline": "Decline",
+        "openGlossary": "Open glossary",
+        "answerError": "Could not answer the invitation",
+        "unread": "Unread",
+        "bellUnread": "Notifications, {count} unread",
+        "accessLevel": "Access: {level}",
+        "level": {
+            "view": "View",
+            "clone": "View and copy",
+            "edit": "Edit",
+            "admin": "Manage"
+        },
+        "state": {
+            "accepted": "You accepted this invitation.",
+            "declined": "You declined this invitation.",
+            "revoked": "This invitation was withdrawn.",
+            "expired": "This invitation has expired."
+        },
+        "GLOSSARY_SHARED": "{actorName} invited you to use the glossary “{glossaryName}”.",
+        "GLOSSARY_SHARE_ACCEPTED": "{actorName} accepted your invitation to “{glossaryName}”.",
+        "GLOSSARY_SHARE_DECLINED": "{actorName} declined your invitation to “{glossaryName}”.",
+        "GLOSSARY_PERMISSION_CHANGED": "{actorName} changed your access to “{glossaryName}”.",
+        "UNKNOWN": "You have a new notification."
     }
 }

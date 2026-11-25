@@ -593,6 +593,8 @@
         "PERMISSION_ALREADY_EXISTS": "Quyền chia sẻ này đã tồn tại.",
         "PERMISSION_ADMIN_GRANT_FORBIDDEN": "Chỉ chủ sở hữu bộ thuật ngữ mới có thể cấp quyền Quản trị.",
         "PERMISSION_PUBLIC_ADMIN_NOT_ALLOWED": "Không thể cấp quyền Quản trị cho bộ thuật ngữ công khai.",
+        "PERMISSION_NOT_PENDING": "Lời mời này không còn có thể phản hồi.",
+        "NOTIFICATION_NOT_FOUND": "Thông báo này không còn tồn tại.",
         "DOCUMENT_NOT_FOUND": "Tài liệu không còn tồn tại.",
         "UNSUPPORTED_FILE_TYPE": "Định dạng tệp này không được hỗ trợ.",
         "TRANSLATION_JOB_NOT_FOUND": "Bản dịch không còn tồn tại.",
@@ -635,5 +637,40 @@
         "reference": "Mã tham chiếu: {id}",
         "copyReference": "Sao chép đầy đủ mã tham chiếu",
         "referenceCopied": "Đã sao chép"
+    },
+    "Notifications": {
+        "open": "Mở thông báo",
+        "title": "Thông báo",
+        "markAllRead": "Đánh dấu tất cả đã đọc",
+        "loading": "Đang tải thông báo...",
+        "empty": "Bạn đã xem hết thông báo.",
+        "loadError": "Không thể tải thông báo.",
+        "retry": "Thử lại",
+        "loadMore": "Xem thông báo cũ hơn",
+        "loadingMore": "Đang tải...",
+        "accept": "Chấp nhận",
+        "decline": "Từ chối",
+        "openGlossary": "Mở bộ thuật ngữ",
+        "answerError": "Không thể trả lời lời mời",
+        "unread": "Chưa đọc",
+        "bellUnread": "Thông báo, {count} chưa đọc",
+        "accessLevel": "Quyền truy cập: {level}",
+        "level": {
+            "view": "Xem",
+            "clone": "Xem và sao chép",
+            "edit": "Chỉnh sửa",
+            "admin": "Quản trị"
+        },
+        "state": {
+            "accepted": "Bạn đã chấp nhận lời mời này.",
+            "declined": "Bạn đã từ chối lời mời này.",
+            "revoked": "Lời mời này đã bị thu hồi.",
+            "expired": "Lời mời này đã hết hạn."
+        },
+        "GLOSSARY_SHARED": "{actorName} đã mời bạn sử dụng bộ thuật ngữ “{glossaryName}”.",
+        "GLOSSARY_SHARE_ACCEPTED": "{actorName} đã chấp nhận lời mời vào bộ thuật ngữ “{glossaryName}”.",
+        "GLOSSARY_SHARE_DECLINED": "{actorName} đã từ chối lời mời vào bộ thuật ngữ “{glossaryName}”.",
+        "GLOSSARY_PERMISSION_CHANGED": "{actorName} đã thay đổi quyền truy cập của bạn vào bộ thuật ngữ “{glossaryName}”.",
+        "UNKNOWN": "Bạn có một thông báo mới."
     }
 }
