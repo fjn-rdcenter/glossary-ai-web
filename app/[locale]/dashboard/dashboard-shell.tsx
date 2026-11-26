@@ -515,9 +515,7 @@ export function DashboardHeader({
             {newTranslationContent}
           </Link>
         )}
-        <span className="hidden sm:inline-flex">
-          <DashboardNotifications copy={copy} locale={currentLocale} />
-        </span>
+        <DashboardNotifications copy={copy} locale={currentLocale} />
         <DashboardLanguageSwitcher label={copy.languageLabel} locale={currentLocale} localePath={localePath} />
         <DashboardUserInfo greeting={copy.userGreeting} />
         <DashboardLogoutButton copy={copy} />
@@ -1370,7 +1368,8 @@ function DashboardNotifications({copy, locale}: {copy: DashboardCopy; locale: Ap
 
       <PopoverContent
         align="end"
-        className="z-[90] max-h-[520px] w-[380px] overflow-hidden rounded-[10px] border border-[#d5d0dc] bg-white/95 p-0 shadow-[0_18px_46px_rgba(33,23,92,0.18)] backdrop-blur-xl"
+        collisionPadding={12}
+        className="z-[90] max-h-[520px] w-[min(380px,calc(100vw-1.5rem))] overflow-hidden rounded-[10px] border border-[#d5d0dc] bg-white/95 p-0 shadow-[0_18px_46px_rgba(33,23,92,0.18)] backdrop-blur-xl"
         sideOffset={12}
       >
         <div className="border-b border-[#e4dfee] px-5 py-3">

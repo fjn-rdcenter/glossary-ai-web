@@ -1,13 +1,13 @@
 "use client";
 
-import { CircleCheck, CircleX, KeyRound, LoaderCircle, Share2, type LucideIcon } from "lucide-react";
+import { CircleCheck, CircleX, FileCheck2, FileX2, KeyRound, LoaderCircle, Share2, type LucideIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ErrorDetails } from "@/components/error-details";
 import { useDescribeError } from "@/hooks/use-describe-error";
 import type { useNotificationCenter } from "@/hooks/use-notification-center";
 import type { UiError } from "@/lib/error-message";
-import { glossaryPath, formatRelativeTime, invitationTarget } from "@/lib/notifications";
+import { glossaryPath, formatRelativeTime, invitationTarget, translationFailure, translationPath } from "@/lib/notifications";
 import { isKnownNotificationType, type NotificationType } from "@/lib/notification-types";
 import type { NotificationResponse } from "@/lib/types";
 import { Link } from "@/i18n/routing";
@@ -19,6 +19,8 @@ const TYPE_ICONS: Record<NotificationType, LucideIcon> = {
   GLOSSARY_SHARE_ACCEPTED: CircleCheck,
   GLOSSARY_SHARE_DECLINED: CircleX,
   GLOSSARY_PERMISSION_CHANGED: KeyRound,
+  TRANSLATION_COMPLETED: FileCheck2,
+  TRANSLATION_FAILED: FileX2,
 };
 
 const BUTTON_FOCUS = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c]";
@@ -39,7 +41,7 @@ function NotificationItem({
 }) {
   const t = useTranslations("Notifications");
   const locale = useLocale();
-  const { describeError } = useDescribeError();
+  const { describeError, describeFailureReason } = useDescribeError();
   const [busy, setBusy] = useState<"accept" | "decline" | null>(null);
   const [error, setError] = useState<UiError | null>(null);
 
@@ -48,14 +50,22 @@ function NotificationItem({
   const message = t(known ? item.type : "UNKNOWN", {
     actorName: stringParam(item, "actorName"),
     glossaryName: stringParam(item, "glossaryName"),
+    documentName: stringParam(item, "documentName") || t("documentFallback"),
   });
+  // Why a translation failed: the job's own failure code, in the user's language.
+  const failureReason = (() => {
+    if (item.type !== "TRANSLATION_FAILED") return null;
+    const failure = translationFailure(item);
+    return describeFailureReason(failure.code, failure.params);
+  })();
 
   const level = stringParam(item, "permission");
   const showLevel = (item.type === "GLOSSARY_SHARED" || item.type === "GLOSSARY_PERMISSION_CHANGED") && t.has(`level.${level}`);
   const stateKey = item.type === "GLOSSARY_SHARED" && item.actionState && item.actionState !== "pending" ? item.actionState : null;
   const isUnread = item.readAt === null;
   const canAnswer = invitationTarget(item) !== null;
-  const path = glossaryPath(item);
+  const glossaryHref = glossaryPath(item);
+  const path = glossaryHref ?? translationPath(item);
 
   const answer = async (accept: boolean) => {
     setBusy(accept ? "accept" : "decline");
@@ -75,6 +85,7 @@ function NotificationItem({
   const body = (
     <>
       <span className="block text-[13px] leading-5 text-[#2a2633]">{message}</span>
+      {failureReason ? <span className="mt-0.5 block text-[12px] text-[#625d6b]">{failureReason}</span> : null}
       {showLevel ? (
         <span className="mt-0.5 block text-[12px] text-[#625d6b]">{t("accessLevel", { level: t(`level.${level}`) })}</span>
       ) : null}
@@ -104,7 +115,7 @@ function NotificationItem({
                 if (isUnread) void center.markRead(item.id);
                 onNavigate();
               }}
-              title={t("openGlossary")}
+              title={glossaryHref ? t("openGlossary") : t("openTranslation")}
             >
               {body}
             </Link>

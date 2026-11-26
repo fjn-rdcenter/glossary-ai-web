@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import {useLocale} from "next-intl";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {Suspense, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {TranslationService} from "@/api";
 import {FileTypeTile} from "@/components/file-type-tile";
 import {LanguageDisplay} from "@/components/language-display";
@@ -26,6 +26,7 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {getTranslatedFileName} from "@/lib/translation-file-name";
 import type {StatusEnum, TranslationHistoryResponse} from "@/lib/types";
 import {DashboardFooter, DashboardHeader} from "../dashboard-shell";
+import {RequestedJobOpener} from "./requested-job-opener";
 import {TranslationPreviewDialog} from "../translate/translation-preview-dialog";
 import {ErrorDetails} from "@/components/error-details";
 import {useDescribeError} from "@/hooks/use-describe-error";
@@ -1029,6 +1030,10 @@ export function HistoryView() {
       </main>
       <DashboardFooter />
 
+      {/* Its own boundary: reading the URL must not hold back the page. */}
+      <Suspense fallback={null}>
+        <RequestedJobOpener onJob={setSelectedJob} />
+      </Suspense>
       <TranslationDetailDialog
         job={selectedJob}
         locale={locale}

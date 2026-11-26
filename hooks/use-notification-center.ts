@@ -16,6 +16,10 @@ const PAGE_SIZE = 20;
  * The unread count is polled while the tab is visible, and again when the tab becomes visible or the window
  * regains focus. The list is fetched when the popover opens (`onOpenChange(true)`), and reloaded by a poll that
  * sees the count change while it is open.
+ *
+ * Push speeds that up: while the tab is visible the API streams a ping whenever something changes, and the ping
+ * makes the same fetches at once instead of at the next poll. Polling stays on as the baseline, so the bell
+ * works the same when the stream cannot connect (a proxy that buffers, a blocked endpoint, a full cap).
  */
 export function useNotificationCenter() {
   const [state, dispatch] = useReducer(notificationReducer, initialNotificationState);
@@ -102,6 +106,20 @@ export function useNotificationCenter() {
     [resync],
   );
 
+  /** The server pinged: something changed. Fetch what the bell shows, as a poll would, but now. */
+  const onPing = useCallback(() => {
+    // A count request already in flight may have read the server before the change; ask again after it.
+    const inFlight = countRequestRef.current;
+    void (inFlight ? inFlight.then(() => fetchCount()) : fetchCount());
+    if (isOpenRef.current) void reloadList();
+  }, [fetchCount, reloadList]);
+
+  /** The stream is up. A poll already in flight is as good as a fresh fetch here; the next poll closes any gap. */
+  const onStreamReady = useCallback(() => {
+    void fetchCount();
+    if (isOpenRef.current) void reloadList(); // a reconnect while the list is on screen: catch up
+  }, [fetchCount, reloadList]);
+
   useMountEffect(() => {
     const poll = async () => {
       if (document.visibilityState !== "visible") return;
@@ -112,15 +130,31 @@ export function useNotificationCenter() {
       if (count !== null && count !== before && isOpenRef.current) void reloadList();
     };
 
+    // The stream is open only while the tab is visible, like the poll: a hidden tab should not hold a connection.
+    let closeStream: (() => void) | null = null;
+    const syncStream = () => {
+      const visible = document.visibilityState === "visible";
+      if (visible && !closeStream) {
+        closeStream = NotificationService.connectStream({ onReady: onStreamReady, onChange: onPing });
+      } else if (!visible && closeStream) {
+        closeStream();
+        closeStream = null;
+      }
+    };
+
     void poll();
+    syncStream();
     const timer = window.setInterval(() => void poll(), NOTIFICATION_POLL_INTERVAL_MS);
     document.addEventListener("visibilitychange", poll);
+    document.addEventListener("visibilitychange", syncStream);
     window.addEventListener("focus", poll);
 
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", poll);
+      document.removeEventListener("visibilitychange", syncStream);
       window.removeEventListener("focus", poll);
+      closeStream?.();
     };
   });
 

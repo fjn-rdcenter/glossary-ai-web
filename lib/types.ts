@@ -354,12 +354,19 @@ export interface GlossaryCloneCreate {
 /** Live state of what a notification asks for (an invitation). `null` when it asks for nothing. */
 export type NotificationActionState = "pending" | "accepted" | "declined" | "revoked" | "expired";
 
+export type NotificationParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: string | number | boolean | null };
+
 export interface NotificationResponse {
   id: string;
   /** A backend `NotificationType`; may be one this build does not know yet (see lib/notification-types.ts). */
   type: string;
-  /** Values safe to show; interpolated into `Notifications.<type>`. */
-  params: Record<string, string | number | boolean | null>;
+  /** Values safe to show; interpolated into `Notifications.<type>`. `errorParams` is the failure's own params object. */
+  params: Record<string, NotificationParamValue>;
   subjectType: string | null;
   subjectId: string | null;
   actionState: NotificationActionState | null;

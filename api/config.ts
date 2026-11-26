@@ -94,6 +94,7 @@ export const API_CONFIG = {
     NOTIFICATIONS: {
       BASE: "/api/v2/notifications",
       UNREAD_COUNT: "/api/v2/notifications/unread-count",
+      STREAM: "/api/v2/notifications/stream",
       READ_ALL: "/api/v2/notifications/read-all",
       READ: (id: string) => `/api/v2/notifications/${id}/read`,
     },

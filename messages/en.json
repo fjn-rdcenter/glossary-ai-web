@@ -651,8 +651,10 @@
         "accept": "Accept",
         "decline": "Decline",
         "openGlossary": "Open glossary",
+        "openTranslation": "Open translation details",
         "answerError": "Could not answer the invitation",
         "unread": "Unread",
+        "documentFallback": "Untitled document",
         "bellUnread": "Notifications, {count} unread",
         "accessLevel": "Access: {level}",
         "level": {
@@ -671,6 +673,8 @@
         "GLOSSARY_SHARE_ACCEPTED": "{actorName} accepted your invitation to “{glossaryName}”.",
         "GLOSSARY_SHARE_DECLINED": "{actorName} declined your invitation to “{glossaryName}”.",
         "GLOSSARY_PERMISSION_CHANGED": "{actorName} changed your access to “{glossaryName}”.",
+        "TRANSLATION_COMPLETED": "Your translation of “{documentName}” is ready.",
+        "TRANSLATION_FAILED": "Your translation of “{documentName}” failed.",
         "UNKNOWN": "You have a new notification."
     }
 }

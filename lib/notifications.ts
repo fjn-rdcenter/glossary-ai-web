@@ -2,6 +2,7 @@
  * Pure helpers for the notification list. No React and no runtime imports, so they can be exercised on their own.
  */
 
+import type { ErrorParams } from "./api-error";
 import type { NotificationResponse } from "./types";
 
 const MINUTE = 60;
@@ -93,6 +94,22 @@ export function glossaryPath(item: NotificationResponse): string | null {
     default:
       return null;
   }
+}
+
+/** The translation job a notification is about. The history page opens its details from `?job=`. */
+export function translationPath(item: NotificationResponse): string | null {
+  if (item.type !== "TRANSLATION_COMPLETED" && item.type !== "TRANSLATION_FAILED") return null;
+  return item.subjectId ? `/dashboard/history?job=${encodeURIComponent(item.subjectId)}` : null;
+}
+
+/** Why a translation failed: the code and params of the job's failure, for `Errors.<CODE>`. */
+export function translationFailure(item: NotificationResponse): { code: string; params: ErrorParams } {
+  const raw = item.params.errorParams;
+  const params: ErrorParams = {};
+  if (raw !== null && typeof raw === "object") {
+    for (const [key, value] of Object.entries(raw)) params[key] = value;
+  }
+  return { code: stringParam(item, "errorCode") ?? "TRANSLATION_FAILED", params };
 }
 
 // --- State of the notification center ---

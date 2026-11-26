@@ -651,8 +651,10 @@
         "accept": "承諾",
         "decline": "辞退",
         "openGlossary": "用語集を開く",
+        "openTranslation": "翻訳の詳細を開く",
         "answerError": "招待に回答できませんでした",
         "unread": "未読",
+        "documentFallback": "無題のドキュメント",
         "bellUnread": "通知、未読 {count} 件",
         "accessLevel": "アクセス権: {level}",
         "level": {
@@ -671,6 +673,8 @@
         "GLOSSARY_SHARE_ACCEPTED": "{actorName}さんが用語集「{glossaryName}」への招待を承諾しました。",
         "GLOSSARY_SHARE_DECLINED": "{actorName}さんが用語集「{glossaryName}」への招待を辞退しました。",
         "GLOSSARY_PERMISSION_CHANGED": "{actorName}さんが用語集「{glossaryName}」へのアクセス権を変更しました。",
+        "TRANSLATION_COMPLETED": "「{documentName}」の翻訳が完了しました。",
+        "TRANSLATION_FAILED": "「{documentName}」の翻訳に失敗しました。",
         "UNKNOWN": "新しい通知があります。"
     }
 }
