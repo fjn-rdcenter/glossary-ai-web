@@ -1,9 +1,10 @@
 /**
- * The push side of the notification bell: a stream of "something changed" pings from the API.
+ * The push side of the notification bell and of job progress: one stream from the API that says "something
+ * changed" and carries a translation job's progress and status.
  *
- * Push is an accelerator, never the baseline. The bell keeps polling, so every failure here (no token, a
- * proxy that buffers, a full cap, a dropped connection) only means the ping does not arrive and the next poll
- * finds the change. This module therefore never throws and never shows anything: it reconnects quietly, with
+ * Push is an accelerator, never the baseline. The bell keeps polling, and so do the job screens while the
+ * stream is down, so every failure here (no token, a proxy that buffers, a full cap, a dropped connection) only
+ * means the event does not arrive and the next poll finds the change. This module therefore never throws and never shows anything: it reconnects quietly, with
  * a growing delay.
  *
  * It uses `fetch` and the bearer token because `EventSource` cannot send an `Authorization` header, and the
@@ -12,6 +13,7 @@
  * a stolen token and sign the user out.
  */
 
+import { type JobEvent, parseJobEvent } from "@/lib/job-events";
 import { createRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
 import { createSseParser, reconnectDelay } from "@/lib/sse";
 import { getStoredAccessToken } from "./auth-session";
@@ -22,6 +24,10 @@ export interface NotificationStreamHandlers {
   onReady: () => void;
   /** The server says the user's notifications changed. Carries no data: fetch the count and the list. */
   onChange: () => void;
+  /** A translation job's progress or status changed. After a status, fetch the job. */
+  onJob?: (event: JobEvent) => void;
+  /** `true` once the server says "ready", `false` when that stream ends. Tells a listener whether to poll. */
+  onConnectionChange?: (connected: boolean) => void;
   /** The server refused the token. Settle once a fresh one is stored, or when it is clear none will be. */
   refreshSession: () => Promise<void>;
 }
@@ -37,7 +43,7 @@ export interface NotificationStreamDeps {
 /** The server sends "ready" at once; a proxy that buffers the response would hold it back. */
 const FIRST_BYTES_TIMEOUT_MS = 15_000;
 /** The server sends a keep-alive every 20 s when quiet, so this long without a byte means the link is dead. */
-const SILENCE_TIMEOUT_MS = 90_000;
+const SILENCE_TIMEOUT_MS = 60_000;
 /** A stream that ends sooner than this counts as a failure, so a server that closes streams at once is not hammered. */
 const HEALTHY_AFTER_MS = 5_000;
 
@@ -96,9 +102,13 @@ async function attemptOnce(
     const parser = createSseParser((event) => {
       if (event.event === "ready") {
         wasReady = true;
+        runHandler(() => handlers.onConnectionChange?.(true));
         runHandler(handlers.onReady);
       } else if (event.event === "notification") {
         runHandler(handlers.onChange);
+      } else if (event.event === "job") {
+        const job = parseJobEvent(event.data);
+        if (job) runHandler(() => handlers.onJob?.(job));
       }
     });
 
@@ -117,6 +127,7 @@ async function attemptOnce(
     clearTimeout(timer);
     signal.removeEventListener("abort", abortAttempt);
     attempt.abort(); // releases the connection if we left early
+    if (wasReady) runHandler(() => handlers.onConnectionChange?.(false));
   }
 }
 

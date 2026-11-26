@@ -7,6 +7,7 @@
 
 import apiClient from "../client";
 import { API_CONFIG } from "../config";
+import { watchJob } from "../job-watch";
 import {
   UploadDocumentRequest,
   UploadDocumentResponse,
@@ -140,6 +141,17 @@ export class TranslationService {
     );
 
     return response.data;
+  }
+
+  /**
+   * Follow a job until it ends, calling `onUpdate` with each change. Uses the push stream while it is up and
+   * polls while it is not. Resolves with the finished job, or `null` once `isStopped` returns true.
+   */
+  static watchJob(
+    initial: TranslationStatusResponse,
+    options: { onUpdate: (job: TranslationStatusResponse) => void; isStopped: () => boolean },
+  ): Promise<TranslationStatusResponse | null> {
+    return watchJob(initial, { ...options, fetchJob: () => TranslationService.getTranslationStatus(initial.id) });
   }
 
   static async cancelTranslation(jobId: string): Promise<void> {

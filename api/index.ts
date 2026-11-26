@@ -19,6 +19,10 @@ export { default as apiClient } from "./client";
 // Export services
 export * from "./services";
 
+// Export the push stream and what follows jobs through it
+export { subscribeToEvents, isEventStreamConnected, watchEventStreamConnection } from "./event-stream";
+export type { EventStreamListener } from "./event-stream";
+
 // Export types
 export * from "./types";
 

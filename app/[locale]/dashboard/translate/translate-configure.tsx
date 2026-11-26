@@ -1830,31 +1830,25 @@ export function TranslateConfigure() {
         : await TranslationService.startTranslation(translationRequest);
       if (!isCurrentAttempt()) return;
 
-      let status = translation.status;
       patchTranslationRun(fileId, {
         documentId,
         failure: jobFailure(translation),
         jobId: translation.id,
         progress: clampProgress(translation.progress),
-        status,
+        status: translation.status,
         targetDocument: translation.targetDocument,
       });
 
-      while (isCurrentAttempt() && !TERMINAL_TRANSLATION_STATUSES.has(status)) {
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
-        if (!isCurrentAttempt()) return;
-
-        const latestTranslation = await TranslationService.getTranslationStatus(translation.id);
-        if (!isCurrentAttempt()) return;
-
-        status = latestTranslation.status;
-        patchTranslationRun(fileId, {
-          failure: jobFailure(latestTranslation),
-          progress: clampProgress(latestTranslation.progress),
-          status,
-          targetDocument: latestTranslation.targetDocument,
-        });
-      }
+      await TranslationService.watchJob(translation, {
+        isStopped: () => !isCurrentAttempt(),
+        onUpdate: (latestTranslation) =>
+          patchTranslationRun(fileId, {
+            failure: jobFailure(latestTranslation),
+            progress: clampProgress(latestTranslation.progress),
+            status: latestTranslation.status,
+            targetDocument: latestTranslation.targetDocument,
+          }),
+      });
     } catch (error) {
       if (!isCurrentAttempt()) return;
 

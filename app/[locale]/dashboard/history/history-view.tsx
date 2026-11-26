@@ -30,6 +30,9 @@ import {RequestedJobOpener} from "./requested-job-opener";
 import {TranslationPreviewDialog} from "../translate/translation-preview-dialog";
 import {ErrorDetails} from "@/components/error-details";
 import {useDescribeError} from "@/hooks/use-describe-error";
+import {useEventStream, useEventStreamConnected} from "@/hooks/use-event-stream";
+import {useLatest} from "@/hooks/use-latest";
+import {isProgressEvent, QUIET_JOB_REFETCH_MS, withLiveProgress} from "@/lib/job-events";
 import type {UiError} from "@/lib/error-message";
 
 type HistoryLocale = "en" | "vi" | "ja";
@@ -598,15 +601,33 @@ export function HistoryView() {
     void fetchHistory();
   }, [fetchHistory, isStatusFilterReady]);
 
+  const streamConnected = useEventStreamConnected();
+  const latestFetchHistory = useLatest(fetchHistory);
+
+  useEventStream({
+    onReady: () => void latestFetchHistory.current(true),
+    onJob: (event) => {
+      if (!isProgressEvent(event)) {
+        void latestFetchHistory.current(true);
+        return;
+      }
+
+      const withProgress = (job: HistoryJob) => (job.id === event.id ? withLiveProgress(job, event.progress) : job);
+      setJobs((currentJobs) => currentJobs.map(withProgress));
+      setSelectedJob((currentJob) => (currentJob ? withProgress(currentJob) : currentJob));
+    },
+  });
+
   useEffect(() => {
     if (isLoading || !jobs.some((job) => job.status === "pending" || job.status === "translating")) return;
 
+    // Every change to `jobs` restarts it, so while the stream is up only a list that has gone quiet is refetched.
     const interval = window.setInterval(() => {
       void fetchHistory(true);
-    }, 4000);
+    }, streamConnected ? QUIET_JOB_REFETCH_MS : 4000);
 
     return () => window.clearInterval(interval);
-  }, [fetchHistory, isLoading, jobs]);
+  }, [fetchHistory, isLoading, jobs, streamConnected]);
 
   const dateRangeLabel = useMemo(() => {
     if (!dateFrom && !dateTo) return copy.dateRange;
