@@ -1441,8 +1441,8 @@ export function TranslateConfigure() {
       const destination = new URL(anchor.href, window.location.href);
       if (destination.protocol !== "http:" && destination.protocol !== "https:") return;
 
+      // Cancel only the navigation: the link's own handlers still run, and Next's Link skips a prevented click.
       event.preventDefault();
-      event.stopImmediatePropagation();
       setPendingNavigation(destination.href);
     };
 

@@ -8,6 +8,7 @@ import { authClient, rejectAsApiError, setRequestId } from "./auth-client";
 import { clearAuthSession, getStoredAccessToken, isLoggedOut, storeAccessToken } from "./auth-session";
 import { API_CONFIG } from "./config";
 import { toApiError } from "@/lib/api-error";
+import { TOKEN_REFRESH_LOCK, withLock } from "@/lib/tab-locks";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -77,21 +78,31 @@ async function forceLogout(): Promise<void> {
   return forcedLogout;
 }
 
-async function refreshAccessToken(): Promise<string> {
-  const response = await authClient.post<TokenResponse>(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {});
-  const accessToken = response.data.data?.access_token ?? response.data.access_token;
+/**
+ * Exchange the refresh cookie for a new access token, one tab at a time: tabs share the cookie, and the API
+ * revokes every session of a user whose rotated refresh token comes back. When the stored token is no longer
+ * `staleToken`, another tab refreshed while this one waited, and its token is used instead.
+ */
+async function refreshAccessToken(staleToken = getStoredAccessToken()): Promise<string> {
+  return withLock(TOKEN_REFRESH_LOCK, async () => {
+    const storedToken = getStoredAccessToken();
+    if (storedToken && storedToken !== staleToken) return storedToken;
 
-  if (!accessToken) {
-    throw new Error("Refresh response did not include an access token");
-  }
+    const response = await authClient.post<TokenResponse>(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {});
+    const accessToken = response.data.data?.access_token ?? response.data.access_token;
 
-  storeAccessToken(accessToken);
-  return accessToken;
+    if (!accessToken) {
+      throw new Error("Refresh response did not include an access token");
+    }
+
+    storeAccessToken(accessToken);
+    return accessToken;
+  });
 }
 
-function refreshAccessTokenOnce(): Promise<string> {
+function refreshAccessTokenOnce(staleToken: string | null): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = refreshAccessToken().finally(() => {
+    refreshPromise = refreshAccessToken(staleToken).finally(() => {
       refreshPromise = null;
     });
   }
@@ -150,7 +161,7 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
 
     try {
-      const accessToken = await refreshAccessTokenOnce();
+      const accessToken = await refreshAccessTokenOnce(originalRequest._accessToken ?? null);
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return apiClient(originalRequest);
     } catch (refreshError) {

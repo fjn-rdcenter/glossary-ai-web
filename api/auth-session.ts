@@ -23,6 +23,16 @@ export function isLoggedOut(): boolean {
   return localStorage.getItem(LOGGED_OUT_STORAGE_KEY) === "true";
 }
 
+export function isSignedIn(): boolean {
+  return getStoredAccessToken() !== null && !isLoggedOut();
+}
+
+export function getStoredUsername(): string | null {
+  if (typeof window === "undefined") return null;
+
+  return localStorage.getItem(USERNAME_STORAGE_KEY);
+}
+
 export function storeAccessToken(accessToken: string): void {
   if (typeof window === "undefined") return;
 

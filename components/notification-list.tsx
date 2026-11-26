@@ -7,8 +7,8 @@ import { ErrorDetails } from "@/components/error-details";
 import { useDescribeError } from "@/hooks/use-describe-error";
 import type { useNotificationCenter } from "@/hooks/use-notification-center";
 import type { UiError } from "@/lib/error-message";
-import { glossaryPath, formatRelativeTime, invitationTarget, translationFailure, translationPath } from "@/lib/notifications";
-import { isKnownNotificationType, type NotificationType } from "@/lib/notification-types";
+import { glossaryPath, formatRelativeTime, invitationTarget, notificationPath, stringParam } from "@/lib/notifications";
+import { isKnownNotificationType, notificationText, type NotificationType } from "@/lib/notification-types";
 import type { NotificationResponse } from "@/lib/types";
 import { Link } from "@/i18n/routing";
 
@@ -24,11 +24,6 @@ const TYPE_ICONS: Record<NotificationType, LucideIcon> = {
 };
 
 const BUTTON_FOCUS = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21175c]";
-
-function stringParam(item: NotificationResponse, key: string): string {
-  const value = item.params[key];
-  return typeof value === "string" ? value : "";
-}
 
 function NotificationItem({
   center,
@@ -47,25 +42,15 @@ function NotificationItem({
 
   const known = isKnownNotificationType(item.type);
   const Icon = known ? TYPE_ICONS[item.type as NotificationType] : Share2;
-  const message = t(known ? item.type : "UNKNOWN", {
-    actorName: stringParam(item, "actorName"),
-    glossaryName: stringParam(item, "glossaryName"),
-    documentName: stringParam(item, "documentName") || t("documentFallback"),
-  });
-  // Why a translation failed: the job's own failure code, in the user's language.
-  const failureReason = (() => {
-    if (item.type !== "TRANSLATION_FAILED") return null;
-    const failure = translationFailure(item);
-    return describeFailureReason(failure.code, failure.params);
-  })();
+  const { message, reason: failureReason } = notificationText(item, t, describeFailureReason);
 
-  const level = stringParam(item, "permission");
+  const level = stringParam(item, "permission") ?? "";
   const showLevel = (item.type === "GLOSSARY_SHARED" || item.type === "GLOSSARY_PERMISSION_CHANGED") && t.has(`level.${level}`);
   const stateKey = item.type === "GLOSSARY_SHARED" && item.actionState && item.actionState !== "pending" ? item.actionState : null;
   const isUnread = item.readAt === null;
   const canAnswer = invitationTarget(item) !== null;
   const glossaryHref = glossaryPath(item);
-  const path = glossaryHref ?? translationPath(item);
+  const path = notificationPath(item);
 
   const answer = async (accept: boolean) => {
     setBusy(accept ? "accept" : "decline");

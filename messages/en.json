@@ -675,6 +675,12 @@
         "GLOSSARY_PERMISSION_CHANGED": "{actorName} changed your access to “{glossaryName}”.",
         "TRANSLATION_COMPLETED": "Your translation of “{documentName}” is ready.",
         "TRANSLATION_FAILED": "Your translation of “{documentName}” failed.",
-        "UNKNOWN": "You have a new notification."
+        "UNKNOWN": "You have a new notification.",
+        "desktop": {
+            "label": "Desktop notifications",
+            "hint": "Get a desktop notification when something new arrives while you work in another window. Keep at least one GlossaryAI tab open.",
+            "blocked": "Your browser blocks notifications from this site. Allow them in the site settings (the icon at the left of the address bar), then turn this on.",
+            "summary": "You have {count} new notifications."
+        }
     }
 }

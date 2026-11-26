@@ -65,7 +65,7 @@ export function countUnread(items: NotificationResponse[]): number {
   return items.filter((item) => item.readAt === null).length;
 }
 
-function stringParam(item: NotificationResponse, key: string): string | null {
+export function stringParam(item: NotificationResponse, key: string): string | null {
   const value = item.params[key];
   return typeof value === "string" && value !== "" ? value : null;
 }
@@ -100,6 +100,21 @@ export function glossaryPath(item: NotificationResponse): string | null {
 export function translationPath(item: NotificationResponse): string | null {
   if (item.type !== "TRANSLATION_COMPLETED" && item.type !== "TRANSLATION_FAILED") return null;
   return item.subjectId ? `/dashboard/history?job=${encodeURIComponent(item.subjectId)}` : null;
+}
+
+/** Where a notification leads: its glossary or its translation job; `null` when there is nothing to open. */
+export function notificationPath(item: NotificationResponse): string | null {
+  return glossaryPath(item) ?? translationPath(item);
+}
+
+/**
+ * The notifications to announce from a freshly fetched page (newest first): the unread ones not in `seen`, oldest
+ * first. Every fetched item is added to `seen`, so nothing is announced twice.
+ */
+export function takeUnannounced(items: NotificationResponse[], seen: Set<string>): NotificationResponse[] {
+  const fresh = items.filter((item) => item.readAt === null && !seen.has(item.id));
+  items.forEach((item) => seen.add(item.id));
+  return fresh.reverse();
 }
 
 /** Why a translation failed: the code and params of the job's failure, for `Errors.<CODE>`. */

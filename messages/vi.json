@@ -675,6 +675,12 @@
         "GLOSSARY_PERMISSION_CHANGED": "{actorName} đã thay đổi quyền truy cập của bạn vào bộ thuật ngữ “{glossaryName}”.",
         "TRANSLATION_COMPLETED": "Bản dịch “{documentName}” của bạn đã hoàn tất.",
         "TRANSLATION_FAILED": "Bản dịch “{documentName}” của bạn không thành công.",
-        "UNKNOWN": "Bạn có một thông báo mới."
+        "UNKNOWN": "Bạn có một thông báo mới.",
+        "desktop": {
+            "label": "Thông báo trên màn hình",
+            "hint": "Nhận thông báo trên màn hình khi có thông báo mới trong lúc bạn làm việc ở cửa sổ khác. Hãy giữ ít nhất một tab GlossaryAI đang mở.",
+            "blocked": "Trình duyệt đang chặn thông báo của trang web này. Hãy cho phép trong phần cài đặt trang web (biểu tượng bên trái thanh địa chỉ), rồi bật tùy chọn này.",
+            "summary": "Bạn có {count} thông báo mới."
+        }
     }
 }

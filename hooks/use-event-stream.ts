@@ -6,7 +6,7 @@ import { useLatest } from "./use-latest";
 import { useMountEffect } from "./use-mount-effect";
 
 /** Listen to the tab's push stream while this component is mounted. The listener may change between renders. */
-export function useEventStream(listener: EventStreamListener) {
+export function useEventStream(listener: Omit<EventStreamListener, "keepOpenWhenHidden">) {
   const latest = useLatest(listener);
 
   useMountEffect(() =>

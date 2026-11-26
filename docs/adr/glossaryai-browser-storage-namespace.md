@@ -11,3 +11,4 @@ In production, Glossary AI is served under a path (`/glossary-ai`) on a domain i
 - The old generic keys stay in users' browsers and are deliberately left alone. Do not add cleanup code for them.
 - Logout removes only `glossaryai_*` keys. Earlier versions also removed generic legacy keys (`onboardingTourCompleted` and similar) and a `refresh_token` cookie at `Path=/`. That cleanup was removed because on a shared domain it deletes other products' data.
 - The API's HttpOnly refresh cookie follows the same rule. It is named `glossaryai_refresh_token`, because cookies are not isolated by path or port either. Its `Path` comes from the backend's `REFRESH_COOKIE_PATH` and must be the public auth path, including any reverse-proxy prefix (for example `/glossary-ai/api/v2/auth/`). Logout deletes only that cookie.
+- Web Lock names and Notification `tag`s are origin-wide too, so they carry the same prefix (`lib/tab-locks.ts`, `components/desktop-notifier.tsx`).

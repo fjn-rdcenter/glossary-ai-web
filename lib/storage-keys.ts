@@ -14,6 +14,8 @@ export const ACCESS_TOKEN_STORAGE_KEY = `${PREFIX}access_token`;
 export const LOGGED_OUT_STORAGE_KEY = `${PREFIX}logged_out`;
 export const USERNAME_STORAGE_KEY = `${PREFIX}username`;
 export const USER_INFO_STORAGE_KEY = `${PREFIX}user_info`;
+/** "on" once the user turned desktop notifications on in this browser. */
+export const DESKTOP_NOTIFICATIONS_STORAGE_KEY = `${PREFIX}desktop_notifications`;
 
 export const getGlossaryTourStageStorageKey = (userId: string) =>
   `${PREFIX}glossary_tour_stage_${userId}`;

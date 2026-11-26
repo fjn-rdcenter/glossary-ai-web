@@ -675,6 +675,12 @@
         "GLOSSARY_PERMISSION_CHANGED": "{actorName}さんが用語集「{glossaryName}」へのアクセス権を変更しました。",
         "TRANSLATION_COMPLETED": "「{documentName}」の翻訳が完了しました。",
         "TRANSLATION_FAILED": "「{documentName}」の翻訳に失敗しました。",
-        "UNKNOWN": "新しい通知があります。"
+        "UNKNOWN": "新しい通知があります。",
+        "desktop": {
+            "label": "デスクトップ通知",
+            "hint": "別のウィンドウで作業中に新しい通知が届くと、デスクトップに通知を表示します。GlossaryAI のタブを開いたままにしてください。",
+            "blocked": "このサイトの通知はブラウザーでブロックされています。アドレスバー左側のアイコンからサイトの設定を開いて通知を許可し、このスイッチをオンにしてください。",
+            "summary": "新しい通知が {count} 件あります。"
+        }
     }
 }

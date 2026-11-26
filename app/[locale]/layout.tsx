@@ -2,6 +2,7 @@ import type {Metadata, Viewport} from "next";
 import localFont from "next/font/local";
 import {NextIntlClientProvider} from "next-intl";
 import {getMessages} from "next-intl/server";
+import {DesktopNotifier} from "@/components/desktop-notifier";
 import "../globals.css";
 
 const inter = localFont({
@@ -42,6 +43,7 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.className} ${inter.variable} ${lora.variable}`}>
         <NextIntlClientProvider messages={messages}>
+          <DesktopNotifier />
           {children}
         </NextIntlClientProvider>
       </body>

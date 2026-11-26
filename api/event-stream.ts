@@ -1,7 +1,8 @@
 /**
  * The tab's one push stream, shared by everything that listens to it (the bell, job progress).
  *
- * It is open while at least one listener exists and the tab is visible, so a hidden tab holds no connection.
+ * It is open while at least one listener exists and the tab is visible, so a hidden tab holds no connection,
+ * unless a listener asks to keep it open while hidden: the desktop notifier does, in one tab per browser.
  * Listeners that need to know when to fall back to polling watch `isEventStreamConnected`.
  */
 
@@ -14,6 +15,8 @@ export interface EventStreamListener {
   onReady?: () => void;
   onNotification?: () => void;
   onJob?: (event: JobEvent) => void;
+  /** Keep the stream open while the tab is hidden, for as long as this listener is subscribed. */
+  keepOpenWhenHidden?: boolean;
 }
 
 const listeners = new Set<EventStreamListener>();
@@ -66,7 +69,9 @@ function close() {
 }
 
 function sync() {
-  const wanted = listeners.size > 0 && document.visibilityState === "visible";
+  const wanted = [...listeners].some(
+    (listener) => listener.keepOpenWhenHidden || document.visibilityState === "visible",
+  );
   if (wanted && !closeStream) open();
   else if (!wanted && closeStream) close();
 }
